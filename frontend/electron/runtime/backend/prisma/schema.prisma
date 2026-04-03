@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  password String
+  sessions Session[]
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UploadHistory {
+  id         Int      @id @default(autoincrement())
+  fileName   String?
+  fileType   String?
+  uploadedBy String?
+  remarks    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  uploadData UploadData[]
+    alarmData  AlarmData[] 
+}
+
+model UploadData {
+  id                                       Int       @id @default(autoincrement())
+  date                                     DateTime?
+  fileId                                   Int
+  Cell_Name                                String?   @db.VarChar(100)
+  Site                                     String?   @db.VarChar(100)
+  Band                                     String?   @db.VarChar(50)
+  Tech                                     String?   @db.VarChar(50)
+  Sector_ID                                String?   @db.VarChar(50)
+  Sector_Name                              String?   @db.VarChar(100)
+  Groups                                   String?   @db.VarChar(100)
+  UL_PRB_Utilization_Rate                  Float?
+  DL_PRB_Utilization_Rate                  Float?
+  UME_4G_Data_Volume_STD_MAPS_MB_903593_1  Float?
+  UME_E_UTRAN_IP_Throughput_UE_UL_STD_Kbps Float?
+  UME_E_UTRAN_IP_Throughput_UE_DL_STD_Kbps Float?
+  E_RAB_Drop_Rate                          Float?
+  Initial_ERAB_Establishment_Success_Rate  Float?
+  RRC_Establishment_Success_Rate           Float?
+  Mean_RRC_Connected_User_Number           Int?
+  Maximum_RRC_Connected_User_Number        Int?
+  E_RAB_Setup_Success_Rate                 Float?
+  RRC_Drop_Rate                            Float?
+  VOLTE_CSSR_Eric                          Float?
+  VOLTE_DCR_Eric                           Float?
+  Inter_Freq_HOSR                          Float?
+  Intra_Freq_HOSR                          Float?
+  CSFB_Success_Rate                        Float?
+
+  uploadHistory UploadHistory @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@map("UploadData")
+}
+
+model Settings {
+  id          Int       @id @default(1)
+  fromDate    DateTime?
+  toDate      DateTime?
+  Cell_Name   String?   @db.VarChar(100)
+  Site        String?   @db.VarChar(100)
+  Band        String?   @db.VarChar(50)
+  Tech        String?   @db.VarChar(50)
+  Sector_ID   String?   @db.VarChar(50)
+  Sector_Name String?   @db.VarChar(100)
+  Groups      String?   @db.VarChar(100)
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@map("Settings")
+}
+
+model Threshold {
+  id                                      Int    @id
+  UL_PRB_Utilization_Rate                 Float?
+  DL_PRB_Utilization_Rate                 Float?
+  E_RAB_Drop_Rate                         Float?
+  RRC_Drop_Rate                           Float?
+  Initial_ERAB_Establishment_Success_Rate Float?
+  RRC_Establishment_Success_Rate          Float?
+  E_RAB_Setup_Success_Rate                Float?
+  VOLTE_CSSR_Eric                         Float?
+  VOLTE_DCR_Eric                          Float?
+  Inter_Freq_HOSR                         Float?
+  Intra_Freq_HOSR                         Float?
+  CSFB_Success_Rate                       Float?
+  Max_RRC_Users                           Float?
+
+  @@map("threshold")
+}
+model siteData {
+  id                                   Int      @id
+
+  Cell_Name                            String?  @map("Cell Name")
+  SI_CI                                String?  @map("SI_CI")
+  EGCI                                 String?  @map("EGCI")
+  SuNetwork_ID                         String?  @map("SuNetwork ID")
+  SITEID                               String?  @map("SITEID")
+  Site_Name                            String?  @map("Site Name")
+  Cell_ID                              String?  @map("Cell ID")
+  SEC_ID                               String?  @map("SEC ID")
+  lon                                  Float?   @map("lon")
+  lat                                  Float?   @map("lat")
+  TAC                                  Int?     @map("TAC")
+  PCI                                  Int?     @map("PCI")
+  AZIMUTH                              Int?     @map("AZIMUTH")
+  Antenna_Height                       Float?   @map("Antenna Height")
+  M_tilt                               Float?   @map("M-tilt")
+  E_tilt                               Float?   @map("E-tilt")
+  TX_RX                                String?  @map("TX/RX")
+  Real_Transmit_Power_of_Resource      Float?   @map("Real Transmit Power of Resource")
+  Referenced_Signal_Power_of_Resource  Float?   @map("Referenced Signal Power of Resource")
+  cellSize                             String?  @map("cellSize")
+  cellRadius                           Float?   @map("cellRadius")
+  RachRootSequence                     Int?     @map("RachRootSequence")
+  Bandwidth                            Int?     @map("Bandwidth")
+  Frequency                            Int?     @map("Frequency")
+  Downlink_Center_Frequency            Int?     @map("Downlink Center Frequency")
+  Region                               String?  @map("Region")
+  Cluster                              String?  @map("Cluster")
+  OMM                                  String?  @map("OMM")
+  Antenna                              String?  @map("Antenna")
+  RET                                  String?  @map("RET")
+ 
+
+
+  @@map("siteData")
+}
+
+model AlarmData {
+  id                              Int      @id @default(autoincrement())
+  fileId                          Int
+
+  FILENAME                        String?
+  DATETIME                        DateTime?
+
+  configData_dnPrefix             String?
+  SubNetwork_id                   String?
+  SubNetwork_2_id                 String?
+  MeContext_id                    String?
+  ManagedElement_id               String?
+  vsEquipment_id                  String?
+  vsFieldReplaceableUnit_id       String?
+  vsAlarmPort_id                  String?
+
+  userLabel                       String?
+  administrativeState             String?
+  perceivedSeverity               String?
+  alarmPortId                     String?
+  alarmSlogan                     String?
+
+  filterDelay                     String?
+  operationalState                String?
+  filterTime                      String?
+  availabilityStatus              String?
+  filterAlgorithm                 String?
+  normallyOpen                    String?
+  alarmInExternalMe               String?
+
+  createdAt                       DateTime @default(now())
+
+  uploadHistory UploadHistory @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@map("AlarmData")
+}
+

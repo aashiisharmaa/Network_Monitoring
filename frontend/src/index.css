@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+body {
+  font-family: "Stack Sans Notch", sans-serif, "Roboto Mono";
+}

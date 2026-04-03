@@ -1,0 +1,84 @@
+{
+  "name": "network-monitor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "npm run dev:web",
+    "dev:web": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "desktop:dev": "concurrently -k \"npm run dev:web\" \"wait-on tcp:5173 && electron .\"",
+    "build": "vite build",
+    "desktop:build": "npm run build && electron-builder",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.5",
+    "@react-google-maps/api": "^2.20.7",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.553.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5",
+    "recharts": "^3.4.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "baseline-browser-mapping": "^2.10.11",
+    "concurrently": "^9.2.1",
+    "electron": "^37.2.4",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "tailwindcss": "^4.2.2",
+    "vite": "^7.2.2",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.vinfocom.networkmonitor",
+    "productName": "Network Monitor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/runtime/backend-runtime.zip",
+        "to": "backend-runtime.zip",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/windows",
+        "to": "windows",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
