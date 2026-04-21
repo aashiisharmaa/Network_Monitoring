@@ -6,7 +6,12 @@ async function getRequest(endpoint, fileId) {
       method: "GET",
       query: fileId ? { fileId } : undefined,
     });
-  } catch {
+  } catch (error) {
+    console.error("[dashboardService] GET request failed", {
+      endpoint,
+      fileId,
+      message: error?.message,
+    });
     return null;
   }
 }
@@ -42,7 +47,11 @@ export async function postThresholdSetting(body, fileId) {
       query: fileId ? { fileId } : undefined,
       body,
     });
-  } catch {
+  } catch (error) {
+    console.error("[dashboardService] postThresholdSetting failed", {
+      fileId,
+      message: error?.message,
+    });
     return null;
   }
 }
@@ -89,7 +98,11 @@ export async function importThresholdWorkbook(file) {
       method: "POST",
       body: formData,
     });
-  } catch {
+  } catch (error) {
+    console.error("[dashboardService] importThresholdWorkbook failed", {
+      fileName: file?.name,
+      message: error?.message,
+    });
     return null;
   }
 }

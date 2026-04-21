@@ -3,6 +3,7 @@ import {
   Upload, 
   File, 
   X, 
+  Trash2,
   CheckCircle, 
   AlertCircle, 
   FileSpreadsheet,
@@ -22,7 +23,7 @@ import {
   AlertTriangle,
   Bell
 } from "lucide-react";
-import { uploadSitesFile, uploadKpisFile, fetchUploads } from "./services/uploadService";
+import { uploadSitesFile, uploadKpisFileWithProgress, fetchUploads, deleteUploadById } from "./services/uploadService";
 import { uploadAlarmFile } from "../alarms/alarmsService";
 import { useAuth } from "../../context/AutContext";
 
@@ -34,7 +35,7 @@ const UPLOAD_TYPES = {
     color: 'emerald',
     description: 'Upload Key Performance Indicators',
     enabled: true,
-    uploadFn: uploadKpisFile
+    uploadFn: uploadKpisFileWithProgress
   },
   SITE: {
     id: 'site',
@@ -93,6 +94,8 @@ export default function UploadsPage() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadHistory, setUploadHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [deletingUploadId, setDeletingUploadId] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   // Fetch upload history on component mount
   useEffect(() => {
@@ -324,6 +327,7 @@ export default function UploadsPage() {
     if (!selectedFile || !selectedType.enabled) return;
 
     setUploading(true);
+    setUploadProgress(0);
     setUploadStatus(null);
 
     try {
@@ -335,10 +339,17 @@ export default function UploadsPage() {
       } else {
         const uploadedBy = user?.email || "system";
         const remarks = `${selectedType.label} upload`;
-        result = await selectedType.uploadFn(selectedFile, uploadedBy, remarks);
+        if (selectedType.id === "kpi") {
+          result = await selectedType.uploadFn(selectedFile, uploadedBy, remarks, (percent) =>
+            setUploadProgress(percent),
+          );
+        } else {
+          result = await selectedType.uploadFn(selectedFile, uploadedBy, remarks);
+        }
       }
 
       if (result && result.success) {
+        setUploadProgress(100);
         setUploadStatus("success");
         setUploadMessage(result.message || "Upload processed successfully.");
         
@@ -362,6 +373,7 @@ export default function UploadsPage() {
       setUploadMessage(error.message || "Upload failed.");
     } finally {
       setUploading(false);
+      setTimeout(() => setUploadProgress(0), 500);
     }
   };
 
@@ -369,6 +381,33 @@ export default function UploadsPage() {
     setSelectedFile(null);
     setUploadStatus(null);
     setUploadMessage("");
+  };
+
+  const handleDeleteUpload = async (uploadId, fileName) => {
+    const confirmed = window.confirm(`Delete upload "${fileName}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeletingUploadId(uploadId);
+    try {
+      const response = await deleteUploadById(uploadId);
+      if (response?.success) {
+        setUploadStatus("success");
+        setUploadMessage(response?.message || "Upload deleted successfully.");
+        await loadUploadHistory();
+        setTimeout(() => {
+          setUploadStatus(null);
+          setUploadMessage("");
+        }, 2500);
+      } else {
+        setUploadStatus("error");
+        setUploadMessage(response?.message || "Failed to delete upload.");
+      }
+    } catch (error) {
+      setUploadStatus("error");
+      setUploadMessage(error?.message || "Failed to delete upload.");
+    } finally {
+      setDeletingUploadId(null);
+    }
   };
 
   const formatFileSize = (bytes) => {
@@ -576,13 +615,25 @@ export default function UploadsPage() {
                 <button
                   onClick={handleUpload}
                   disabled={uploading || !selectedType.enabled}
-                  className={`w-full mt-6 py-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                  className={`relative overflow-hidden w-full mt-6 py-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                     uploading || !selectedType.enabled
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                       : `bg-gradient-to-r ${colorClasses.gradient} text-white shadow-lg ${colorClasses.shadow} hover:shadow-xl active:scale-[0.99]`
                   }`}
                 >
-                  {uploading ? (
+                  {uploading && selectedType.id === "kpi" ? (
+                    <>
+                      <div className="absolute inset-0 bg-slate-200/50">
+                        <div
+                          className={`h-full bg-gradient-to-r ${colorClasses.gradient} transition-all duration-200`}
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <span className="relative z-10 text-slate-800 font-semibold">
+                        Uploading KPI Data... {uploadProgress}%
+                      </span>
+                    </>
+                  ) : uploading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin"></div>
                       <span>Uploading {selectedType.label}...</span>
@@ -680,6 +731,24 @@ export default function UploadsPage() {
                         key={item.id}
                         className="group p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200"
                       >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="text-[11px] text-slate-400">ID #{item.id}</div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUpload(item.id, fileName)}
+                            disabled={deletingUploadId === item.id}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            title="Delete upload"
+                          >
+                            {deletingUploadId === item.id ? (
+                              <LoaderIcon className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                            Delete
+                          </button>
+                        </div>
+
                         <div className="flex items-start gap-3">
                           <div className={`p-2 rounded-lg ${itemColors.bg} group-hover:scale-110 transition-transform`}>
                             <FileIcon className={`w-4 h-4 ${itemColors.icon}`} />

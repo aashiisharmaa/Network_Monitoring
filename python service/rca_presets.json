@@ -1,0 +1,253 @@
+{
+  "preset 1": {
+    "vendor": "nokia",
+    "columnMapping": {
+      "Short name": "shortname",
+      "Date": "date",
+      "Cell I'd": "cellid",
+      "Site I'd": "siteid",
+      "Tech": "tech"
+    },
+    "kpiMapping": {
+      "MV_PUSCH SINR": "mvpuschsinr",
+      "MV_E-UTRAN Average CQI": "mveutranaveragecqi",
+      "DL PRB Utilisation": "dlprbutilisation",
+      "Average UE Distance_KM": "averageuedistancekm",
+      "MV_Packet Loss DL": "mvpacketlossdl",
+      "MV_Packet Loss UL": "mvpacketlossul",
+      "MV_Radio NW Availability": "mvradionwavailability",
+      "MV_VoLTE DCR": "mvvoltedcr",
+      "VoLTE ERAB Setup Success Rate": "volteerabsetupsuccessrate",
+      "VoLTE InterF HOSR": "volteinterfhosr",
+      "VoLTE IntraF HOSR [CBBH]": "volteintrafhosrcbbh",
+      "UL User Throughput_Kbps": "uluserthroughputkbps",
+      "PS IntraF HOSR [CDBH]": "psintrafhosrcdbh",
+      "PS InterF HOSR": "psinterfhosr",
+      "RRC Setup Success Rate": "rrcsetupsuccessrate",
+      "MV_ERAB Setup Success Rate": "mverabsetupsuccessrate",
+      "MV_DL User Throughput_Mbps": "mvdluserthroughputmbps",
+      "MV_% RSRP Sample <-110 dBm": "mvrsrpsample110dbm",
+      "MV_PS Drop Call Rate %": "mvpsdropcallrate",
+      "MV_VoLTE CSSR%": "mvvoltecssr",
+      "Avg RSSI PUSCH": "avgrssipusch",
+      "Avg RSSI PUCCH": "avgrssipucch",
+      "UL NI [RSSI-SINR]": "ulnirssisinr",
+      "MV_VoLTE Packet Loss DL": "mvvoltepacketlossdl",
+      "MV_VoLTE Packet Loss UL": "mvvoltepacketlossul"
+    },
+    "selectedKpis": [
+      "MV_PUSCH SINR",
+      "MV_E-UTRAN Average CQI",
+      "DL PRB Utilisation",
+      "Average UE Distance_KM",
+      "MV_Packet Loss DL",
+      "MV_Packet Loss UL",
+      "MV_Radio NW Availability",
+      "MV_VoLTE DCR",
+      "VoLTE ERAB Setup Success Rate",
+      "VoLTE InterF HOSR",
+      "VoLTE IntraF HOSR [CBBH]",
+      "UL User Throughput_Kbps",
+      "PS IntraF HOSR [CDBH]",
+      "PS InterF HOSR",
+      "RRC Setup Success Rate",
+      "MV_ERAB Setup Success Rate",
+      "MV_DL User Throughput_Mbps",
+      "MV_% RSRP Sample <-110 dBm",
+      "MV_PS Drop Call Rate %",
+      "MV_VoLTE CSSR%",
+      "Avg RSSI PUSCH",
+      "Avg RSSI PUCCH",
+      "UL NI [RSSI-SINR]",
+      "MV_VoLTE Packet Loss DL",
+      "MV_VoLTE Packet Loss UL"
+    ],
+    "kpis": {
+      "MV_PUSCH SINR": {
+        "direction": "high_good",
+        "threshold": 6,
+        "weight": 1.2,
+        "min_scale": 0.8
+      },
+      "MV_E-UTRAN Average CQI": {
+        "direction": "high_good",
+        "threshold": 7,
+        "weight": 1,
+        "min_scale": 0.3
+      },
+      "DL PRB Utilisation": {
+        "direction": "low_good",
+        "threshold": 70,
+        "weight": 1,
+        "min_scale": 5
+      },
+      "Average UE Distance_KM": {
+        "direction": "low_good",
+        "threshold": 1.2,
+        "weight": 0.7,
+        "min_scale": 0.05
+      },
+      "MV_Packet Loss DL": {
+        "direction": "low_good",
+        "threshold": 0.05,
+        "weight": 0.8,
+        "min_scale": 0.02
+      },
+      "MV_Packet Loss UL": {
+        "direction": "low_good",
+        "threshold": 2,
+        "weight": 0.8,
+        "min_scale": 0.2
+      },
+      "MV_Radio NW Availability": {
+        "direction": "high_good",
+        "threshold": 97,
+        "weight": 1.4,
+        "min_scale": 0.5
+      },
+      "MV_VoLTE DCR": {
+        "direction": "low_good",
+        "threshold": 1,
+        "weight": 1,
+        "min_scale": 0.2
+      },
+      "VoLTE ERAB Setup Success Rate": {
+        "direction": "high_good",
+        "threshold": 98.5,
+        "weight": 1,
+        "min_scale": 0.5
+      },
+      "VoLTE InterF HOSR": {
+        "direction": "high_good",
+        "threshold": 95,
+        "weight": 0.9,
+        "min_scale": 1
+      },
+      "VoLTE IntraF HOSR [CBBH]": {
+        "direction": "high_good",
+        "threshold": 95,
+        "weight": 0.9,
+        "min_scale": 1
+      },
+      "UL User Throughput_Kbps": {
+        "direction": "high_good",
+        "threshold": 250,
+        "weight": 0.9,
+        "min_scale": 80
+      },
+      "PS IntraF HOSR [CDBH]": {
+        "direction": "high_good",
+        "threshold": 95,
+        "weight": 0.9,
+        "min_scale": 1
+      },
+      "PS InterF HOSR": {
+        "direction": "high_good",
+        "threshold": 95,
+        "weight": 0.9,
+        "min_scale": 1
+      },
+      "RRC Setup Success Rate": {
+        "direction": "high_good",
+        "threshold": 98,
+        "weight": 1.2,
+        "min_scale": 0.5
+      },
+      "MV_ERAB Setup Success Rate": {
+        "direction": "high_good",
+        "threshold": 98.5,
+        "weight": 1.1,
+        "min_scale": 0.4
+      },
+      "MV_DL User Throughput_Mbps": {
+        "direction": "high_good",
+        "threshold": 5,
+        "weight": 1.3,
+        "min_scale": 1.5
+      },
+      "MV_% RSRP Sample <-110 dBm": {
+        "direction": "low_good",
+        "threshold": 35,
+        "weight": 1.1,
+        "min_scale": 3
+      },
+      "MV_PS Drop Call Rate %": {
+        "direction": "low_good",
+        "threshold": 1,
+        "weight": 1.2,
+        "min_scale": 0.2
+      },
+      "MV_VoLTE CSSR%": {
+        "direction": "high_good",
+        "threshold": 98.5,
+        "weight": 1,
+        "min_scale": 0.5
+      },
+      "Avg RSSI PUSCH": {
+        "direction": "low_good",
+        "threshold": -103,
+        "weight": 0.8,
+        "min_scale": 1.5
+      },
+      "Avg RSSI PUCCH": {
+        "direction": "low_good",
+        "threshold": -103,
+        "weight": 0.7,
+        "min_scale": 1.5
+      },
+      "UL NI [RSSI-SINR]": {
+        "direction": "low_good",
+        "threshold": -113,
+        "weight": 0.8,
+        "min_scale": 1
+      },
+      "MV_VoLTE Packet Loss DL": {
+        "direction": "low_good",
+        "threshold": 0.3,
+        "weight": 0.8,
+        "min_scale": 0.1
+      },
+      "MV_VoLTE Packet Loss UL": {
+        "direction": "low_good",
+        "threshold": 0.3,
+        "weight": 0.8,
+        "min_scale": 0.1
+      }
+    },
+    "rcaThresholds": {
+      "coverage_rsrp_poor": 35,
+      "coverage_ue_distance": 1,
+      "coverage_pusch_sinr_low": 5,
+      "coverage_dl_tp_low": 5,
+      "ul_interference_pusch_sinr_low": 5,
+      "ul_interference_rssi_pusch_high": -103,
+      "ul_interference_ul_ni_high": -113,
+      "ul_interference_packet_loss_ul_high": 3,
+      "congestion_dl_prb_high": 70,
+      "congestion_connected_users_high": 40,
+      "mobility_drop_rate_high": 1,
+      "mobility_volte_dcr_high": 1,
+      "mobility_hosr_low": 95,
+      "accessibility_rrc_setup_low": 98,
+      "accessibility_erab_setup_low": 98.5,
+      "accessibility_volte_erab_setup_low": 98.5,
+      "accessibility_volte_cssr_low": 98.5,
+      "availability_radio_low": 97,
+      "transport_packet_loss_dl_high": 0.1,
+      "transport_packet_loss_ul_high": 3,
+      "transport_volte_packet_loss_dl_high": 0.5,
+      "transport_volte_packet_loss_ul_high": 0.5
+    },
+    "severityThresholds": {
+      "critical_score": 35,
+      "major_score": 22,
+      "moderate_score": 15,
+      "critical_drop_rate": 3,
+      "critical_volte_dcr": 5
+    },
+    "anomalyThresholds": {
+      "is_anomaly_score_threshold": 15,
+      "fallback_general_score_threshold": 18
+    }
+  }
+}

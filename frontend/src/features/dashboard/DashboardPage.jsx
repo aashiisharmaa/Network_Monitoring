@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useContext } from "react";
 import {
   Activity,
   Radio,
@@ -19,6 +19,7 @@ import {
   Download,
   Upload,
   Minus,
+  RefreshCw,
 } from "lucide-react";
 import {
   exportThresholdWorkbook,
@@ -28,8 +29,11 @@ import {
   importThresholdWorkbook,
   postThresholdSetting,
 } from "./services/dashboardService";
-import { fetchKpiUploadHistory } from "../kpi/kpiService";
-import { fetchDynamicKpiMetrics, fetchDynamicKpiData } from "../kpi/kpiService";
+import {
+  fetchDynamicKpiSummary,
+  fetchKpiUploadHistory,
+} from "../kpi/kpiService";
+import UserContext from "../../context/fileContext";
 
 const THRESHOLD_STORAGE_PREFIX = "dashboardThresholdProfile";
 const THRESHOLD_OPERATOR_STORAGE_PREFIX = "dashboardThresholdOperators";
@@ -43,8 +47,12 @@ const THRESHOLD_OPERATOR_OPTIONS = [
 const THRESHOLD_OPERATOR_SET = new Set(
   THRESHOLD_OPERATOR_OPTIONS.map((item) => item.value),
 );
+const getDashboardScopeCacheKey = (fileId) =>
+  fileId ? `file:${String(fileId)}` : "all";
+let dashboardRuntimeCacheByScope = {};
 
 export default function DashboardPage() {
+  const { selectedFileId, setSelectedFileId } = useContext(UserContext);
   const [dashboardData, setDashboardData] = useState(null);
   const [performanceData, setPerformanceData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,18 +60,31 @@ export default function DashboardPage() {
   const [thresholds, setThresholds] = useState({});
   const [thresholdOperators, setThresholdOperators] = useState({});
   const [defaultThresholds, setDefaultThresholds] = useState({});
-  const [defaultThresholdOperators, setDefaultThresholdOperators] = useState({});
+  const [defaultThresholdOperators, setDefaultThresholdOperators] = useState(
+    {},
+  );
   const [dashboardFileOptions, setDashboardFileOptions] = useState([]);
-  const [selectedDashboardFileId, setSelectedDashboardFileId] = useState("");
-  const [dynamicPerformanceEntries, setDynamicPerformanceEntries] = useState([]);
-  const [dynamicPerformanceLoading, setDynamicPerformanceLoading] = useState(false);
+  const [dynamicPerformanceEntries, setDynamicPerformanceEntries] = useState(
+    [],
+  );
+  const [dynamicPerformanceLoading, setDynamicPerformanceLoading] =
+    useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [exportingThresholds, setExportingThresholds] = useState(false);
   const [importingThresholds, setImportingThresholds] = useState(false);
-  const [thresholdTransferMessage, setThresholdTransferMessage] = useState(null);
+  const [refreshingData, setRefreshingData] = useState(false);
+  const [isScopeHydrated, setIsScopeHydrated] = useState(false);
+  const [thresholdTransferMessage, setThresholdTransferMessage] =
+    useState(null);
+  const selectedDashboardFileId = String(selectedFileId || "");
+  const setSelectedDashboardFileId = setSelectedFileId;
 
   const isInitialMount = useRef(true);
+  const hasHydratedSelectionRef = useRef(false);
+  const hasLoadedDashboardFilesRef = useRef(false);
+  const isRestoringDashboardCacheRef = useRef(false);
+  const thresholdFetchRequestIdRef = useRef(0);
   const saveTimeout = useRef(null);
   const skipThresholdAutosaveRef = useRef(false);
   const thresholdImportInputRef = useRef(null);
@@ -112,7 +133,9 @@ export default function DashboardPage() {
       "RRC_Drop_Rate",
       "VOLTE_DCR_Eric",
     ]);
-    return lowerIsBetter.has(performanceKey) ? "<=" : DEFAULT_THRESHOLD_OPERATOR;
+    return lowerIsBetter.has(performanceKey)
+      ? "<="
+      : DEFAULT_THRESHOLD_OPERATOR;
   }, []);
 
   const buildOperatorFallbacks = useCallback(
@@ -183,22 +206,19 @@ export default function DashboardPage() {
 
     try {
       setDynamicPerformanceLoading(true);
-      const metricResponse = await fetchDynamicKpiMetrics(fileId);
-      const metrics = metricResponse?.success ? metricResponse.data || [] : [];
+      const summaryResponse = await fetchDynamicKpiSummary(fileId);
+      const metrics = summaryResponse?.success
+        ? summaryResponse.data || []
+        : [];
 
       if (!metrics.length) {
         setDynamicPerformanceEntries([]);
         return;
       }
 
-      const metricDataResponses = await Promise.all(
-        metrics.map((metric) => fetchDynamicKpiData(fileId, metric.key)),
-      );
-
       const entries = metrics
-        .map((metric, index) => {
-          const response = metricDataResponses[index];
-          const statistics = response?.statistics || {};
+        .map((metric) => {
+          const statistics = metric?.statistics || {};
           const average =
             typeof statistics.average === "number"
               ? statistics.average
@@ -208,7 +228,6 @@ export default function DashboardPage() {
           return {
             key: metric.key,
             label:
-              response?.kpi ||
               metric.label ||
               metric.key
                 .replace(/([A-Z])/g, " $1")
@@ -254,8 +273,10 @@ export default function DashboardPage() {
   }
 
   async function handleGetThresholdSetting(fileId) {
+    const requestId = ++thresholdFetchRequestIdRef.current;
     try {
       const res = await getThresholdSetting(fileId);
+      if (requestId !== thresholdFetchRequestIdRef.current) return;
       if (res?.success && res?.data) {
         const thresholdData = { ...res.data };
         const operatorPayload =
@@ -272,9 +293,28 @@ export default function DashboardPage() {
         setDefaultThresholdOperators(operatorPayload);
       }
     } catch (error) {
+      if (requestId !== thresholdFetchRequestIdRef.current) return;
       console.error("Error fetching threshold settings:", error);
     }
   }
+
+  const handleRefreshDashboardData = useCallback(async () => {
+    const fileId = selectedDashboardFileId || undefined;
+    setRefreshingData(true);
+    try {
+      await handleGetDashboardData(fileId);
+      await handleGetThresholdSetting(fileId);
+      if (selectedDashboardFileId) {
+        setPerformanceData(null);
+        await loadDynamicPerformanceData(selectedDashboardFileId);
+      } else {
+        setDynamicPerformanceEntries([]);
+        await handleGetPerformanceData(undefined);
+      }
+    } finally {
+      setRefreshingData(false);
+    }
+  }, [selectedDashboardFileId, loadDynamicPerformanceData]);
 
   async function handleUpdateThresholdSetting() {
     try {
@@ -342,19 +382,58 @@ export default function DashboardPage() {
   }, [thresholds, thresholdOperators]);
 
   useEffect(() => {
+    if (hasHydratedSelectionRef.current) return;
+    hasHydratedSelectionRef.current = true;
+    setIsScopeHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedDashboardFilesRef.current) return;
+    if (!selectedDashboardFileId) return;
+    const exists = dashboardFileOptions.some(
+      (file) => String(file.id) === String(selectedDashboardFileId),
+    );
+    if (!exists) {
+      setSelectedDashboardFileId("");
+    }
+  }, [dashboardFileOptions, selectedDashboardFileId]);
+
+  useEffect(() => {
     const loadDashboardFiles = async () => {
       const response = await fetchKpiUploadHistory();
+      hasLoadedDashboardFilesRef.current = true;
       if (response?.success) {
         const files = response.data || [];
         setDashboardFileOptions(files);
       }
     };
     loadDashboardFiles();
-    handleGetThresholdSetting(undefined);
   }, []);
 
   useEffect(() => {
+    if (!isScopeHydrated) return;
     const fileId = selectedDashboardFileId || undefined;
+    const scopeKey = getDashboardScopeCacheKey(selectedDashboardFileId);
+    const cached = dashboardRuntimeCacheByScope[scopeKey];
+    if (cached) {
+      isRestoringDashboardCacheRef.current = true;
+      skipThresholdAutosaveRef.current = true;
+      setDashboardData(cached.dashboardData || null);
+      setPerformanceData(cached.performanceData || null);
+      setDynamicPerformanceEntries(
+        Array.isArray(cached.dynamicPerformanceEntries)
+          ? cached.dynamicPerformanceEntries
+          : [],
+      );
+      setDefaultThresholds(cached.defaultThresholds || {});
+      setDefaultThresholdOperators(cached.defaultThresholdOperators || {});
+      setThresholds(cached.thresholds || {});
+      setThresholdOperators(cached.thresholdOperators || {});
+      setLoading(false);
+      setDynamicPerformanceLoading(false);
+      return;
+    }
+
     handleGetDashboardData(fileId);
     handleGetThresholdSetting(fileId);
     if (selectedDashboardFileId) {
@@ -364,9 +443,47 @@ export default function DashboardPage() {
       setDynamicPerformanceEntries([]);
       handleGetPerformanceData(undefined);
     }
-  }, [selectedDashboardFileId, loadDynamicPerformanceData]);
+  }, [selectedDashboardFileId, loadDynamicPerformanceData, isScopeHydrated]);
 
   useEffect(() => {
+    const scopeKey = getDashboardScopeCacheKey(selectedDashboardFileId);
+    if (
+      !dashboardData &&
+      !performanceData &&
+      !dynamicPerformanceEntries.length &&
+      Object.keys(defaultThresholds || {}).length === 0 &&
+      Object.keys(thresholds || {}).length === 0
+    ) {
+      return;
+    }
+    dashboardRuntimeCacheByScope[scopeKey] = {
+      dashboardData,
+      performanceData,
+      dynamicPerformanceEntries: Array.isArray(dynamicPerformanceEntries)
+        ? [...dynamicPerformanceEntries]
+        : [],
+      defaultThresholds: { ...(defaultThresholds || {}) },
+      defaultThresholdOperators: { ...(defaultThresholdOperators || {}) },
+      thresholds: { ...(thresholds || {}) },
+      thresholdOperators: { ...(thresholdOperators || {}) },
+      updatedAt: Date.now(),
+    };
+  }, [
+    selectedDashboardFileId,
+    dashboardData,
+    performanceData,
+    dynamicPerformanceEntries,
+    defaultThresholds,
+    defaultThresholdOperators,
+    thresholds,
+    thresholdOperators,
+  ]);
+
+  useEffect(() => {
+    if (isRestoringDashboardCacheRef.current) {
+      isRestoringDashboardCacheRef.current = false;
+      return;
+    }
     if (Object.keys(defaultThresholds).length === 0) return;
     const nextThresholds = { ...defaultThresholds };
     const operatorFallbacks = buildOperatorFallbacks(nextThresholds);
@@ -414,14 +531,16 @@ export default function DashboardPage() {
   ];
 
   const getThresholdForKey = (performanceKey) => {
-    const thresholdKey = performanceToThresholdMap[performanceKey] || performanceKey;
+    const thresholdKey =
+      performanceToThresholdMap[performanceKey] || performanceKey;
     return Object.prototype.hasOwnProperty.call(thresholds, thresholdKey)
       ? thresholds[thresholdKey]
       : null;
   };
 
   const handleThresholdChange = (performanceKey, value) => {
-    const thresholdKey = performanceToThresholdMap[performanceKey] || performanceKey;
+    const thresholdKey =
+      performanceToThresholdMap[performanceKey] || performanceKey;
 
     setThresholds((prev) => ({
       ...prev,
@@ -430,12 +549,17 @@ export default function DashboardPage() {
   };
 
   const getOperatorForKey = (performanceKey) => {
-    const thresholdKey = performanceToThresholdMap[performanceKey] || performanceKey;
-    return thresholdOperators[thresholdKey] || getDefaultOperatorForMetric(thresholdKey);
+    const thresholdKey =
+      performanceToThresholdMap[performanceKey] || performanceKey;
+    return (
+      thresholdOperators[thresholdKey] ||
+      getDefaultOperatorForMetric(thresholdKey)
+    );
   };
 
   const handleThresholdOperatorChange = (performanceKey, operator) => {
-    const thresholdKey = performanceToThresholdMap[performanceKey] || performanceKey;
+    const thresholdKey =
+      performanceToThresholdMap[performanceKey] || performanceKey;
     setThresholdOperators((prev) => ({
       ...prev,
       [thresholdKey]: operator,
@@ -485,7 +609,10 @@ export default function DashboardPage() {
       const sanitizedThresholds = Object.fromEntries(
         exportThresholdKeys.map((key) => {
           const numericThreshold = Number(thresholds?.[key]);
-          return [key, Number.isFinite(numericThreshold) ? numericThreshold : 0];
+          return [
+            key,
+            Number.isFinite(numericThreshold) ? numericThreshold : 0,
+          ];
         }),
       );
 
@@ -550,12 +677,17 @@ export default function DashboardPage() {
 
       const response = await importThresholdWorkbook(file);
       if (!response?.success || !response?.data) {
-        throw new Error(response?.message || "Failed to import threshold workbook.");
+        throw new Error(
+          response?.message || "Failed to import threshold workbook.",
+        );
       }
 
       const importedThresholds = Object.fromEntries(
         Object.entries(response.data.thresholds || {})
-          .map(([key, rawValue]) => [String(key || "").trim(), Number(rawValue)])
+          .map(([key, rawValue]) => [
+            String(key || "").trim(),
+            Number(rawValue),
+          ])
           .filter(([key, value]) => key && Number.isFinite(value)),
       );
 
@@ -565,8 +697,13 @@ export default function DashboardPage() {
 
       const importedOperators = Object.fromEntries(
         Object.entries(response.data.operators || {})
-          .map(([key, rawOperator]) => [String(key || "").trim(), String(rawOperator || "").trim()])
-          .filter(([key, operator]) => key && THRESHOLD_OPERATOR_SET.has(operator)),
+          .map(([key, rawOperator]) => [
+            String(key || "").trim(),
+            String(rawOperator || "").trim(),
+          ])
+          .filter(
+            ([key, operator]) => key && THRESHOLD_OPERATOR_SET.has(operator),
+          ),
       );
 
       const nextThresholds = {
@@ -583,7 +720,8 @@ export default function DashboardPage() {
       setThresholdOperators(nextThresholdOperators);
 
       const importedCount =
-        Number(response.data.importedCount) || Object.keys(importedThresholds).length;
+        Number(response.data.importedCount) ||
+        Object.keys(importedThresholds).length;
       setThresholdTransferMessage({
         type: "success",
         text: `Imported ${importedCount} threshold row${
@@ -706,6 +844,21 @@ export default function DashboardPage() {
                   ))}
                 </select>
               </div>
+              <button
+                type="button"
+                onClick={handleRefreshDashboardData}
+                disabled={refreshingData}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                  refreshingData
+                    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${refreshingData ? "animate-spin" : ""}`}
+                />
+                {refreshingData ? "Refreshing..." : "Refresh"}
+              </button>
               {saving && (
                 <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-700 rounded-xl border-2 border-blue-200 shadow-sm">
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -730,7 +883,8 @@ export default function DashboardPage() {
             {selectedDashboardFileId
               ? `File #${selectedDashboardFileId} - ${
                   dashboardFileOptions.find(
-                    (file) => String(file.id) === String(selectedDashboardFileId),
+                    (file) =>
+                      String(file.id) === String(selectedDashboardFileId),
                   )?.fileName || "Selected upload"
                 }`
               : "All KPI uploads"}
@@ -821,7 +975,8 @@ export default function DashboardPage() {
                   }`}
                 >
                   {exportingThresholds ||
-                  (Boolean(selectedDashboardFileId) && dynamicPerformanceLoading) ? (
+                  (Boolean(selectedDashboardFileId) &&
+                    dynamicPerformanceLoading) ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Download className="w-4 h-4" />
@@ -900,7 +1055,10 @@ export default function DashboardPage() {
                   : Object.entries({
                       ...(performanceData?.averages || {}),
                       ...(performanceData?.peaks || {}),
-                    }).map(([key, value]) => [key, { key, label: formatKeyName(key), value }])
+                    }).map(([key, value]) => [
+                      key,
+                      { key, label: formatKeyName(key), value },
+                    ])
                 ).map(([key, entry]) => {
                   const value = entry?.value;
                   const thresholdValue = getThresholdForKey(key);
@@ -964,17 +1122,22 @@ export default function DashboardPage() {
                                 className="w-full mt-2 px-2.5 py-2 text-sm border-2 border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white font-semibold shadow-sm"
                                 value={getOperatorForKey(key)}
                                 onChange={(e) =>
-                                  handleThresholdOperatorChange(key, e.target.value)
+                                  handleThresholdOperatorChange(
+                                    key,
+                                    e.target.value,
+                                  )
                                 }
                               >
-                                {THRESHOLD_OPERATOR_OPTIONS.map((operatorOption) => (
-                                  <option
-                                    key={operatorOption.value}
-                                    value={operatorOption.value}
-                                  >
-                                    {operatorOption.label}
-                                  </option>
-                                ))}
+                                {THRESHOLD_OPERATOR_OPTIONS.map(
+                                  (operatorOption) => (
+                                    <option
+                                      key={operatorOption.value}
+                                      value={operatorOption.value}
+                                    >
+                                      {operatorOption.label}
+                                    </option>
+                                  ),
+                                )}
                               </select>
                             </>
                           ) : (
@@ -986,7 +1149,8 @@ export default function DashboardPage() {
                                   <div className="flex items-center gap-2">
                                     <Settings className="w-3.5 h-3.5 text-slate-500" />
                                     <p className="text-xs font-bold text-slate-700">
-                                      Target: {getOperatorForKey(key)} {thresholdValue}
+                                      Target: {getOperatorForKey(key)}{" "}
+                                      {thresholdValue}
                                     </p>
                                   </div>
                                 ) : (

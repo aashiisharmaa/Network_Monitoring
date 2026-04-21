@@ -1,8 +1,14 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   fetchKpiUploadHistory,
-  fetchDynamicKpiMetrics,
-  fetchDynamicKpiData,
+  fetchDynamicKpiBatchData,
   fetchDynamicKpiColumns,
   updateDynamicKpiSelection,
   downloadDynamicKpiReport,
@@ -39,6 +45,7 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from "recharts";
+import UserContext from "../../context/fileContext";
 
 // Helper to create default KPI state
 const createKpiState = () => ({
@@ -89,6 +96,38 @@ const KPI_COMPARISON_OPERATORS = [
 ];
 
 const DEFAULT_KPI_COMPARISON_OPERATOR = ">=";
+const KPI_VIEW_PAGE_STATE_KEY = "kpiViewPageState:v1";
+const createKpiViewRuntimeCache = () => ({
+  fileOptions: [],
+  kpisByFileId: new Map(),
+  columnsByFileId: new Map(),
+  pendingFileOptionsPromise: null,
+  pendingKpisByFileId: new Map(),
+  pendingColumnsByFileId: new Map(),
+});
+let kpiViewRuntimeCache = createKpiViewRuntimeCache();
+
+const getKpiViewRuntimeCache = () => {
+  if (!kpiViewRuntimeCache || typeof kpiViewRuntimeCache !== "object") {
+    kpiViewRuntimeCache = createKpiViewRuntimeCache();
+  }
+  if (!(kpiViewRuntimeCache.kpisByFileId instanceof Map)) {
+    kpiViewRuntimeCache.kpisByFileId = new Map();
+  }
+  if (!(kpiViewRuntimeCache.columnsByFileId instanceof Map)) {
+    kpiViewRuntimeCache.columnsByFileId = new Map();
+  }
+  if (!(kpiViewRuntimeCache.pendingKpisByFileId instanceof Map)) {
+    kpiViewRuntimeCache.pendingKpisByFileId = new Map();
+  }
+  if (!(kpiViewRuntimeCache.pendingColumnsByFileId instanceof Map)) {
+    kpiViewRuntimeCache.pendingColumnsByFileId = new Map();
+  }
+  if (!Array.isArray(kpiViewRuntimeCache.fileOptions)) {
+    kpiViewRuntimeCache.fileOptions = [];
+  }
+  return kpiViewRuntimeCache;
+};
 
 const formatFilterLabel = (key) => {
   const preferred = FILTER_FIELD_PREFERENCES.find((item) => item.key === key);
@@ -108,7 +147,9 @@ const toFilterValue = (value) => {
 };
 
 const canonicalizeFilterKey = (key) =>
-  String(key || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  String(key || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 
 const readRowValueByFilterKey = (row, key) => {
   if (!row || !key) return undefined;
@@ -165,7 +206,8 @@ const evaluateComparisonOperator = (postValue, preValue, operator) => {
 };
 
 export default function KpiView() {
-  const [selectedKpiFileId, setSelectedKpiFileId] = useState("");
+  const hasHydratedRef = useRef(false);
+  const { selectedFileId, setSelectedFileId } = useContext(UserContext);
   const [kpiFileOptions, setKpiFileOptions] = useState([]);
   const [kpiColumns, setKpiColumns] = useState([]);
   const [selectedKpiColumnKeys, setSelectedKpiColumnKeys] = useState([]);
@@ -176,10 +218,12 @@ export default function KpiView() {
   const [savingFilterSelection, setSavingFilterSelection] = useState(false);
   const [downloadingReport, setDownloadingReport] = useState(false);
   const [generatingPdfReport, setGeneratingPdfReport] = useState(false);
+  const [isLoadingKpis, setIsLoadingKpis] = useState(false);
   const [globalXAxisType, setGlobalXAxisType] = useState("");
   const [globalXAxisApplyVersion, setGlobalXAxisApplyVersion] = useState(0);
   const [performanceMode, setPerformanceMode] = useState(true);
   const [kpiComparisonOperators, setKpiComparisonOperators] = useState({});
+  // const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState({});
   const [searchTerms, setSearchTerms] = useState({});
@@ -199,76 +243,208 @@ export default function KpiView() {
   });
 
   const [kpis, setKpis] = useState([]);
+  const selectedKpiFileId = String(selectedFileId || "");
+  const setSelectedKpiFileId = setSelectedFileId;
+
+  useEffect(() => {
+    if (hasHydratedRef.current) return;
+    hasHydratedRef.current = true;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(KPI_VIEW_PAGE_STATE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (!saved || typeof saved !== "object") return;
+
+      setSelectedKpiColumnKeys(
+        Array.isArray(saved.selectedKpiColumnKeys)
+          ? saved.selectedKpiColumnKeys
+          : [],
+      );
+      setSelectedFilterColumnKeys(
+        Array.isArray(saved.selectedFilterColumnKeys)
+          ? saved.selectedFilterColumnKeys
+          : [],
+      );
+      setMetricConfigOpen(Boolean(saved.metricConfigOpen));
+      setFilterConfigOpen(Boolean(saved.filterConfigOpen));
+      setGlobalXAxisType(saved.globalXAxisType || "");
+      setPerformanceMode(saved.performanceMode !== false);
+      setKpiComparisonOperators(saved.kpiComparisonOperators || {});
+      setFilters(saved.filters || {});
+      setSearchTerms(saved.searchTerms || {});
+      setPendingComparisonRanges(
+        saved.pendingComparisonRanges || {
+          preStart: "",
+          preEnd: "",
+          postStart: "",
+          postEnd: "",
+        },
+      );
+      setAppliedComparisonRanges(
+        saved.appliedComparisonRanges || {
+          preStart: "",
+          preEnd: "",
+          postStart: "",
+          postEnd: "",
+        },
+      );
+    } catch {
+      // ignore invalid persisted state
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        KPI_VIEW_PAGE_STATE_KEY,
+        JSON.stringify({
+          selectedKpiColumnKeys,
+          selectedFilterColumnKeys,
+          metricConfigOpen,
+          filterConfigOpen,
+          globalXAxisType,
+          performanceMode,
+          kpiComparisonOperators,
+          filters,
+          searchTerms,
+          pendingComparisonRanges,
+          appliedComparisonRanges,
+        }),
+      );
+    } catch {
+      // ignore storage full / serialization failures
+    }
+  }, [
+    selectedKpiColumnKeys,
+    selectedFilterColumnKeys,
+    metricConfigOpen,
+    filterConfigOpen,
+    globalXAxisType,
+    performanceMode,
+    kpiComparisonOperators,
+    filters,
+    searchTerms,
+    pendingComparisonRanges,
+    appliedComparisonRanges,
+  ]);
 
   useEffect(() => {
     const loadKpiUploads = async () => {
-      const response = await fetchKpiUploadHistory();
-      if (response?.success) {
-        const uploads = response.data || [];
-        setKpiFileOptions(uploads);
-        if (!selectedKpiFileId && uploads.length > 0) {
-          setSelectedKpiFileId(String(uploads[0].id));
+      const runtimeCache = getKpiViewRuntimeCache();
+      if (runtimeCache.fileOptions.length) {
+        setKpiFileOptions(runtimeCache.fileOptions);
+        if (runtimeCache.fileOptions.length > 0) {
+          setSelectedKpiFileId((prev) => prev || String(runtimeCache.fileOptions[0].id));
         }
+        return;
+      }
+
+      if (!runtimeCache.pendingFileOptionsPromise) {
+        runtimeCache.pendingFileOptionsPromise = fetchKpiUploadHistory()
+          .then((response) => {
+            const uploads = response?.success ? response.data || [] : [];
+            runtimeCache.fileOptions = Array.isArray(uploads) ? uploads : [];
+            runtimeCache.pendingFileOptionsPromise = null;
+            return runtimeCache.fileOptions;
+          })
+          .catch((error) => {
+            runtimeCache.pendingFileOptionsPromise = null;
+            throw error;
+          });
+      }
+
+      const uploads = await runtimeCache.pendingFileOptionsPromise;
+      setKpiFileOptions(uploads);
+      if (uploads.length > 0) {
+        setSelectedKpiFileId((prev) => prev || String(uploads[0].id));
       }
     };
 
     loadKpiUploads();
-  }, [selectedKpiFileId]);
+  }, []);
 
   const loadDynamicKpis = useCallback(async () => {
     if (!selectedKpiFileId) {
       setKpis([]);
+      setIsLoadingKpis(false);
       return;
     }
 
-    const metricResponse = await fetchDynamicKpiMetrics(selectedKpiFileId);
-    const metrics = metricResponse?.success ? metricResponse.data || [] : [];
-    kpiDebugLog("[KPI DEBUG][UI] metric list", {
-      fileId: selectedKpiFileId,
-      metricsCount: metrics.length,
-      metricKeys: metrics.map((metric) => metric.key),
-    });
-
-    if (!metrics.length) {
-      setKpis([]);
+    const runtimeCache = getKpiViewRuntimeCache();
+    const cacheKey = String(selectedKpiFileId);
+    if (runtimeCache.kpisByFileId.has(cacheKey)) {
+      setKpis(runtimeCache.kpisByFileId.get(cacheKey) || []);
+      setIsLoadingKpis(false);
       return;
     }
 
-    setKpis(
-      metrics.map((metric) => ({
-        ...createKpiState(),
-        metricKey: metric.key,
-        kpiName: metric.label || formatKpiName(metric.key),
-      })),
-    );
+    setIsLoadingKpis(true);
+    try {
+      if (!runtimeCache.pendingKpisByFileId.has(cacheKey)) {
+        const requestPromise = fetchDynamicKpiBatchData(selectedKpiFileId)
+          .then((batchResponse) => {
+            const metrics = batchResponse?.success ? batchResponse.data || [] : [];
+            kpiDebugLog("[KPI DEBUG][UI] batch metric data", {
+              fileId: selectedKpiFileId,
+              metricsCount: metrics.length,
+              responses: metrics.map((metric) => ({
+                metricKey: metric.key || metric.metricKey,
+                points: Array.isArray(metric?.data) ? metric.data.length : 0,
+              })),
+            });
 
-    const dataResponses = await Promise.all(
-      metrics.map((metric) =>
-        fetchDynamicKpiData(selectedKpiFileId, metric.key),
-      ),
-    );
-    kpiDebugLog("[KPI DEBUG][UI] metric data responses", {
-      fileId: selectedKpiFileId,
-      responses: dataResponses.map((response, index) => ({
-        metricKey: metrics[index]?.key,
-        points: Array.isArray(response?.data) ? response.data.length : 0,
-      })),
-    });
+            const nextKpis = metrics.map((metric, index) => {
+              const metricKey = metric.key || metric.metricKey;
+              return {
+                metricKey,
+                kpiName:
+                  formatKpiName(metric?.kpi || metric.label || metricKey) ||
+                  `KPI ${index + 1}`,
+                data: Array.isArray(metric?.data) ? metric.data : [],
+                loading: false,
+                statistics: metric?.statistics || null,
+              };
+            });
 
-    setKpis(
-      metrics.map((metric, index) => {
-        const response = dataResponses[index];
-        return {
-          metricKey: metric.key,
-          kpiName:
-            formatKpiName(response?.kpi || metric.label || metric.key) ||
-            `KPI ${index + 1}`,
-          data: Array.isArray(response?.data) ? response.data : [],
-          loading: false,
-          statistics: response?.statistics || null,
-        };
-      }),
-    );
+            runtimeCache.kpisByFileId.set(cacheKey, nextKpis);
+            runtimeCache.pendingKpisByFileId.delete(cacheKey);
+            return { metrics, nextKpis };
+          })
+          .catch((error) => {
+            runtimeCache.pendingKpisByFileId.delete(cacheKey);
+            throw error;
+          });
+        runtimeCache.pendingKpisByFileId.set(cacheKey, requestPromise);
+      }
+
+      const { metrics, nextKpis } =
+        await runtimeCache.pendingKpisByFileId.get(cacheKey);
+
+      if (!metrics.length) {
+        setKpis([]);
+        return;
+      }
+
+      // Preserve existing per-KPI rule operators across refreshes/date-range applies.
+      // Only initialize missing metric keys with default operator.
+      setKpiComparisonOperators((prev) => {
+        const next = { ...(prev || {}) };
+        metrics.forEach((metric) => {
+          const key = String(metric?.key || metric?.metricKey || "").trim();
+          if (!key) return;
+          if (!next[key]) {
+            next[key] = DEFAULT_KPI_COMPARISON_OPERATOR;
+          }
+        });
+        return next;
+      });
+
+      setKpis(nextKpis);
+    } finally {
+      setIsLoadingKpis(false);
+    }
   }, [selectedKpiFileId]);
 
   useEffect(() => {
@@ -286,7 +462,9 @@ export default function KpiView() {
         `kpiComparisonOperators:${selectedKpiFileId}`,
       );
       const parsed = raw ? JSON.parse(raw) : {};
-      setKpiComparisonOperators(parsed && typeof parsed === "object" ? parsed : {});
+      setKpiComparisonOperators(
+        parsed && typeof parsed === "object" ? parsed : {},
+      );
       kpiDebugLog("[KPI DEBUG][UI] loaded KPI comparison operators", {
         fileId: selectedKpiFileId,
         operators: parsed,
@@ -317,7 +495,43 @@ export default function KpiView() {
       return;
     }
 
-    const response = await fetchDynamicKpiColumns(fileId);
+    const runtimeCache = getKpiViewRuntimeCache();
+    const cacheKey = String(fileId);
+
+    if (!runtimeCache.columnsByFileId.has(cacheKey)) {
+      if (!runtimeCache.pendingColumnsByFileId.has(cacheKey)) {
+        const requestPromise = fetchDynamicKpiColumns(fileId)
+          .then((response) => {
+            const nextValue = response?.success
+              ? {
+                  columns: Array.isArray(response.columns) ? response.columns : [],
+                  selectedMetricKeys: Array.isArray(response.selectedMetricKeys)
+                    ? response.selectedMetricKeys
+                    : [],
+                  selectedFilterKeys: Array.isArray(response.selectedFilterKeys)
+                    ? response.selectedFilterKeys
+                    : [],
+                }
+              : null;
+            if (nextValue) {
+              runtimeCache.columnsByFileId.set(cacheKey, nextValue);
+            }
+            runtimeCache.pendingColumnsByFileId.delete(cacheKey);
+            return response;
+          })
+          .catch((error) => {
+            runtimeCache.pendingColumnsByFileId.delete(cacheKey);
+            throw error;
+          });
+        runtimeCache.pendingColumnsByFileId.set(cacheKey, requestPromise);
+      }
+      await runtimeCache.pendingColumnsByFileId.get(cacheKey);
+    }
+
+    const cachedColumns = runtimeCache.columnsByFileId.get(cacheKey);
+    const response = cachedColumns
+      ? { success: true, ...cachedColumns }
+      : await fetchDynamicKpiColumns(fileId);
     if (!response?.success) {
       kpiDebugLog("[KPI DEBUG][UI] columns config load failed", {
         fileId,
@@ -331,14 +545,20 @@ export default function KpiView() {
 
     setKpiColumns(Array.isArray(response.columns) ? response.columns : []);
     setSelectedKpiColumnKeys(
-      Array.isArray(response.selectedMetricKeys) ? response.selectedMetricKeys : [],
+      Array.isArray(response.selectedMetricKeys)
+        ? response.selectedMetricKeys
+        : [],
     );
     setSelectedFilterColumnKeys(
-      Array.isArray(response.selectedFilterKeys) ? response.selectedFilterKeys : [],
+      Array.isArray(response.selectedFilterKeys)
+        ? response.selectedFilterKeys
+        : [],
     );
     kpiDebugLog("[KPI DEBUG][UI] columns config loaded", {
       fileId,
-      columnsCount: Array.isArray(response.columns) ? response.columns.length : 0,
+      columnsCount: Array.isArray(response.columns)
+        ? response.columns.length
+        : 0,
       columnKeysPreview: Array.isArray(response.columns)
         ? response.columns.slice(0, 20).map((col) => col?.key)
         : [],
@@ -378,7 +598,10 @@ export default function KpiView() {
     });
 
     const resolved = Object.fromEntries(
-      Object.entries(optionsByKey).map(([key, values]) => [key, [...values].sort()]),
+      Object.entries(optionsByKey).map(([key, values]) => [
+        key,
+        [...values].sort(),
+      ]),
     );
     if (candidateKeys?.length) {
       const missingConfiguredKeys = candidateKeys.filter(
@@ -406,12 +629,16 @@ export default function KpiView() {
       ? new Set(selectedFilterColumnKeys)
       : null;
     const keys = Object.keys(filterOptionsMap)
-      .filter((key) => (allowedBySelection ? allowedBySelection.has(key) : true))
+      .filter((key) =>
+        allowedBySelection ? allowedBySelection.has(key) : true,
+      )
       .filter((key) => filterOptionsMap[key]?.length > 1);
 
     const preferredOrder = FILTER_FIELD_PREFERENCES.map((item) => item.key);
     const preferredKeys = preferredOrder.filter((key) => keys.includes(key));
-    const remainingKeys = keys.filter((key) => !preferredOrder.includes(key)).sort();
+    const remainingKeys = keys
+      .filter((key) => !preferredOrder.includes(key))
+      .sort();
     const orderedKeys = [...preferredKeys, ...remainingKeys];
 
     const fields = orderedKeys.map((key) => ({
@@ -466,7 +693,9 @@ export default function KpiView() {
 
       return data.filter((d) => {
         return activeFilters.every(([key, selectedValues]) =>
-          selectedValues.includes(toFilterValue(readRowValueByFilterKey(d, key))),
+          selectedValues.includes(
+            toFilterValue(readRowValueByFilterKey(d, key)),
+          ),
         );
       });
     },
@@ -490,8 +719,12 @@ export default function KpiView() {
     return (
       (selectedKpiFileId ? 1 : 0) +
       selectedValuesCount +
-      (appliedComparisonRanges.preStart || appliedComparisonRanges.preEnd ? 1 : 0) +
-      (appliedComparisonRanges.postStart || appliedComparisonRanges.postEnd ? 1 : 0)
+      (appliedComparisonRanges.preStart || appliedComparisonRanges.preEnd
+        ? 1
+        : 0) +
+      (appliedComparisonRanges.postStart || appliedComparisonRanges.postEnd
+        ? 1
+        : 0)
     );
   }, [filters, selectedKpiFileId, appliedComparisonRanges]);
 
@@ -505,10 +738,15 @@ export default function KpiView() {
     if (!selectedKpiFileId) return;
     setSavingMetricSelection(true);
     try {
-      await updateDynamicKpiSelection(
-        selectedKpiFileId,
-        { metricKeys: selectedKpiColumnKeys },
-      );
+      await updateDynamicKpiSelection(selectedKpiFileId, {
+        metricKeys: selectedKpiColumnKeys,
+      });
+      const runtimeCache = getKpiViewRuntimeCache();
+      const cacheKey = String(selectedKpiFileId);
+      runtimeCache.kpisByFileId.delete(cacheKey);
+      runtimeCache.columnsByFileId.delete(cacheKey);
+      runtimeCache.pendingKpisByFileId.delete(cacheKey);
+      runtimeCache.pendingColumnsByFileId.delete(cacheKey);
       kpiDebugLog("[KPI DEBUG][UI] saved selection", {
         fileId: selectedKpiFileId,
         selectedMetricKeys: selectedKpiColumnKeys,
@@ -528,10 +766,13 @@ export default function KpiView() {
         fileId: selectedKpiFileId,
         selectedFilterKeys: selectedFilterColumnKeys,
       });
-      const saveResponse = await updateDynamicKpiSelection(
-        selectedKpiFileId,
-        { filterKeys: selectedFilterColumnKeys },
-      );
+      const saveResponse = await updateDynamicKpiSelection(selectedKpiFileId, {
+        filterKeys: selectedFilterColumnKeys,
+      });
+      const runtimeCache = getKpiViewRuntimeCache();
+      const cacheKey = String(selectedKpiFileId);
+      runtimeCache.columnsByFileId.delete(cacheKey);
+      runtimeCache.pendingColumnsByFileId.delete(cacheKey);
       kpiDebugLog("[KPI DEBUG][UI] saved filter selection", {
         fileId: selectedKpiFileId,
         selectedFilterKeys: selectedFilterColumnKeys,
@@ -672,18 +913,16 @@ export default function KpiView() {
         )
         .join(" | ");
 
-      const preRangeSummary =
-        hasPreRange
-          ? `${appliedComparisonRanges.preStart || "-"} to ${
-              appliedComparisonRanges.preEnd || "-"
-            }`
-          : "Not applied";
-      const postRangeSummary =
-        hasPostRange
-          ? `${appliedComparisonRanges.postStart || "-"} to ${
-              appliedComparisonRanges.postEnd || "-"
-            }`
-          : "Not applied";
+      const preRangeSummary = hasPreRange
+        ? `${appliedComparisonRanges.preStart || "-"} to ${
+            appliedComparisonRanges.preEnd || "-"
+          }`
+        : "Not applied";
+      const postRangeSummary = hasPostRange
+        ? `${appliedComparisonRanges.postStart || "-"} to ${
+            appliedComparisonRanges.postEnd || "-"
+          }`
+        : "Not applied";
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
@@ -692,11 +931,7 @@ export default function KpiView() {
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.text(
-        `Generated: ${new Date().toLocaleString()}`,
-        margin,
-        cursorY,
-      );
+      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, cursorY);
       cursorY += 5;
       doc.text(
         `File: ${selectedKpiFileLabel || "All KPI uploads"}`,
@@ -725,7 +960,8 @@ export default function KpiView() {
 
       for (let i = 0; i < chartElements.length; i += 1) {
         const chartElement = chartElements[i];
-        const chartTitle = chartElement.getAttribute("data-kpi-title") || `KPI ${i + 1}`;
+        const chartTitle =
+          chartElement.getAttribute("data-kpi-title") || `KPI ${i + 1}`;
 
         const rect = chartElement.getBoundingClientRect();
         if (!rect.width || !rect.height) continue;
@@ -778,7 +1014,9 @@ export default function KpiView() {
       doc.save(fileName);
     } catch (error) {
       console.error("Failed to export KPI PDF report:", error);
-      alert(`Failed to export KPI PDF report: ${error?.message || "Unknown error"}`);
+      alert(
+        `Failed to export KPI PDF report: ${error?.message || "Unknown error"}`,
+      );
     } finally {
       setGeneratingPdfReport(false);
     }
@@ -813,7 +1051,10 @@ export default function KpiView() {
 
   const isKpiFetchComplete = kpis.every((kpi) => !kpi.loading);
   const noKpisForSelectedFile =
-    hasSelectedFile && isKpiFetchComplete && visibleKpis.length === 0;
+    hasSelectedFile &&
+    !isLoadingKpis &&
+    isKpiFetchComplete &&
+    visibleKpis.length === 0;
 
   useEffect(() => {
     if (!hasSelectedFile) return;
@@ -823,10 +1064,19 @@ export default function KpiView() {
       allDataRows: allData.length,
       dynamicFilterFields: dynamicFilterFields.map((field) => field.key),
       activeFilters: Object.fromEntries(
-        Object.entries(filters).filter(([, values]) => Array.isArray(values) && values.length > 0),
+        Object.entries(filters).filter(
+          ([, values]) => Array.isArray(values) && values.length > 0,
+        ),
       ),
     });
-  }, [hasSelectedFile, selectedKpiFileId, kpis.length, allData.length, dynamicFilterFields, filters]);
+  }, [
+    hasSelectedFile,
+    selectedKpiFileId,
+    kpis.length,
+    allData.length,
+    dynamicFilterFields,
+    filters,
+  ]);
 
   const chartTypes = ["bar", "line", "area"];
   const chartColors = [
@@ -841,8 +1091,22 @@ export default function KpiView() {
   ];
 
   const globalXAxisOptions = useMemo(() => {
-    const preferred = ["cellName", "date", "tech", "band", "groups", "site", "sectorname"];
-    const excluded = new Set(["value", "count", "index", "__period", "__separator"]);
+    const preferred = [
+      "cellName",
+      "date",
+      "tech",
+      "band",
+      "groups",
+      "site",
+      "sectorname",
+    ];
+    const excluded = new Set([
+      "value",
+      "count",
+      "index",
+      "__period",
+      "__separator",
+    ]);
     const availableKeys = new Set();
 
     allData.forEach((row) => {
@@ -890,17 +1154,22 @@ export default function KpiView() {
     setGlobalXAxisApplyVersion((prev) => prev + 1);
   };
 
-  const handleKpiComparisonOperatorChange = useCallback((metricKey, operator) => {
-    if (!metricKey) return;
-    const safeOperator = KPI_COMPARISON_OPERATORS.some((item) => item.value === operator)
-      ? operator
-      : DEFAULT_KPI_COMPARISON_OPERATOR;
+  const handleKpiComparisonOperatorChange = useCallback(
+    (metricKey, operator) => {
+      if (!metricKey) return;
+      const safeOperator = KPI_COMPARISON_OPERATORS.some(
+        (item) => item.value === operator,
+      )
+        ? operator
+        : DEFAULT_KPI_COMPARISON_OPERATOR;
 
-    setKpiComparisonOperators((prev) => ({
-      ...prev,
-      [metricKey]: safeOperator,
-    }));
-  }, []);
+      setKpiComparisonOperators((prev) => ({
+        ...prev,
+        [metricKey]: safeOperator,
+      }));
+    },
+    [],
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -1060,13 +1329,17 @@ export default function KpiView() {
                         onClick={() => setMetricConfigOpen((prev) => !prev)}
                         className="self-start px-3 py-2 text-sm font-semibold rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
                       >
-                        {metricConfigOpen ? "Hide KPI Metrics Config" : "Configure KPI Metrics"}
+                        {metricConfigOpen
+                          ? "Hide KPI Metrics Config"
+                          : "Configure KPI Metrics"}
                       </button>
                       <button
                         onClick={() => setFilterConfigOpen((prev) => !prev)}
                         className="self-start px-3 py-2 text-sm font-semibold rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
                       >
-                        {filterConfigOpen ? "Hide Filter Headers Config" : "Configure Filter Headers"}
+                        {filterConfigOpen
+                          ? "Hide Filter Headers Config"
+                          : "Configure Filter Headers"}
                       </button>
                     </div>
                   )}
@@ -1092,7 +1365,9 @@ export default function KpiView() {
                   </div>
                   <div className="max-h-52 overflow-y-auto border border-gray-200 rounded-lg">
                     {kpiColumns.length === 0 ? (
-                      <p className="px-3 py-3 text-sm text-gray-500">No columns found.</p>
+                      <p className="px-3 py-3 text-sm text-gray-500">
+                        No columns found.
+                      </p>
                     ) : (
                       kpiColumns
                         .filter((column) => !column.isDimension)
@@ -1104,11 +1379,15 @@ export default function KpiView() {
                             <div className="flex items-center gap-3">
                               <input
                                 type="checkbox"
-                                checked={selectedKpiColumnKeys.includes(column.key)}
+                                checked={selectedKpiColumnKeys.includes(
+                                  column.key,
+                                )}
                                 onChange={() => toggleKpiColumn(column.key)}
                                 className="w-4 h-4"
                               />
-                              <span className="text-sm text-gray-700">{column.label}</span>
+                              <span className="text-sm text-gray-700">
+                                {column.label}
+                              </span>
                             </div>
                             <span className="text-xs text-gray-500">
                               {column.numericRatio}% numeric
@@ -1127,11 +1406,14 @@ export default function KpiView() {
                       Select which headers should be used as filters
                     </p>
                     <p className="text-xs text-gray-500 mb-2">
-                      Filter options will be created only from these selected headers.
+                      Filter options will be created only from these selected
+                      headers.
                     </p>
                     <div className="max-h-52 overflow-y-auto border border-gray-200 rounded-lg">
                       {kpiColumns.length === 0 ? (
-                        <p className="px-3 py-3 text-sm text-gray-500">No columns found.</p>
+                        <p className="px-3 py-3 text-sm text-gray-500">
+                          No columns found.
+                        </p>
                       ) : (
                         kpiColumns.map((column) => (
                           <label
@@ -1141,11 +1423,15 @@ export default function KpiView() {
                             <div className="flex items-center gap-3">
                               <input
                                 type="checkbox"
-                                checked={selectedFilterColumnKeys.includes(column.key)}
+                                checked={selectedFilterColumnKeys.includes(
+                                  column.key,
+                                )}
                                 onChange={() => toggleFilterColumn(column.key)}
                                 className="w-4 h-4"
                               />
-                              <span className="text-sm text-gray-700">{column.label}</span>
+                              <span className="text-sm text-gray-700">
+                                {column.label}
+                              </span>
                             </div>
                             <span className="text-xs text-gray-500">
                               {column.nonEmptyCount} non-empty
@@ -1165,7 +1451,9 @@ export default function KpiView() {
                           : "bg-indigo-600 text-white hover:bg-indigo-700"
                       }`}
                     >
-                      {savingFilterSelection ? "Saving..." : "Save Filter Headers"}
+                      {savingFilterSelection
+                        ? "Saving..."
+                        : "Save Filter Headers"}
                     </button>
                   </div>
                 </div>
@@ -1286,7 +1574,9 @@ export default function KpiView() {
                   options={field.options}
                   selected={filters[field.key] || []}
                   toggle={(v) => toggleFilter(field.key, v)}
-                  toggleSelectAll={() => toggleSelectAll(field.key, field.options)}
+                  toggleSelectAll={() =>
+                    toggleSelectAll(field.key, field.options)
+                  }
                   searchTerm={searchTerms[field.key] || ""}
                   onSearchChange={(v) =>
                     setSearchTerms((prev) => ({ ...prev, [field.key]: v }))
@@ -1389,7 +1679,7 @@ export default function KpiView() {
                         <X size={14} />
                       </button>
                     </span>
-                  ))
+                  )),
                 )}
               </div>
             )}
@@ -1405,7 +1695,8 @@ export default function KpiView() {
                     Global X-Axis (Apply to All Charts)
                   </p>
                   <p className="text-xs text-indigo-700/80">
-                    Bulk-set the X-axis once. Individual chart dropdowns will still work for overrides.
+                    Bulk-set the X-axis once. Individual chart dropdowns will
+                    still work for overrides.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1441,6 +1732,17 @@ export default function KpiView() {
         )}
 
         {/* KPI Charts Grid */}
+        {hasSelectedFile && isLoadingKpis && (
+          <Card className="border border-blue-200 bg-blue-50">
+            <CardContent className="py-5">
+              <div className="flex items-center gap-3 text-blue-800">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <p className="text-sm font-semibold">Loading KPI metrics...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {noKpisForSelectedFile && (
           <Card className="border border-amber-200 bg-amber-50">
             <CardContent className="py-5">
@@ -1456,14 +1758,15 @@ export default function KpiView() {
             <Card className="lg:col-span-2 border border-emerald-200 bg-emerald-50">
               <CardContent className="py-4">
                 <p className="text-sm font-semibold text-emerald-800">
-                  Performance mode is active. Showing {visibleKpis.length} of {filteredKpis.length} KPI cards.
+                  Performance mode is active. Showing {visibleKpis.length} of{" "}
+                  {filteredKpis.length} KPI cards.
                 </p>
               </CardContent>
             </Card>
           )}
           {visibleKpis.map(({ kpi, index: i }) => (
             <KpiChart
-              key={i}
+              key={kpi.metricKey || i}
               title={kpi.kpiName}
               type={chartTypes[i % chartTypes.length]}
               color={chartColors[i % chartColors.length]}
@@ -1500,7 +1803,7 @@ function MultiSelect({
   onSearchChange,
 }) {
   const filteredOptions = options.filter((opt) =>
-    opt?.toLowerCase().includes(searchTerm.toLowerCase())
+    opt?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const allSelected =
@@ -1623,7 +1926,7 @@ function downsampleLTTB(data, threshold, yKey = "value") {
 
       const area = Math.abs(
         (pointAX - avgX) * (pointBY - pointAY) -
-          (pointAX - pointBX) * (avgY - pointAY)
+          (pointAX - pointBX) * (avgY - pointAY),
       );
 
       if (area > maxArea) {
@@ -1712,7 +2015,6 @@ function KpiChart({
   kpi,
   color,
   index,
-  statistics,
   compareRanges,
   performanceMode = false,
   globalXAxisType = "",
@@ -1730,8 +2032,22 @@ function KpiChart({
   const maxChartPoints = performanceMode ? 300 : 500;
 
   const xAxisOptions = useMemo(() => {
-    const preferred = ["cellName", "date", "tech", "band", "groups", "site", "sectorname"];
-    const excluded = new Set(["value", "count", "index", "__period", "__separator"]);
+    const preferred = [
+      "cellName",
+      "date",
+      "tech",
+      "band",
+      "groups",
+      "site",
+      "sectorname",
+    ];
+    const excluded = new Set([
+      "value",
+      "count",
+      "index",
+      "__period",
+      "__separator",
+    ]);
     const availableKeys = new Set();
 
     (kpi?.data || []).forEach((row) => {
@@ -1782,7 +2098,9 @@ function KpiChart({
       if (xAxisType !== "") setXAxisType("");
       return;
     }
-    const hasCurrent = xAxisOptions.some((option) => option.value === xAxisType);
+    const hasCurrent = xAxisOptions.some(
+      (option) => option.value === xAxisType,
+    );
     if (!hasCurrent) {
       setXAxisType(xAxisOptions[0].value);
     }
@@ -1828,14 +2146,26 @@ function KpiChart({
 
   const isWithinRange = (dateValue, start, end) => {
     if (!start && !end) return true;
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return false;
-    if (start && date < new Date(start)) return false;
-    if (end) {
-      const endDate = new Date(end);
-      endDate.setHours(23, 59, 59, 999);
-      if (date > endDate) return false;
-    }
+
+    const toDatePart = (value) => {
+      if (!value) return "";
+      const text = String(value).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return "";
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, "0");
+      const day = String(parsed.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const datePart = toDatePart(dateValue);
+    if (!datePart) return false;
+    const startPart = toDatePart(start);
+    const endPart = toDatePart(end);
+
+    if (startPart && datePart < startPart) return false;
+    if (endPart && datePart > endPart) return false;
     return true;
   };
 
@@ -1845,7 +2175,7 @@ function KpiChart({
       return [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
     }
     return [...data].sort((a, b) =>
-      String(a[xAxisType] || "").localeCompare(String(b[xAxisType] || ""))
+      String(a[xAxisType] || "").localeCompare(String(b[xAxisType] || "")),
     );
   };
 
@@ -1859,12 +2189,12 @@ function KpiChart({
 
     const preRaw = hasPreRange
       ? kpi.data.filter((d) =>
-          isWithinRange(d.date, compareRanges.preStart, compareRanges.preEnd)
+          isWithinRange(d.date, compareRanges.preStart, compareRanges.preEnd),
         )
       : [];
     const postRaw = hasPostRange
       ? kpi.data.filter((d) =>
-          isWithinRange(d.date, compareRanges.postStart, compareRanges.postEnd)
+          isWithinRange(d.date, compareRanges.postStart, compareRanges.postEnd),
         )
       : [];
 
@@ -1880,21 +2210,44 @@ function KpiChart({
     const preLookup = new Map(
       preData.map((item) => [String(item[xAxisType]), Number(item.value)]),
     );
+    const prePeriodAverage =
+      preData.length > 0
+        ? preData.reduce((sum, item) => sum + (Number(item.value) || 0), 0) /
+          preData.length
+        : null;
+    console.log(preData);
 
     const postData = sortAggregated(
-      aggregateDataByXAxis(postRaw, xAxisType)
+      aggregateDataByXAxis(postRaw, xAxisType),
     ).map((item, idx) => {
-      const preValue = preLookup.get(String(item[xAxisType]));
+      const directPreValue = preLookup.get(String(item[xAxisType]));
+      const preValue =
+        directPreValue !== undefined
+          ? directPreValue
+          : xAxisType === "date" && prePeriodAverage !== null
+            ? prePeriodAverage
+            : undefined;
       const comparisonPass =
         preValue === undefined
           ? null
-          : evaluateComparisonOperator(Number(item.value), preValue, comparisonOperator);
+          : evaluateComparisonOperator(
+              Number(item.value),
+              preValue,
+              comparisonOperator,
+            );
       return {
         ...item,
         __period: "post",
         __xLabel: item[xAxisType],
         __chartX: `post__${String(item[xAxisType])}__${idx}`,
         __comparisonPass: comparisonPass,
+        __comparisonPreValue: preValue,
+        __comparisonBasis:
+          directPreValue !== undefined
+            ? "paired_x_axis"
+            : xAxisType === "date" && prePeriodAverage !== null
+              ? "pre_period_average"
+              : "none",
       };
     });
 
@@ -1917,7 +2270,8 @@ function KpiChart({
     return [...preData, ...postData].map((item, idx) => ({
       ...item,
       __chartX:
-        item.__chartX || `${item.__period || "all"}__${String(item[xAxisType])}__${idx}`,
+        item.__chartX ||
+        `${item.__period || "all"}__${String(item[xAxisType])}__${idx}`,
       __xLabel: item.__xLabel || item[xAxisType],
     }));
   }, [
@@ -1932,7 +2286,11 @@ function KpiChart({
   ]);
 
   const comparisonSummary = useMemo(() => {
-    if (!isComparisonMode || !Array.isArray(kpi.data) || kpi.data.length === 0) {
+    if (
+      !isComparisonMode ||
+      !Array.isArray(kpi.data) ||
+      kpi.data.length === 0
+    ) {
       return null;
     }
     const preRaw = hasPreRange
@@ -1948,10 +2306,19 @@ function KpiChart({
 
     if (!preRaw.length || !postRaw.length) return null;
 
+    const preNumeric = preRaw
+      .map((row) => Number(row.value))
+      .filter((value) => Number.isFinite(value));
+    const postNumeric = postRaw
+      .map((row) => Number(row.value))
+      .filter((value) => Number.isFinite(value));
+
+    if (!preNumeric.length || !postNumeric.length) return null;
+
     const preAverage =
-      preRaw.reduce((sum, row) => sum + (Number(row.value) || 0), 0) / preRaw.length;
+      preNumeric.reduce((sum, value) => sum + value, 0) / preNumeric.length;
     const postAverage =
-      postRaw.reduce((sum, row) => sum + (Number(row.value) || 0), 0) / postRaw.length;
+      postNumeric.reduce((sum, value) => sum + value, 0) / postNumeric.length;
 
     const comparisonResult = evaluateComparisonOperator(
       postAverage,
@@ -1962,8 +2329,8 @@ function KpiChart({
     return {
       preAverage,
       postAverage,
-      preCount: preRaw.length,
-      postCount: postRaw.length,
+      preCount: preNumeric.length,
+      postCount: postNumeric.length,
       comparisonResult,
     };
   }, [
@@ -1973,6 +2340,51 @@ function KpiChart({
     hasPostRange,
     compareRanges,
     comparisonOperator,
+  ]);
+
+  const derivedStats = useMemo(() => {
+    if (!Array.isArray(kpi.data) || kpi.data.length === 0) return null;
+
+    const preRaw = hasPreRange
+      ? kpi.data.filter((d) =>
+          isWithinRange(d.date, compareRanges.preStart, compareRanges.preEnd),
+        )
+      : [];
+    const postRaw = hasPostRange
+      ? kpi.data.filter((d) =>
+          isWithinRange(d.date, compareRanges.postStart, compareRanges.postEnd),
+        )
+      : [];
+
+    const sourceRows = isComparisonMode ? [...preRaw, ...postRaw] : kpi.data;
+
+    const values = sourceRows
+      .map((row) => Number(row?.value))
+      .filter((value) => Number.isFinite(value))
+      .sort((a, b) => a - b);
+
+    if (!values.length) return null;
+
+    const count = values.length;
+    const average = values.reduce((sum, value) => sum + value, 0) / count;
+    const minimum = values[0];
+    const maximum = values[count - 1];
+    const middle = Math.floor(count / 2);
+    const median =
+      count % 2 === 0
+        ? (values[middle - 1] + values[middle]) / 2
+        : values[middle];
+
+    return { average, minimum, maximum, median, count };
+  }, [
+    kpi.data,
+    isComparisonMode,
+    hasPreRange,
+    hasPostRange,
+    compareRanges.preStart,
+    compareRanges.preEnd,
+    compareRanges.postStart,
+    compareRanges.postEnd,
   ]);
 
   // Apply smart sampling for chart visualization
@@ -1999,8 +2411,11 @@ function KpiChart({
         }
 
         if (item.__period === "post") {
-          const shouldColorByRule = isDualRangeComparison && item.__comparisonPass !== null;
-          const isPass = shouldColorByRule ? item.__comparisonPass === true : true;
+          const shouldColorByRule =
+            isDualRangeComparison && item.__comparisonPass !== null;
+          const isPass = shouldColorByRule
+            ? item.__comparisonPass === true
+            : true;
           return {
             ...item,
             preValue: null,
@@ -2083,14 +2498,17 @@ function KpiChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const metricPoint =
-        payload.find((entry) => entry?.value !== null && entry?.value !== undefined) ||
-        payload[0];
+        payload.find(
+          (entry) => entry?.value !== null && entry?.value !== undefined,
+        ) || payload[0];
       const value = metricPoint?.value;
 
       if (data.__separator) {
         return (
           <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl p-4">
-            <p className="text-sm font-bold text-gray-700">Post Period Starts</p>
+            <p className="text-sm font-bold text-gray-700">
+              Post Period Starts
+            </p>
           </div>
         );
       }
@@ -2116,13 +2534,20 @@ function KpiChart({
                       : "text-gray-600"
                 }`}
               >
-                Period: {data.__period === "pre" ? "Pre" : data.__period === "post" ? "Post" : data.__period}
+                Period:{" "}
+                {data.__period === "pre"
+                  ? "Pre"
+                  : data.__period === "post"
+                    ? "Post"
+                    : data.__period}
               </p>
             )}
             {isDualRangeComparison && data.__period === "post" && (
               <p
                 className={`text-sm font-semibold ${
-                  data.__comparisonPass === false ? "text-rose-700" : "text-emerald-700"
+                  data.__comparisonPass === false
+                    ? "text-rose-700"
+                    : "text-emerald-700"
                 }`}
               >
                 Rule (Post {comparisonOperator} Pre):{" "}
@@ -2238,8 +2663,8 @@ function KpiChart({
                       performanceMode
                         ? "Locked on in Performance mode"
                         : samplingEnabled
-                        ? "Smart sampling enabled for better performance"
-                        : "Showing all data (may be slow)"
+                          ? "Smart sampling enabled for better performance"
+                          : "Showing all data (may be slow)"
                     }
                   >
                     {samplingEnabled ? (
@@ -2307,7 +2732,10 @@ function KpiChart({
                     <select
                       value={comparisonOperator}
                       onChange={(e) =>
-                        onComparisonOperatorChange?.(kpi.metricKey, e.target.value)
+                        onComparisonOperatorChange?.(
+                          kpi.metricKey,
+                          e.target.value,
+                        )
                       }
                       className="appearance-none bg-white border border-gray-200 text-gray-700 py-2 pl-3 pr-8 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:border-gray-300 transition-all"
                     >
@@ -2325,7 +2753,7 @@ function KpiChart({
           </div>
         </div>
         {/* Statistics badges */}
-        {(statistics || comparisonSummary) && (
+        {(derivedStats || comparisonSummary) && (
           <div className="flex flex-row items-center gap-2 flex-wrap py-2">
             {comparisonSummary && (
               <>
@@ -2371,31 +2799,31 @@ function KpiChart({
                 </span>
               </div>
             )}
-            {statistics.average !== undefined && (
+            {derivedStats?.average !== undefined && (
               <div className="px-3 py-1 bg-blue-50 rounded-full border border-blue-200">
                 <span className="text-xs font-semibold text-blue-700">
-                  Avg: {formatValue(statistics.average)}
+                  Avg: {formatValue(derivedStats.average)}
                 </span>
               </div>
             )}
-            {statistics.minimum !== undefined && (
+            {derivedStats?.minimum !== undefined && (
               <div className="px-3 py-1 bg-green-50 rounded-full border border-green-200">
                 <span className="text-xs font-semibold text-green-700">
-                  Min: {formatValue(statistics.minimum)}
+                  Min: {formatValue(derivedStats.minimum)}
                 </span>
               </div>
             )}
-            {statistics.maximum !== undefined && (
+            {derivedStats?.maximum !== undefined && (
               <div className="px-3 py-1 bg-purple-50 rounded-full border border-purple-200">
                 <span className="text-xs font-semibold text-purple-700">
-                  Max: {formatValue(statistics.maximum)}
+                  Max: {formatValue(derivedStats.maximum)}
                 </span>
               </div>
             )}
-            {statistics.median !== undefined && (
+            {derivedStats?.median !== undefined && (
               <div className="px-3 py-1 bg-orange-50 rounded-full border border-orange-200">
                 <span className="text-xs font-semibold text-orange-700">
-                  Median: {formatValue(statistics.median)}
+                  Median: {formatValue(derivedStats.median)}
                 </span>
               </div>
             )}
@@ -2657,79 +3085,81 @@ function KpiChart({
             </ResponsiveContainer>
 
             {/* Pagination Controls - Only show when sampling is disabled */}
-            {!isComparisonMode && !isSampled && sortedData.length > itemsPerPage && (
-              <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-600">
-                    Showing{" "}
-                    <span className="font-semibold text-gray-800">
-                      {startIndex + 1}-{endIndex}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-gray-800">
-                      {sortedData.length.toLocaleString()}
-                    </span>{" "}
-                    entries
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={goToFirstPage}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                    }`}
-                  >
-                    First
-                  </button>
-
-                  <button
-                    onClick={goToPreviousPage}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                    }`}
-                  >
-                    Previous
-                  </button>
-
-                  <div className="px-4 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                    <span className="text-sm font-bold text-blue-700">
-                      Page {currentPage} of {totalPages}
-                    </span>
+            {!isComparisonMode &&
+              !isSampled &&
+              sortedData.length > itemsPerPage && (
+                <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">
+                        {startIndex + 1}-{endIndex}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {sortedData.length.toLocaleString()}
+                      </span>{" "}
+                      entries
+                    </p>
                   </div>
 
-                  <button
-                    onClick={goToNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                    }`}
-                  >
-                    Next
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={goToFirstPage}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
+                    >
+                      First
+                    </button>
 
-                  <button
-                    onClick={goToLastPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                    }`}
-                  >
-                    Last
-                  </button>
+                    <button
+                      onClick={goToPreviousPage}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
+                    >
+                      Previous
+                    </button>
+
+                    <div className="px-4 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                      <span className="text-sm font-bold text-blue-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={goToNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
+                    >
+                      Next
+                    </button>
+
+                    <button
+                      onClick={goToLastPage}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
+                    >
+                      Last
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </>
         )}
       </CardContent>

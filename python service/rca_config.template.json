@@ -1,0 +1,33 @@
+{
+  "vendor": "nokia",
+  "sheet_name": null,
+  "column_mapping": {
+    "Short name": "cellname",
+    "Date": "date",
+    "Cell I'd": "cellname",
+    "Site I'd": "site",
+    "Tech": "tech"
+  },
+  "kpi_mapping": {
+    "MV_PUSCH SINR": "mvpuschsinr",
+    "MV_E-UTRAN Average CQI": "mveutranaveragecqi"
+  },
+  "selected_kpis": [
+    "MV_PUSCH SINR",
+    "MV_E-UTRAN Average CQI"
+  ],
+  "kpis": {
+    "MV_PUSCH SINR": {
+      "direction": "high_good",
+      "threshold": 6,
+      "weight": 1.2,
+      "min_scale": 0.8
+    },
+    "MV_E-UTRAN Average CQI": {
+      "direction": "high_good",
+      "threshold": 7,
+      "weight": 1.0,
+      "min_scale": 0.3
+    }
+  }
+}

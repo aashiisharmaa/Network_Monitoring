@@ -1713,24 +1713,10 @@ export const getDynamicKpiData = async (req: Request, res: Response) => {
         };
       })
       .filter(Boolean);
-
     const values = data
       .map((item: any) => item.value)
       .filter((v: number) => !Number.isNaN(v));
-    const avg =
-      values.length > 0
-        ? values.reduce((a: number, b: number) => a + b, 0) / values.length
-        : 0;
-    const max = values.length > 0 ? Math.max(...values) : 0;
-    const min = values.length > 0 ? Math.min(...values) : 0;
-    const sorted = [...values].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    const median =
-      sorted.length === 0
-        ? 0
-        : sorted.length % 2 !== 0
-          ? sorted[mid]
-          : (sorted[mid - 1] + sorted[mid]) / 2;
+    const stats = buildStatistics(values);
 
     kpiDebugLog("[KPI DEBUG] getDynamicKpiData:result", {
       fileId,
@@ -1747,11 +1733,11 @@ export const getDynamicKpiData = async (req: Request, res: Response) => {
       kpi: formatMetricLabel(metricLabels[metricKey] || metricKey),
       data,
       statistics: {
-        count: values.length,
-        average: Number(avg.toFixed(2)),
-        maximum: max,
-        minimum: min,
-        median: Number(median.toFixed(2)),
+        count: stats.count,
+        average: Number(stats.average.toFixed(2)),
+        maximum: stats.maximum,
+        minimum: stats.minimum,
+        median: Number(stats.median.toFixed(2)),
       },
     });
   } catch (error: any) {

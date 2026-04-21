@@ -6,7 +6,12 @@ async function getKpiData(endpoint, fileId) {
       method: "GET",
       query: fileId ? { fileId } : undefined,
     });
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] KPI request failed", {
+      endpoint,
+      fileId,
+      message: error?.message,
+    });
     return null;
   }
 }
@@ -92,7 +97,10 @@ export async function fetchKpiUploadHistory() {
       success: true,
       data: kpiUploads,
     };
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] fetchKpiUploadHistory failed", {
+      message: error?.message,
+    });
     return {
       success: false,
       data: [],
@@ -113,7 +121,11 @@ export async function fetchAvailableKpiMetrics(fileId) {
         ? response.availableMetrics
         : [],
     };
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] fetchAvailableKpiMetrics failed", {
+      fileId,
+      message: error?.message,
+    });
     return {
       success: false,
       data: [],
@@ -131,7 +143,34 @@ export async function fetchDynamicKpiMetrics(fileId) {
       success: true,
       data: Array.isArray(response?.metrics) ? response.metrics : [],
     };
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicKpiMetrics failed", {
+      fileId,
+      message: error?.message,
+    });
+    return {
+      success: false,
+      data: [],
+    };
+  }
+}
+
+export async function fetchDynamicKpiSummary(fileId) {
+  try {
+    const response = await apiFetch("kpi/dynamic/summary", {
+      method: "GET",
+      query: { fileId },
+    });
+    return {
+      success: true,
+      fileId: response?.fileId,
+      data: Array.isArray(response?.metrics) ? response.metrics : [],
+    };
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicKpiSummary failed", {
+      fileId,
+      message: error?.message,
+    });
     return {
       success: false,
       data: [],
@@ -145,7 +184,52 @@ export async function fetchDynamicKpiData(fileId, metricKey) {
       method: "GET",
       query: { fileId, metricKey },
     });
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicKpiData failed", {
+      fileId,
+      metricKey,
+      message: error?.message,
+    });
+    return null;
+  }
+}
+
+export async function fetchDynamicKpiBatchData(fileId) {
+  try {
+    const response = await apiFetch("kpi/dynamic/batch-data", {
+      method: "GET",
+      query: { fileId },
+    });
+    return {
+      success: true,
+      fileId: response?.fileId,
+      data: Array.isArray(response?.metrics) ? response.metrics : [],
+    };
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicKpiBatchData failed", {
+      fileId,
+      message: error?.message,
+    });
+    return {
+      success: false,
+      data: [],
+    };
+  }
+}
+
+export async function fetchDynamicBadDaysSummary(fileId, payload = {}) {
+  try {
+    return await apiFetch("kpi/dynamic/bad-days", {
+      method: "POST",
+      query: { fileId },
+      body: payload,
+    });
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicBadDaysSummary failed", {
+      fileId,
+      payload,
+      message: error?.message,
+    });
     return null;
   }
 }
@@ -156,7 +240,11 @@ export async function fetchDynamicKpiColumns(fileId) {
       method: "GET",
       query: { fileId },
     });
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] fetchDynamicKpiColumns failed", {
+      fileId,
+      message: error?.message,
+    });
     return null;
   }
 }
@@ -168,7 +256,12 @@ export async function updateDynamicKpiSelection(fileId, payload = {}) {
       query: { fileId },
       body: payload,
     });
-  } catch {
+  } catch (error) {
+    console.error("[kpiService] updateDynamicKpiSelection failed", {
+      fileId,
+      payload,
+      message: error?.message,
+    });
     return null;
   }
 }

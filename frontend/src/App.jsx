@@ -3,6 +3,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import AppRoutes from "./routes/AppRoutes";
 import theme from "./styles/theme";
 import { AuthProvider } from "./context/AutContext";
+import FileContextProvider from "./context/filecontextProvider";
 
 export default function App() {
   const isElectron =
@@ -15,7 +16,9 @@ export default function App() {
       <CssBaseline />
       <Router>
         <AuthProvider>
-          <AppRoutes />
+          <FileContextProvider>
+            <AppRoutes />
+          </FileContextProvider>
         </AuthProvider>
       </Router>
     </ThemeProvider>
