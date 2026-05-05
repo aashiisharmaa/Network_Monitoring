@@ -2,7 +2,20 @@ $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $frontendPath = Join-Path $projectRoot "frontend"
-$backendPath = Join-Path $projectRoot "backend"
+$backendJavaPath = Join-Path $projectRoot "backend-java"
+$backendPidFile = Join-Path $projectRoot ".backend-java-dev.pid"
+
+function Stop-ProcessTree {
+  param(
+    [Parameter(Mandatory = $true)]
+    [int]$ProcessId
+  )
+
+  & taskkill /PID $ProcessId /T /F | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    Stop-Process -Id $ProcessId -Force -ErrorAction Stop
+  }
+}
 
 Write-Host "Building desktop installer..." -ForegroundColor Cyan
 
@@ -11,14 +24,30 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 }
 
 Write-Host "Stopping lingering backend dev processes (if any)..." -ForegroundColor Yellow
+if (Test-Path $backendPidFile) {
+  $pidValue = Get-Content $backendPidFile -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($pidValue) {
+    try {
+      Stop-ProcessTree -ProcessId ([int]$pidValue)
+      Write-Host "Stopped backend process tree from pid file: $pidValue" -ForegroundColor DarkGray
+    } catch {
+      Write-Host "Could not stop backend pid ${pidValue}: $($_.Exception.Message)" -ForegroundColor DarkYellow
+    }
+  }
+  Remove-Item $backendPidFile -Force -ErrorAction SilentlyContinue
+}
+
 $backendProcCandidates = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+  ($_.CommandLine -like "*run-backend.ps1*") -or
+  ($_.CommandLine -like "*backend-java*backend.jar*") -or
+  ($_.CommandLine -like "*backend-java*spring-boot:run*") -or
   ($_.CommandLine -like "*backend*src*server.ts*") -or
   ($_.CommandLine -like "*network monitoring*backend*tsx*")
 }
 
 foreach ($proc in $backendProcCandidates) {
   try {
-    Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop
+    Stop-ProcessTree -ProcessId $proc.ProcessId
     Write-Host "Stopped process $($proc.ProcessId)" -ForegroundColor DarkGray
   } catch {
     Write-Host "Could not stop process $($proc.ProcessId): $($_.Exception.Message)" -ForegroundColor DarkYellow
@@ -29,37 +58,6 @@ Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
 npm install --prefix $frontendPath
 if ($LASTEXITCODE -ne 0) {
   throw "Frontend dependency install failed."
-}
-
-Write-Host "Installing backend dependencies..." -ForegroundColor Yellow
-npm install --include=dev --prefix $backendPath
-if ($LASTEXITCODE -ne 0) {
-  throw "Backend dependency install failed."
-}
-
-Write-Host "Generating Prisma client (backend)..." -ForegroundColor Yellow
-$generateSucceeded = $false
-for ($attempt = 1; $attempt -le 3; $attempt++) {
-  npm run generate --prefix $backendPath
-  if ($LASTEXITCODE -eq 0) {
-    $generateSucceeded = $true
-    break
-  }
-
-  Write-Host "Prisma generate failed (attempt $attempt/3). Retrying..." -ForegroundColor DarkYellow
-  $prismaTmpPattern = Join-Path $backendPath "node_modules\.prisma\client\query_engine-windows.dll.node.tmp*"
-  Remove-Item $prismaTmpPattern -Force -ErrorAction SilentlyContinue
-  Start-Sleep -Seconds 2
-}
-
-if (-not $generateSucceeded) {
-  throw "Backend Prisma generation failed after retries. Close any running app/terminal using backend and try again."
-}
-
-Write-Host "Preparing packaged backend runtime..." -ForegroundColor Yellow
-powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "prepare-backend-runtime.ps1")
-if ($LASTEXITCODE -ne 0) {
-  throw "Failed to prepare packaged backend runtime."
 }
 
 Write-Host "Running Electron build..." -ForegroundColor Yellow
@@ -73,9 +71,9 @@ if ($LASTEXITCODE -ne 0) {
   throw "Installer build failed."
 }
 
-$packedRuntimeZip = Join-Path $frontendPath "release\win-unpacked\resources\backend-runtime.zip"
-if (-not (Test-Path $packedRuntimeZip)) {
-  throw "Installer built, but packaged backend runtime zip is missing: $packedRuntimeZip"
+$packedRuntimeRoot = Join-Path $frontendPath "release\win-unpacked\resources\backend"
+if (-not (Test-Path (Join-Path $packedRuntimeRoot "classes")) -or -not (Test-Path (Join-Path $packedRuntimeRoot "lib"))) {
+  throw "Installer built, but packaged backend runtime is missing: $packedRuntimeRoot"
 }
 
 $releasePath = Join-Path $frontendPath "release"

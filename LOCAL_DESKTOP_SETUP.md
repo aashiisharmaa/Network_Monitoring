@@ -5,15 +5,10 @@ This project now runs as local frontend + backend only.
 ## Prerequisites
 
 - Node.js 20+ and npm
+- Java 17+
 - MySQL running locally
 
 ## 1. Configure Environment Files
-
-Backend:
-
-```bash
-cp backend/.env.example backend/.env
-```
 
 Frontend:
 
@@ -21,25 +16,20 @@ Frontend:
 cp frontend/.env.example frontend/.env
 ```
 
-Update backend `DATABASE_URL` in `backend/.env` for your local MySQL.
-
-Example:
-
-```env
-DATABASE_URL=mysql://admin:Admin%401234@localhost:3306/kpi_tool
-```
+The desktop launcher now sets the Java backend env vars automatically.
+If you run `backend-java/run-backend.ps1` directly, make sure `DATABASE_URL`
+matches your local MySQL setup.
 
 ## 2. Install Dependencies
 
 ```bash
-npm install --prefix backend
 npm install --prefix frontend
 ```
 
 ## 3. Start Backend
 
 ```bash
-npm run dev --prefix backend
+powershell -ExecutionPolicy Bypass -File backend-java/run-backend.ps1
 ```
 
 Backend API runs on:

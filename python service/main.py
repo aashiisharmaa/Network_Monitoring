@@ -1,5 +1,7 @@
 import argparse
 import json
+import re
+import warnings
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -16,6 +18,21 @@ PRESETS_FILE = Path(__file__).with_name("rca_presets.json")
 DEFAULT_VENDOR = "nokia"
 BASE_FIELDS = ["Short name", "Date", "Cell I'd", "Site I'd", "Tech"]
 DEFAULT_EXPORT_NAME = "vendor_kpi_anomaly_rca_output.xlsx"
+DATE_PARSE_FORMATS = (
+    "%d-%b-%y",
+    "%d-%b-%Y",
+    "%Y-%m-%d",
+    "%Y/%m/%d",
+    "%d/%m/%Y",
+    "%m/%d/%Y",
+    "%d-%m-%Y",
+    "%m-%d-%Y",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S.%f",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S.%f",
+)
 
 
 def _json_default(value: Any) -> Any:
@@ -35,6 +52,136 @@ def _to_records(df: pd.DataFrame) -> List[Dict[str, Any]]:
         return []
     clean = df.replace({np.nan: None})
     return clean.to_dict(orient="records")
+
+
+def _normalize_name(value: Any) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", str(value or "").lower())).strip()
+
+
+def _is_date_candidate_name(value: Any) -> bool:
+    normalized = _normalize_name(value)
+    if not normalized:
+        return False
+    return (
+        normalized == "date"
+        or " date " in f" {normalized} "
+        or normalized.startswith("date")
+        or normalized.endswith("date")
+        or "datetime" in normalized
+        or normalized in {"time", "day"}
+    )
+
+
+def _clean_datetime_strings(values: pd.Series) -> pd.Series:
+    text = values.astype("string").str.strip()
+    return text.replace(
+        {
+            "": pd.NA,
+            "nan": pd.NA,
+            "NaN": pd.NA,
+            "None": pd.NA,
+            "null": pd.NA,
+            "NULL": pd.NA,
+            "<NA>": pd.NA,
+        }
+    )
+
+
+def _to_datetime_safely(values: Any, **kwargs: Any) -> pd.Series:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        return pd.to_datetime(values, **kwargs)
+
+
+def _parse_datetime_series(values: Any) -> pd.Series:
+    if values is None:
+        return pd.Series(dtype="datetime64[ns]")
+    if isinstance(values, pd.DataFrame):
+        if values.empty:
+            return pd.Series(dtype="datetime64[ns]")
+        values = values.iloc[:, 0]
+    if not isinstance(values, pd.Series):
+        values = pd.Series(values)
+    if values.empty:
+        return pd.Series(dtype="datetime64[ns]")
+
+    parsed = _to_datetime_safely(values, errors="coerce")
+    if parsed.notna().any() or values.dropna().empty:
+        return parsed
+
+    text = _clean_datetime_strings(values)
+    parsed = _to_datetime_safely(text, errors="coerce")
+    if parsed.notna().any():
+        return parsed
+
+    numeric = pd.to_numeric(text, errors="coerce")
+    if numeric.notna().any():
+        plausible = numeric.between(20000, 80000)
+        if plausible.any():
+            serial = pd.Series(pd.NaT, index=text.index, dtype="datetime64[ns]")
+            serial.loc[plausible] = pd.Timestamp("1899-12-30") + pd.to_timedelta(numeric.loc[plausible], unit="D")
+            if serial.notna().any():
+                return serial
+
+    for fmt in DATE_PARSE_FORMATS:
+        parsed = _to_datetime_safely(text, errors="coerce", format=fmt)
+        if parsed.notna().any():
+            return parsed
+
+    parsed = _to_datetime_safely(text, errors="coerce", dayfirst=True)
+    return parsed
+
+
+def _select_best_date_series(raw_df: pd.DataFrame, mapped_source: Optional[str]) -> pd.Series:
+    candidates: List[Tuple[str, pd.Series]] = []
+    seen: set[str] = set()
+
+    def add_candidate(column_name: Any) -> None:
+        if column_name is None:
+            return
+        column_text = str(column_name)
+        if column_text in seen or column_text not in raw_df.columns:
+            return
+        seen.add(column_text)
+        candidates.append((column_text, raw_df[column_text]))
+
+    add_candidate(mapped_source)
+    for column_name in raw_df.columns:
+        if _is_date_candidate_name(column_name):
+            add_candidate(column_name)
+
+    best_series: Optional[pd.Series] = None
+    best_score = -1
+
+    for column_name, candidate in candidates:
+        parsed = _parse_datetime_series(candidate)
+        parsed_count = int(parsed.notna().sum())
+        if parsed_count == 0:
+            continue
+
+        normalized_name = _normalize_name(column_name)
+        score = parsed_count
+        if normalized_name == "date":
+            score += 10000
+        elif "datetime" in normalized_name:
+            score += 9000
+        elif "time" in normalized_name:
+            score += 8000
+        elif "date" in normalized_name:
+            score += 7000
+        elif normalized_name == "day":
+            score += 6000
+
+        if not _is_date_candidate_name(column_name) and pd.api.types.is_numeric_dtype(candidate):
+            score -= 100000
+
+        if score > best_score:
+            best_score = score
+            best_series = parsed
+
+    if best_series is not None:
+        return best_series
+    return pd.Series(dtype="datetime64[ns]")
 
 
 def _safe_float(value: Any, fallback: float) -> float:
@@ -168,8 +315,15 @@ def _normalize_frame(raw_df: pd.DataFrame, config: Dict[str, Any], final_meta: D
     for expected_col in BASE_FIELDS:
         source_col = column_mapping.get(expected_col)
         if source_col and source_col in raw_df.columns:
-            normalized[expected_col] = raw_df[source_col]
+            if expected_col == "Date":
+                normalized[expected_col] = _select_best_date_series(raw_df, source_col)
+            else:
+                normalized[expected_col] = raw_df[source_col]
         else:
+            if expected_col == "Date":
+                normalized[expected_col] = _select_best_date_series(raw_df, None)
+                if normalized[expected_col].notna().any():
+                    continue
             missing_required.append(expected_col)
             normalized[expected_col] = np.nan
 
@@ -874,11 +1028,19 @@ def main() -> int:
 
     if args.command == "run":
         config = _read_config(args.config)
-        if "preset" in config:
-            preset_payload = get_preset(config["preset"])
-            merged = dict(preset_payload)
-            merged.update({k: v for k, v in config.items() if k != "preset"})
-            config = merged
+        preset_name = config.get("preset")
+        if preset_name is not None:
+            preset_name = str(preset_name).strip()
+            if preset_name:
+                try:
+                    preset_payload = get_preset(preset_name)
+                except KeyError as exc:
+                    raise ValueError(str(exc)) from exc
+                merged = dict(preset_payload)
+                merged.update({k: v for k, v in config.items() if k != "preset"})
+                config = merged
+            else:
+                config.pop("preset", None)
 
         response = run_rca(
             input_path=args.input,

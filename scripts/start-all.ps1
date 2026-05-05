@@ -6,18 +6,13 @@ $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $frontendPath = Join-Path $projectRoot "frontend"
-$backendPath = Join-Path $projectRoot "backend"
-$backendPidFile = Join-Path $projectRoot ".backend-dev.pid"
+$backendJavaPath = Join-Path $projectRoot "backend-java"
+$backendPidFile = Join-Path $projectRoot ".backend-java-dev.pid"
 
-Write-Host "Starting local stack (backend + frontend)..." -ForegroundColor Cyan
+Write-Host "Starting local stack (Java backend + frontend)..." -ForegroundColor Cyan
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
   throw "npm is not installed or not available in PATH."
-}
-
-if (-not (Test-Path (Join-Path $backendPath ".env")) -and (Test-Path (Join-Path $backendPath ".env.example"))) {
-  Copy-Item (Join-Path $backendPath ".env.example") (Join-Path $backendPath ".env")
-  Write-Host "Created backend/.env from .env.example" -ForegroundColor DarkGray
 }
 
 if (-not (Test-Path (Join-Path $frontendPath ".env")) -and (Test-Path (Join-Path $frontendPath ".env.example"))) {
@@ -26,12 +21,6 @@ if (-not (Test-Path (Join-Path $frontendPath ".env")) -and (Test-Path (Join-Path
 }
 
 if (-not $SkipInstall) {
-  Write-Host "Installing backend dependencies..." -ForegroundColor Yellow
-  npm install --prefix $backendPath
-  if ($LASTEXITCODE -ne 0) {
-    throw "Backend dependency install failed."
-  }
-
   Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
   npm install --prefix $frontendPath
   if ($LASTEXITCODE -ne 0) {
@@ -39,10 +28,28 @@ if (-not $SkipInstall) {
   }
 }
 
-Write-Host "Starting backend API in a separate PowerShell window..." -ForegroundColor Yellow
-$backendCmd = "Set-Location -LiteralPath '$backendPath'; npm run dev"
+if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) {
+  $env:DATABASE_URL = "mysql://nm_app_user:NmApp1234@127.0.0.1:3306/kpi_tool_nm"
+}
+if ([string]::IsNullOrWhiteSpace($env:JWT_SECRET)) {
+  $env:JWT_SECRET = "local-desktop-jwt-secret-change-me"
+}
+if ([string]::IsNullOrWhiteSpace($env:CORS_ORIGINS)) {
+  $env:CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,file://"
+}
+if ([string]::IsNullOrWhiteSpace($env:SPRING_JPA_HIBERNATE_DDL_AUTO)) {
+  $env:SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+}
+
+$backendScript = Join-Path $backendJavaPath "run-backend.ps1"
+if (-not (Test-Path $backendScript)) {
+  throw "Java backend startup script not found: $backendScript"
+}
+
+Write-Host "Starting Java backend in a separate PowerShell window..." -ForegroundColor Yellow
 $backendProcess = Start-Process -FilePath "powershell" `
-  -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $backendCmd `
+  -ArgumentList "-NoProfile", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $backendScript `
+  -WorkingDirectory $backendJavaPath `
   -PassThru
 
 Set-Content -Path $backendPidFile -Value $backendProcess.Id

@@ -3,7 +3,20 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $backendPath = Join-Path $projectRoot "backend"
 $frontendPath = Join-Path $projectRoot "frontend"
-$backendPidFile = Join-Path $projectRoot ".backend-dev.pid"
+$backendJavaPath = Join-Path $projectRoot "backend-java"
+$backendPidFile = Join-Path $projectRoot ".backend-java-dev.pid"
+
+function Stop-ProcessTree {
+  param(
+    [Parameter(Mandatory = $true)]
+    [int]$ProcessId
+  )
+
+  & taskkill /PID $ProcessId /T /F | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    Stop-Process -Id $ProcessId -Force -ErrorAction Stop
+  }
+}
 
 Write-Host "Stopping local stack..." -ForegroundColor Cyan
 
@@ -13,11 +26,11 @@ if (Test-Path $backendPidFile) {
   $pidValue = Get-Content $backendPidFile -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($pidValue) {
     try {
-      Stop-Process -Id ([int]$pidValue) -Force -ErrorAction Stop
-      Write-Host "Stopped backend process (PID: $pidValue)." -ForegroundColor Green
+      Stop-ProcessTree -ProcessId ([int]$pidValue)
+      Write-Host "Stopped backend process tree (PID: $pidValue)." -ForegroundColor Green
       $stopped = $true
     } catch {
-      Write-Host "Could not stop backend PID $pidValue: $($_.Exception.Message)" -ForegroundColor DarkYellow
+      Write-Host "Could not stop backend PID ${pidValue}: $($_.Exception.Message)" -ForegroundColor DarkYellow
     }
   }
 
@@ -25,6 +38,9 @@ if (Test-Path $backendPidFile) {
 }
 
 $procCandidates = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+  ($_.CommandLine -like "*run-backend.ps1*") -or
+  ($_.CommandLine -like "*$backendJavaPath*backend.jar*") -or
+  ($_.CommandLine -like "*$backendJavaPath*spring-boot:run*") -or
   ($_.CommandLine -like "*$backendPath*src*server.ts*") -or
   ($_.CommandLine -like "*$backendPath*tsx*") -or
   ($_.CommandLine -like "*$frontendPath*vite*")
@@ -32,7 +48,7 @@ $procCandidates = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | 
 
 foreach ($proc in $procCandidates) {
   try {
-    Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop
+    Stop-ProcessTree -ProcessId $proc.ProcessId
     Write-Host "Stopped process $($proc.ProcessId)." -ForegroundColor DarkGray
     $stopped = $true
   } catch {
