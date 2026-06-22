@@ -2,3 +2,8 @@ frontend/release/
 backend/uploads/
 frontend/release/
 backend/uploads/
+
+# Documentation
+*.md
+*.docx
+*.pdf
