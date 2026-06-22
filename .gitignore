@@ -11,6 +11,7 @@ backend-java/*.log
 backend-java/smoke-*.csv
 backend-java/*.out.log
 backend-java/*.err.log
+*.zip
 
 # Documentation
 *.md
