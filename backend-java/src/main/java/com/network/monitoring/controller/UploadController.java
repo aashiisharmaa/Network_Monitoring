@@ -1,0 +1,147 @@
+package com.network.monitoring.controller;
+
+import com.network.monitoring.service.UploadService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/upload")
+public class UploadController {
+
+    private final UploadService uploadService;
+
+    public UploadController(UploadService uploadService) {
+        this.uploadService = uploadService;
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, Object>> uploadAndParseFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "remarks", required = false) String remarks,
+            @RequestParam(value = "uploadedBy", required = false) String uploadedBy,
+            @RequestParam(value = "appendOption", required = false) String appendOption,
+            @RequestParam(value = "fileId", required = false) Long fileId,
+            @RequestParam(value = "targetFileId", required = false) Long targetFileId) {
+        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId));
+    }
+
+    @PostMapping("/kpi")
+    public ResponseEntity<Map<String, Object>> uploadKpiData(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "remarks", required = false) String remarks,
+            @RequestParam(value = "uploadedBy", required = false) String uploadedBy,
+            @RequestParam(value = "appendOption", required = false) String appendOption,
+            @RequestParam(value = "fileId", required = false) Long fileId,
+            @RequestParam(value = "targetFileId", required = false) Long targetFileId) {
+        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId));
+    }
+
+    @PostMapping("/site")
+    public ResponseEntity<Map<String, Object>> uploadSiteData(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "remarks", required = false) String remarks,
+            @RequestParam(value = "uploadedBy", required = false) String uploadedBy) {
+        return executeUpload(() -> uploadService.uploadSiteData(file, remarks, uploadedBy));
+    }
+
+    @PostMapping("/alarm")
+    public ResponseEntity<Map<String, Object>> uploadAlarmData(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "remarks", required = false) String remarks,
+            @RequestParam(value = "uploadedBy", required = false) String uploadedBy) {
+        return executeUpload(() -> uploadService.uploadAlarmData(file, remarks, uploadedBy));
+    }
+
+    @GetMapping("/uploads")
+    public ResponseEntity<Map<String, Object>> getUploadHistory() {
+        return ResponseEntity.ok(uploadService.getUploadHistory());
+    }
+
+    @DeleteMapping("/uploads/{id}")
+    public ResponseEntity<Map<String, Object>> deleteUpload(@PathVariable("id") Long id) {
+        try {
+            return ResponseEntity.ok(uploadService.deleteUpload(id));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(500).body(errorResponse(ex.toString()));
+        }
+    }
+
+    @GetMapping("/network-data")
+    public ResponseEntity<Map<String, Object>> getNetworkData(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                                              @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
+        return ResponseEntity.ok(uploadService.getNetworkData(page, limit));
+    }
+
+    @GetMapping("/uploads/history")
+    public ResponseEntity<Map<String, Object>> getUploadHistorySlim() {
+        return ResponseEntity.ok(uploadService.getUploadHistorySlim());
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<Map<String, Object>> getUploadHistorySlimAlias() {
+        return ResponseEntity.ok(uploadService.getUploadHistorySlim());
+    }
+
+    @GetMapping("/site-data")
+    public ResponseEntity<Map<String, Object>> getSiteData(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                                           @RequestParam(value = "limit", required = false, defaultValue = "10000") int limit) {
+        return ResponseEntity.ok(uploadService.getSiteData(page, limit));
+    }
+
+    @GetMapping("/alarm-data")
+    public ResponseEntity<Map<String, Object>> getAlarmData(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                                            @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
+                                                            @RequestParam(value = "circle", required = false) String circle,
+                                                            @RequestParam(value = "severity", required = false) String severity,
+                                                            @RequestParam(value = "search", required = false) String search,
+                                                            @RequestParam(value = "startDate", required = false) String startDate,
+                                                            @RequestParam(value = "endDate", required = false) String endDate) {
+        return ResponseEntity.ok(uploadService.getAlarmData(page, limit, circle, severity, search, startDate, endDate));
+    }
+
+    private ResponseEntity<Map<String, Object>> wrapUpload(Map<String, Object> payload) {
+        Object success = payload.get("success");
+        if (Boolean.FALSE.equals(success)) {
+            return ResponseEntity.badRequest().body(payload);
+        }
+        return ResponseEntity.ok(payload);
+    }
+
+    private ResponseEntity<Map<String, Object>> executeUpload(ThrowingUploadSupplier supplier) {
+        try {
+            return wrapUpload(supplier.get());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (IOException ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
+    }
+
+    private Map<String, Object> errorResponse(String message) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("success", false);
+        response.put("message", message);
+        return response;
+    }
+
+    @FunctionalInterface
+    private interface ThrowingUploadSupplier {
+        Map<String, Object> get() throws IOException;
+    }
+}

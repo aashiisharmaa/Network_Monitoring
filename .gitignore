@@ -3,6 +3,15 @@ backend/uploads/
 frontend/release/
 backend/uploads/
 
+# Java backend generated/runtime files
+backend-java/target/
+backend-java/run-classes/
+backend-java/tools/
+backend-java/*.log
+backend-java/smoke-*.csv
+backend-java/*.out.log
+backend-java/*.err.log
+
 # Documentation
 *.md
 *.docx

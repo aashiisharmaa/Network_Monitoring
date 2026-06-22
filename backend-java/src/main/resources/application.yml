@@ -1,0 +1,38 @@
+server:
+  port: ${PORT:3000}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  datasource:
+    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/kpi_tool?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
+    username: "${SPRING_DATASOURCE_USERNAME:root}"
+    password: "${SPRING_DATASOURCE_PASSWORD:NewPassword@123}"
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  redis:
+    timeout: 60000
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,file://}
+  upload-base-path: ${UPLOADS_BASE:uploads}
+  kpi-cache-path: ${KPI_CACHE_DIR:uploads/kpi-cache}
+  python-service-path: ${PYTHON_SERVICE_PATH:python service}
+  python-venv-path: ${PROJECT_VENV_PYTHON:}
+  python-bin: ${PYTHON_BIN:}
+  redis-enabled: ${REDIS_ENABLED:false}
+  redis-url: ${REDIS_URL:redis://127.0.0.1:6379}
+  redis-ttl-seconds: ${REDIS_TTL_SECONDS:300}
+  perf-logs-enabled: ${PERF_LOGS:false}
+  kpi-debug-logs-enabled: ${KPI_DEBUG_LOGS:false}
+  jwt-secret: ${JWT_SECRET:change-me-in-env}
+  jwt-expiry-seconds: 604800
