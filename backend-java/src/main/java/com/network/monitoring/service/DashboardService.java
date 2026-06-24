@@ -236,7 +236,7 @@ public class DashboardService {
     private List<Map<String, Object>> listDistinctSectorSummaries(Long fileId) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT `Sector_ID` AS id, MIN(`Sector_Name`) AS name ");
-        sql.append("FROM `UploadData` ");
+        sql.append("FROM `uploaddata` ");
         sql.append("WHERE `Sector_ID` IS NOT NULL");
         if (fileId != null) {
             sql.append(" AND `fileId` = :fileId");
