@@ -342,8 +342,7 @@ public class UploadService {
                 int replacedRows = 0;
                 int mergedSkippedRows = 0;
                 if (appendOption == AppendOption.OVERWRITE) {
-                    replacedRows = (int) uploadDataRepository.deleteByFileId(uploadRecord.getId());
-                    uploadDataRepository.flush();
+                    replacedRows = jdbcTemplate.update("DELETE FROM `uploaddata` WHERE `fileId` = ?", uploadRecord.getId());
                 } else if (appendOption == AppendOption.MERGE) {
                     Set<String> knownKeys = uploadDataRepository.findAllByFileId(uploadRecord.getId()).stream()
                             .map(this::kpiBusinessKey)
