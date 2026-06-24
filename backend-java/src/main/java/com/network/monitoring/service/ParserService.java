@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -69,7 +70,7 @@ public class ParserService {
     }
 
     private List<Map<String, Object>> parseCsv(File file) throws IOException {
-        try (CSVReader reader = new CSVReaderBuilder(new FileReader(file))
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))
                 .withCSVParser(new CSVParserBuilder().withSeparator(',').build())
                 .build()) {
             List<String[]> lines = reader.readAll();
@@ -88,6 +89,7 @@ public class ParserService {
                 for (int j = 0; j < headers.size(); j++) {
                     record.put(headers.get(j), j < row.length ? cleanValue(row[j]) : null);
                 }
+                record.put("_sheetName", "CSV");
                 records.add(record);
             }
             return records;
