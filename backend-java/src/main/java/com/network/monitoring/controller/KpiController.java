@@ -37,11 +37,19 @@ public class KpiController {
                 .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
                 .map(Map.Entry::getKey)
                 .toList();
+        List<Map<String, Object>> dynamicMetrics = List.of();
+        if (fileId != null) {
+            Map<String, Object> cache = kpiService.readKpiCache(fileId);
+            if (cache != null) {
+                dynamicMetrics = buildDynamicMetricList(cache, getSelectedMetricKeys(cache), getStringMap(cache, "metricLabels"));
+            }
+        }
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
         response.put("fileId", fileId);
         response.put("availableMetrics", availableMetrics);
         response.put("metricCounts", metricCounts);
+        response.put("dynamicAvailableMetrics", dynamicMetrics);
         return ResponseEntity.ok(response);
     }
 

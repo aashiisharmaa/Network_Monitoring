@@ -34,7 +34,7 @@ public class UploadDataRepositoryImpl implements UploadDataRepositoryCustom {
                 "SUM(Inter_Freq_HOSR IS NOT NULL) AS Inter_Freq_HOSR, " +
                 "SUM(Intra_Freq_HOSR IS NOT NULL) AS Intra_Freq_HOSR, " +
                 "SUM(CSFB_Success_Rate IS NOT NULL) AS CSFB_Success_Rate " +
-                "FROM UploadData ";
+                "FROM uploaddata ";
 
         if (fileId != null) {
             sql += "WHERE fileId = :fileId";
