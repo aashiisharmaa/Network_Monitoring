@@ -40,6 +40,9 @@ public class KpiController {
         List<Map<String, Object>> dynamicMetrics = List.of();
         if (fileId != null) {
             Map<String, Object> cache = kpiService.readKpiCache(fileId);
+            if (cache == null) {
+                cache = buildCacheFromDynamicRecords(kpiService.findDynamicRecords(fileId));
+            }
             if (cache != null) {
                 dynamicMetrics = buildDynamicMetricList(cache, getSelectedMetricKeys(cache), getStringMap(cache, "metricLabels"));
             }
@@ -172,11 +175,7 @@ public class KpiController {
             @RequestParam(value = "fileId") Long fileId) {
         Map<String, Object> cache = kpiService.readKpiCache(fileId);
         if (cache == null) {
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "fileId", fileId,
-                    "metrics", List.of()
-            ));
+            cache = buildCacheFromDynamicRecords(kpiService.findDynamicRecords(fileId));
         }
         List<String> selectedMetricKeys = getSelectedMetricKeys(cache);
         Map<String, String> metricLabels = getStringMap(cache, "metricLabels");
@@ -193,11 +192,7 @@ public class KpiController {
             @RequestParam(value = "fileId") Long fileId) {
         Map<String, Object> cache = kpiService.readKpiCache(fileId);
         if (cache == null) {
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "fileId", fileId,
-                    "metrics", List.of()
-            ));
+            cache = buildCacheFromDynamicRecords(kpiService.findDynamicRecords(fileId));
         }
         List<String> selectedMetricKeys = getSelectedMetricKeys(cache);
         Map<String, String> metricLabels = getStringMap(cache, "metricLabels");
@@ -553,6 +548,33 @@ public class KpiController {
     private List<String> getSelectedMetricKeys(Map<String, Object> cache) {
         List<String> selected = getStringList(cache, "selectedMetricKeys", "detectedMetricKeys");
         return selected;
+    }
+
+    private Map<String, Object> buildCacheFromDynamicRecords(List<Map<String, Object>> records) {
+        Map<String, Object> cache = new LinkedHashMap<>();
+        if (records == null || records.isEmpty()) {
+            cache.put("records", List.of());
+            cache.put("metricLabels", Map.of());
+            cache.put("detectedMetricKeys", List.of());
+            cache.put("selectedMetricKeys", List.of());
+            return cache;
+        }
+
+        LinkedHashSet<String> metricKeys = new LinkedHashSet<>();
+        for (Map<String, Object> record : records) {
+            metricKeys.addAll(getObjectMap(record.get("metrics")).keySet());
+        }
+
+        Map<String, String> metricLabels = new LinkedHashMap<>();
+        for (String key : metricKeys) {
+            metricLabels.put(key, key);
+        }
+
+        cache.put("records", records);
+        cache.put("metricLabels", metricLabels);
+        cache.put("detectedMetricKeys", new ArrayList<>(metricKeys));
+        cache.put("selectedMetricKeys", new ArrayList<>(metricKeys));
+        return cache;
     }
 
     private List<String> getSelectedFilterKeys(Map<String, Object> cache) {

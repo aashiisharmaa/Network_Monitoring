@@ -62,6 +62,7 @@ public class UploadService {
     private final AlarmDataRepository alarmDataRepository;
     private final ThresholdRepository thresholdRepository;
     private final KpiCacheService kpiCacheService;
+    private final KpiDynamicDataService kpiDynamicDataService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
@@ -80,6 +81,7 @@ public class UploadService {
                          AlarmDataRepository alarmDataRepository,
                          ThresholdRepository thresholdRepository,
                          KpiCacheService kpiCacheService,
+                         KpiDynamicDataService kpiDynamicDataService,
                          JdbcTemplate jdbcTemplate,
                          ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
         this.parserService = parserService;
@@ -90,6 +92,7 @@ public class UploadService {
         this.alarmDataRepository = alarmDataRepository;
         this.thresholdRepository = thresholdRepository;
         this.kpiCacheService = kpiCacheService;
+        this.kpiDynamicDataService = kpiDynamicDataService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
     }
@@ -133,6 +136,7 @@ public class UploadService {
         }
         alarmDataRepository.findAllByFileId(id).forEach(alarmDataRepository::delete);
         uploadDataRepository.findAllByFileId(id).forEach(uploadDataRepository::delete);
+        kpiDynamicDataService.deleteByFileId(id);
         alarmDataRepository.flush();
         uploadDataRepository.flush();
         uploadHistoryRepository.findById(id).ifPresent(uploadHistoryRepository::delete);
@@ -365,6 +369,7 @@ public class UploadService {
                         appendOption == AppendOption.MERGE
                 );
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
+                kpiDynamicDataService.replaceRecords(uploadRecord.getId(), kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload));
                 clearRedisKpiCaches(uploadRecord.getId());
                 return Map.of(
                         "success", true,
@@ -375,6 +380,7 @@ public class UploadService {
                                 "appendOption", appendOption.name().toLowerCase(Locale.ROOT),
                                 "totalRows", parsedRows.size(),
                                 "insertedRows", insertedRows,
+                                "dynamicRowsStored", kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload).size(),
                                 "replacedRows", replacedRows,
                                 "skippedRows", parsedRows.size() - insertedRows,
                                 "duplicateRows", mergedSkippedRows,

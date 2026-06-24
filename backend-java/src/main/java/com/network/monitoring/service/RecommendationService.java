@@ -33,6 +33,7 @@ import java.util.Locale;
 public class RecommendationService {
 
     private final KpiCacheService kpiCacheService;
+    private final KpiDynamicDataService kpiDynamicDataService;
     private final UploadDataRepository uploadDataRepository;
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -48,8 +49,11 @@ public class RecommendationService {
     @Value("${app.perf-logs-enabled:false}")
     private String perfLogsEnabledRaw;
 
-    public RecommendationService(KpiCacheService kpiCacheService, UploadDataRepository uploadDataRepository) {
+    public RecommendationService(KpiCacheService kpiCacheService,
+                                 KpiDynamicDataService kpiDynamicDataService,
+                                 UploadDataRepository uploadDataRepository) {
         this.kpiCacheService = kpiCacheService;
+        this.kpiDynamicDataService = kpiDynamicDataService;
         this.uploadDataRepository = uploadDataRepository;
     }
 
@@ -59,6 +63,9 @@ public class RecommendationService {
 
         Map<String, Object> cache = kpiCacheService.readKpiCache(fileId);
         List<Map<String, Object>> rows = cache == null ? List.of() : toCanonicalRows(cache);
+        if (rows.isEmpty()) {
+            rows = kpiDynamicDataService.findRecordsByFileId(fileId);
+        }
         if (rows.isEmpty()) {
             rows = toCanonicalRows(uploadDataRepository.findAllByFileId(fileId));
         }

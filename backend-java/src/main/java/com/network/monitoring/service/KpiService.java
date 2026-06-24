@@ -16,11 +16,14 @@ public class KpiService {
 
     private final UploadDataRepository uploadDataRepository;
     private final KpiCacheService kpiCacheService;
+    private final KpiDynamicDataService kpiDynamicDataService;
 
     public KpiService(UploadDataRepository uploadDataRepository,
-                      KpiCacheService kpiCacheService) {
+                      KpiCacheService kpiCacheService,
+                      KpiDynamicDataService kpiDynamicDataService) {
         this.uploadDataRepository = uploadDataRepository;
         this.kpiCacheService = kpiCacheService;
+        this.kpiDynamicDataService = kpiDynamicDataService;
     }
 
     @PersistenceContext
@@ -48,6 +51,13 @@ public class KpiService {
 
     public Map<String, Object> readKpiCache(Long fileId) {
         return kpiCacheService.readKpiCache(fileId);
+    }
+
+    public List<Map<String, Object>> findDynamicRecords(Long fileId) {
+        if (fileId == null) {
+            return List.of();
+        }
+        return kpiDynamicDataService.findRecordsByFileId(fileId);
     }
 
     public Map<String, Object> updateKpiCache(long fileId, java.util.function.UnaryOperator<Map<String, Object>> updater) {
