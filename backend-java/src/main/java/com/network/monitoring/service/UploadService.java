@@ -355,7 +355,15 @@ public class UploadService {
                     uploadDataRows = mergedRows;
                 }
                 insertedRows = insertInChunks(uploadDataRows, UploadData.class);
-                Map<String, Object> kpiCachePayload = buildKpiDynamicCachePayload(toKpiCacheRows(uploadDataRepository.findAllByFileId(uploadRecord.getId())));
+                Map<String, Object> incomingKpiCachePayload = buildKpiDynamicCachePayload(parsedRows);
+                Map<String, Object> existingKpiCachePayload = appendOption == AppendOption.OVERWRITE
+                        ? null
+                        : kpiCacheService.readKpiCache(uploadRecord.getId());
+                Map<String, Object> kpiCachePayload = mergeKpiDynamicCachePayloads(
+                        existingKpiCachePayload,
+                        incomingKpiCachePayload,
+                        appendOption == AppendOption.MERGE
+                );
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 clearRedisKpiCaches(uploadRecord.getId());
                 return Map.of(
@@ -817,6 +825,153 @@ public class UploadService {
         payload.put("selectedFilterKeys", selectedFilterKeys);
         payload.put("records", canonicalRows);
         return payload;
+    }
+
+    private Map<String, Object> mergeKpiDynamicCachePayloads(Map<String, Object> existing, Map<String, Object> incoming, boolean dedupeRecords) {
+        if (existing == null || existing.isEmpty()) {
+            return incoming == null ? new LinkedHashMap<>() : incoming;
+        }
+        if (incoming == null || incoming.isEmpty()) {
+            return existing;
+        }
+
+        Map<String, Object> merged = new LinkedHashMap<>();
+        merged.put("generatedAt", Instant.now().toString());
+
+        Map<String, String> metricLabels = new LinkedHashMap<>();
+        metricLabels.putAll(toStringMap(existing.get("metricLabels")));
+        metricLabels.putAll(toStringMap(incoming.get("metricLabels")));
+        merged.put("metricLabels", metricLabels);
+
+        Map<String, Map<String, Object>> columnStats = new LinkedHashMap<>();
+        mergeColumnStats(columnStats, toNestedObjectMap(existing.get("columnStats")));
+        mergeColumnStats(columnStats, toNestedObjectMap(incoming.get("columnStats")));
+        merged.put("columnStats", columnStats);
+
+        merged.put("detectedMetricKeys", unionStringLists(existing.get("detectedMetricKeys"), incoming.get("detectedMetricKeys")));
+        merged.put("selectedMetricKeys", unionStringLists(existing.get("selectedMetricKeys"), incoming.get("selectedMetricKeys")));
+        merged.put("detectedFilterKeys", unionStringLists(existing.get("detectedFilterKeys"), incoming.get("detectedFilterKeys")));
+        merged.put("selectedFilterKeys", unionStringLists(existing.get("selectedFilterKeys"), incoming.get("selectedFilterKeys")));
+
+        List<Map<String, Object>> records = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        appendCacheRecords(records, seen, getMapRecordList(existing.get("records")), dedupeRecords);
+        appendCacheRecords(records, seen, getMapRecordList(incoming.get("records")), dedupeRecords);
+        merged.put("records", records);
+        return merged;
+    }
+
+    private void mergeColumnStats(Map<String, Map<String, Object>> target, Map<String, Map<String, Object>> source) {
+        for (Map.Entry<String, Map<String, Object>> entry : source.entrySet()) {
+            Map<String, Object> incoming = entry.getValue();
+            Map<String, Object> current = target.computeIfAbsent(entry.getKey(), ignored -> {
+                Map<String, Object> value = new LinkedHashMap<>();
+                value.put("label", incoming.getOrDefault("label", entry.getKey()));
+                value.put("nonEmptyCount", 0);
+                value.put("numericCount", 0);
+                value.put("numericRatio", 0.0);
+                value.put("isDimension", incoming.getOrDefault("isDimension", false));
+                value.put("hasKpiHint", incoming.getOrDefault("hasKpiHint", false));
+                return value;
+            });
+            int nonEmpty = toInt(current.get("nonEmptyCount")) + toInt(incoming.get("nonEmptyCount"));
+            int numeric = toInt(current.get("numericCount")) + toInt(incoming.get("numericCount"));
+            current.put("nonEmptyCount", nonEmpty);
+            current.put("numericCount", numeric);
+            current.put("numericRatio", nonEmpty > 0 ? (double) numeric / nonEmpty : 0.0);
+            current.put("isDimension", Boolean.TRUE.equals(current.get("isDimension")) || Boolean.TRUE.equals(incoming.get("isDimension")));
+            current.put("hasKpiHint", Boolean.TRUE.equals(current.get("hasKpiHint")) || Boolean.TRUE.equals(incoming.get("hasKpiHint")));
+        }
+    }
+
+    private void appendCacheRecords(List<Map<String, Object>> target, Set<String> seen, List<Map<String, Object>> source, boolean dedupeRecords) {
+        for (Map<String, Object> record : source) {
+            if (!dedupeRecords || seen.add(dynamicRecordKey(record))) {
+                target.add(record);
+            }
+        }
+    }
+
+    private String dynamicRecordKey(Map<String, Object> record) {
+        return String.join("|",
+                keyPart(record.get("date")),
+                keyPart(record.get("cellName")),
+                keyPart(record.get("site")),
+                keyPart(record.get("band")),
+                keyPart(record.get("tech")),
+                keyPart(record.get("sectorid")),
+                keyPart(record.get("sectorname")),
+                keyPart(record.get("groups")),
+                keyPart(getObjectMap(record.get("metrics")).toString())
+        );
+    }
+
+    private List<String> unionStringLists(Object first, Object second) {
+        LinkedHashSet<String> values = new LinkedHashSet<>();
+        values.addAll(toStringList(first));
+        values.addAll(toStringList(second));
+        return new ArrayList<>(values);
+    }
+
+    private List<String> toStringList(Object value) {
+        if (!(value instanceof List<?> list)) {
+            return List.of();
+        }
+        return list.stream()
+                .map(String::valueOf)
+                .filter(item -> !item.isBlank())
+                .toList();
+    }
+
+    private Map<String, String> toStringMap(Object value) {
+        Map<String, String> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : getObjectMap(value).entrySet()) {
+            result.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        return result;
+    }
+
+    private Map<String, Map<String, Object>> toNestedObjectMap(Object value) {
+        Map<String, Map<String, Object>> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : getObjectMap(value).entrySet()) {
+            result.put(entry.getKey(), getObjectMap(entry.getValue()));
+        }
+        return result;
+    }
+
+    private Map<String, Object> getObjectMap(Object value) {
+        if (!(value instanceof Map<?, ?> map)) {
+            return new LinkedHashMap<>();
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (entry.getKey() != null) {
+                result.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> getMapRecordList(Object value) {
+        if (!(value instanceof List<?> list)) {
+            return List.of();
+        }
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object item : list) {
+            result.add(getObjectMap(item));
+        }
+        return result;
+    }
+
+    private int toInt(Object value) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     private boolean isLikelyDimensionColumn(String canonicalKey) {
