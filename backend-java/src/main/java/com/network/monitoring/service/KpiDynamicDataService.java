@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -87,7 +89,7 @@ public class KpiDynamicDataService {
                     `id` BIGINT NOT NULL AUTO_INCREMENT,
                     `fileId` BIGINT NOT NULL,
                     `rowIndex` INT NOT NULL,
-                    `rowKey` VARCHAR(768) NULL,
+                    `rowKey` VARCHAR(191) NULL,
                     `dateValue` VARCHAR(64) NULL,
                     `cellName` VARCHAR(255) NULL,
                     `site` VARCHAR(255) NULL,
@@ -178,7 +180,7 @@ public class KpiDynamicDataService {
     }
 
     private String dynamicRecordKey(Map<String, Object> record) {
-        return String.join("|",
+        String raw = String.join("|",
                 safeString(record.get("date")),
                 safeString(record.get("cellName")),
                 safeString(record.get("site")),
@@ -189,6 +191,21 @@ public class KpiDynamicDataService {
                 safeString(record.get("groups")),
                 getObjectMap(record.get("metrics")).toString()
         );
+        return sha256Hex(raw);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(String.valueOf(value).getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte item : hash) {
+                hex.append(String.format("%02x", item));
+            }
+            return hex.toString();
+        } catch (Exception ex) {
+            return String.valueOf(value == null ? "" : value.hashCode());
+        }
     }
 
     private String safeString(Object value) {
