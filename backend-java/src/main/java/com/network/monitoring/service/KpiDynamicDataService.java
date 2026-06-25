@@ -17,6 +17,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class KpiDynamicDataService {
@@ -44,9 +46,19 @@ public class KpiDynamicDataService {
     }
 
     public List<Map<String, Object>> findRecordsByFileId(long fileId) {
+        return findRecords(fileId);
+    }
+
+    private List<Map<String, Object>> findRecords(Long fileId) {
         ensureTable();
         String sql = "SELECT `dateValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `sectorName`, `groupsName`, `dimensionsJson`, `metricsJson` " +
-                "FROM `kpidynamicdata` WHERE `fileId` = ? ORDER BY `rowIndex` ASC, `id` ASC";
+                "FROM `kpidynamicdata` ";
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql += "WHERE `fileId` = ? ";
+            args.add(fileId);
+        }
+        sql += "ORDER BY `rowIndex` ASC, `id` ASC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Map<String, Object> record = new LinkedHashMap<>();
             record.put("date", rs.getString("dateValue"));
@@ -60,56 +72,39 @@ public class KpiDynamicDataService {
             record.put("dimensions", readJsonMap(rs.getString("dimensionsJson")));
             record.put("metrics", readJsonMap(rs.getString("metricsJson")));
             return record;
-        }, fileId);
+        }, args.toArray());
     }
 
     public List<String> listDistinctDimensionValues(String dimension, Long fileId) {
-        ensureTable();
-        String column = switch (dimension) {
-            case "cellName" -> "cellName";
-            case "site" -> "site";
-            case "band" -> "band";
-            case "tech" -> "tech";
-            case "groups" -> "groupsName";
-            default -> throw new IllegalArgumentException("Unsupported dynamic KPI dimension: " + dimension);
-        };
-
-        StringBuilder sql = new StringBuilder("SELECT DISTINCT `")
-                .append(column)
-                .append("` FROM `kpidynamicdata` WHERE `")
-                .append(column)
-                .append("` IS NOT NULL AND TRIM(`")
-                .append(column)
-                .append("`) <> ''");
-        List<Object> args = new ArrayList<>();
-        if (fileId != null) {
-            sql.append(" AND `fileId` = ?");
-            args.add(fileId);
+        LinkedHashSet<String> values = new LinkedHashSet<>();
+        for (Map<String, Object> record : findRecords(fileId)) {
+            addNonBlank(values, dimensionValue(record, dimension));
         }
-        sql.append(" ORDER BY `").append(column).append("` ASC");
-
-        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> rs.getString(1), args.toArray());
+        return values.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
     public List<Map<String, Object>> listDistinctSectorSummaries(Long fileId) {
-        ensureTable();
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT `sectorId`, MIN(`sectorName`) AS `sectorName` ");
-        sql.append("FROM `kpidynamicdata` ");
-        sql.append("WHERE `sectorId` IS NOT NULL AND TRIM(`sectorId`) <> ''");
-        List<Object> args = new ArrayList<>();
-        if (fileId != null) {
-            sql.append(" AND `fileId` = ?");
-            args.add(fileId);
+        Map<String, Map<String, Object>> sectors = new LinkedHashMap<>();
+        for (Map<String, Object> record : findRecords(fileId)) {
+            String id = firstNonBlank(
+                    record.get("sectorid"),
+                    dimension(record, "sectorid", "sector_id", "secid", "sec_id", "sec"),
+                    deriveSectorFromCell(record)
+            );
+            if (id == null || id.isBlank()) {
+                continue;
+            }
+            String name = firstNonBlank(record.get("sectorname"), dimension(record, "sectorname", "sector_name", "sector"));
+            sectors.computeIfAbsent(id, ignored -> {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("id", id);
+                item.put("name", name);
+                return item;
+            });
         }
-        sql.append(" GROUP BY `sectorId` ORDER BY `sectorId` ASC");
-
-        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("id", rs.getString("sectorId"));
-            item.put("name", rs.getString("sectorName"));
-            return item;
-        }, args.toArray());
+        return sectors.values().stream()
+                .sorted((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(String.valueOf(a.get("id")), String.valueOf(b.get("id"))))
+                .toList();
     }
 
     @SuppressWarnings("unchecked")
@@ -230,14 +225,14 @@ public class KpiDynamicDataService {
 
     private String dynamicRecordKey(Map<String, Object> record) {
         String raw = String.join("|",
-                safeString(record.get("date")),
-                safeString(record.get("cellName")),
-                safeString(record.get("site")),
-                safeString(record.get("band")),
-                safeString(record.get("tech")),
-                safeString(record.get("sectorid")),
-                safeString(record.get("sectorname")),
-                safeString(record.get("groups")),
+                keyPart(record.get("date")),
+                keyPart(record.get("cellName")),
+                keyPart(record.get("site")),
+                keyPart(firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "layer", "carrier"), record.get("tech"))),
+                keyPart(record.get("tech")),
+                keyPart(firstNonBlank(record.get("sectorid"), dimension(record, "sectorid", "sector_id", "secid", "sec_id", "sec"), deriveSectorFromCell(record))),
+                keyPart(record.get("sectorname")),
+                keyPart(record.get("groups")),
                 getObjectMap(record.get("metrics")).toString()
         );
         return sha256Hex(raw);
@@ -263,5 +258,69 @@ public class KpiDynamicDataService {
         }
         String parsed = String.valueOf(value).trim();
         return parsed.isEmpty() ? null : parsed;
+    }
+
+    private String keyPart(Object value) {
+        String parsed = safeString(value);
+        return parsed == null ? "" : parsed.toLowerCase();
+    }
+
+    private String dimensionValue(Map<String, Object> record, String dimension) {
+        return switch (dimension) {
+            case "cellName" -> firstNonBlank(record.get("cellName"), dimension(record, "cellname", "cellid", "cell", "shortname", "short_name"));
+            case "site" -> firstNonBlank(record.get("site"), dimension(record, "site", "siteid", "site_id", "sitename", "site_name"));
+            case "band" -> firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "frequency_band", "layer", "carrier"), record.get("tech"));
+            case "tech" -> firstNonBlank(record.get("tech"), dimension(record, "tech", "technology"));
+            case "groups" -> firstNonBlank(record.get("groups"), dimension(record, "groups", "group", "region", "cluster"));
+            default -> throw new IllegalArgumentException("Unsupported dynamic KPI dimension: " + dimension);
+        };
+    }
+
+    private String dimension(Map<String, Object> record, String... keys) {
+        Map<String, Object> dimensions = getObjectMap(record.get("dimensions"));
+        for (String key : keys) {
+            String value = safeString(dimensions.get(key));
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private String deriveSectorFromCell(Map<String, Object> record) {
+        String shortName = firstNonBlank(dimension(record, "shortname", "short_name"), record.get("cellName"));
+        if (shortName != null) {
+            String[] parts = shortName.split("_");
+            if (parts.length > 0) {
+                String last = parts[parts.length - 1].trim();
+                if (last.matches("[A-Za-z0-9]{1,3}")) {
+                    return last.toUpperCase();
+                }
+            }
+        }
+
+        String cell = firstNonBlank(record.get("cellName"), dimension(record, "cellid", "cellname"));
+        if (cell == null) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile("([A-Za-z])$").matcher(cell.trim());
+        return matcher.find() ? matcher.group(1).toUpperCase() : null;
+    }
+
+    private String firstNonBlank(Object... values) {
+        for (Object value : values) {
+            String parsed = safeString(value);
+            if (parsed != null) {
+                return parsed;
+            }
+        }
+        return null;
+    }
+
+    private void addNonBlank(Set<String> values, String value) {
+        String parsed = safeString(value);
+        if (parsed != null) {
+            values.add(parsed);
+        }
     }
 }
