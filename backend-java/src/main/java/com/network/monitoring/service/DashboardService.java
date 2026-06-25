@@ -18,10 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class DashboardService {
@@ -29,16 +32,19 @@ public class DashboardService {
     private final UploadDataRepository uploadDataRepository;
     private final UploadHistoryRepository uploadHistoryRepository;
     private final AlarmDataRepository alarmDataRepository;
+    private final KpiDynamicDataService kpiDynamicDataService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public DashboardService(UploadDataRepository uploadDataRepository,
                             UploadHistoryRepository uploadHistoryRepository,
-                            AlarmDataRepository alarmDataRepository) {
+                            AlarmDataRepository alarmDataRepository,
+                            KpiDynamicDataService kpiDynamicDataService) {
         this.uploadDataRepository = uploadDataRepository;
         this.uploadHistoryRepository = uploadHistoryRepository;
         this.alarmDataRepository = alarmDataRepository;
+        this.kpiDynamicDataService = kpiDynamicDataService;
     }
 
     public List<String> listDistinctCells() {
@@ -206,7 +212,14 @@ public class DashboardService {
         }
         query.where(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         query.orderBy(cb.asc(path));
-        return entityManager.createQuery(query).getResultList();
+        Set<String> values = new LinkedHashSet<>();
+        for (String value : entityManager.createQuery(query).getResultList()) {
+            addNonBlank(values, value);
+        }
+        for (String value : kpiDynamicDataService.listDistinctDimensionValues(property, fileId)) {
+            addNonBlank(values, value);
+        }
+        return values.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
     private List<Map<String, Object>> groupByCount(String property) {
@@ -257,6 +270,42 @@ public class DashboardService {
             item.put("name", row.length > 1 ? row[1] : null);
             sectors.add(item);
         }
-        return sectors;
+        Map<String, Map<String, Object>> merged = new LinkedHashMap<>();
+        for (Map<String, Object> sector : sectors) {
+            putSectorSummary(merged, sector);
+        }
+        for (Map<String, Object> sector : kpiDynamicDataService.listDistinctSectorSummaries(fileId)) {
+            putSectorSummary(merged, sector);
+        }
+        return merged.values().stream()
+                .sorted(Comparator.comparing(item -> String.valueOf(item.getOrDefault("id", "")), String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    private void addNonBlank(Set<String> values, String value) {
+        if (value == null) {
+            return;
+        }
+        String trimmed = value.trim();
+        if (!trimmed.isBlank()) {
+            values.add(trimmed);
+        }
+    }
+
+    private void putSectorSummary(Map<String, Map<String, Object>> target, Map<String, Object> sector) {
+        Object rawId = sector.get("id");
+        Object rawName = sector.get("name");
+        String id = rawId == null ? "" : String.valueOf(rawId).trim();
+        String name = rawName == null ? "" : String.valueOf(rawName).trim();
+        if (id.isBlank() && name.isBlank()) {
+            return;
+        }
+        String key = id.isBlank() ? name : id;
+        target.computeIfAbsent(key, ignored -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", id.isBlank() ? name : id);
+            item.put("name", name.isBlank() ? null : name);
+            return item;
+        });
     }
 }

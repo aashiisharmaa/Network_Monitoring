@@ -63,6 +63,55 @@ public class KpiDynamicDataService {
         }, fileId);
     }
 
+    public List<String> listDistinctDimensionValues(String dimension, Long fileId) {
+        ensureTable();
+        String column = switch (dimension) {
+            case "cellName" -> "cellName";
+            case "site" -> "site";
+            case "band" -> "band";
+            case "tech" -> "tech";
+            case "groups" -> "groupsName";
+            default -> throw new IllegalArgumentException("Unsupported dynamic KPI dimension: " + dimension);
+        };
+
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT `")
+                .append(column)
+                .append("` FROM `kpidynamicdata` WHERE `")
+                .append(column)
+                .append("` IS NOT NULL AND TRIM(`")
+                .append(column)
+                .append("`) <> ''");
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(" ORDER BY `").append(column).append("` ASC");
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> rs.getString(1), args.toArray());
+    }
+
+    public List<Map<String, Object>> listDistinctSectorSummaries(Long fileId) {
+        ensureTable();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT `sectorId`, MIN(`sectorName`) AS `sectorName` ");
+        sql.append("FROM `kpidynamicdata` ");
+        sql.append("WHERE `sectorId` IS NOT NULL AND TRIM(`sectorId`) <> ''");
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(" GROUP BY `sectorId` ORDER BY `sectorId` ASC");
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", rs.getString("sectorId"));
+            item.put("name", rs.getString("sectorName"));
+            return item;
+        }, args.toArray());
+    }
+
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> getRecordsFromCachePayload(Map<String, Object> cachePayload) {
         if (cachePayload == null || !(cachePayload.get("records") instanceof List<?> records)) {
