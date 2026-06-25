@@ -2,6 +2,7 @@ frontend/release/
 backend/uploads/
 frontend/release/
 backend/uploads/
+uploads/
 
 # Java backend generated/runtime files
 backend-java/target/
