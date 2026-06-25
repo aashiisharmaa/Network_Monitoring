@@ -3,6 +3,7 @@ package com.network.monitoring.service;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -21,6 +22,8 @@ import java.util.*;
 @Service
 public class ParserService {
 
+    private static final int POI_BYTE_ARRAY_MAX_OVERRIDE = 250_000_000;
+
     public List<Map<String, Object>> parseFile(Path filePath) throws IOException {
         if (!Files.exists(filePath)) {
             throw new IllegalArgumentException("File not found: " + filePath);
@@ -37,6 +40,7 @@ public class ParserService {
     }
 
     private List<Map<String, Object>> parseExcel(File file) throws IOException {
+        IOUtils.setByteArrayMaxOverride(POI_BYTE_ARRAY_MAX_OVERRIDE);
         try (FileInputStream stream = new FileInputStream(file);
              Workbook workbook = WorkbookFactory.create(stream)) {
             if (workbook.getNumberOfSheets() == 0) {
