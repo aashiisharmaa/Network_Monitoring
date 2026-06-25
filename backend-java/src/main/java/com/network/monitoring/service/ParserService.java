@@ -30,6 +30,9 @@ public class ParserService {
         }
 
         String extension = getExtension(filePath.getFileName().toString()).toLowerCase(Locale.ROOT);
+        if (extension.equals("xlsb")) {
+            throw new IllegalArgumentException("XLSB Binary Workbooks are not supported. Please save the file as .xlsx or export it as .csv, then upload again.");
+        }
         if (extension.equals("xlsx") || extension.equals("xls")) {
             return parseExcel(filePath.toFile());
         }
@@ -69,6 +72,9 @@ public class ParserService {
             }
             return records;
         } catch (Exception ex) {
+            if (String.valueOf(ex.getMessage()).toLowerCase(Locale.ROOT).contains("xlsb")) {
+                throw new IOException("XLSB Binary Workbooks are not supported. Please save the file as .xlsx or export it as .csv, then upload again.", ex);
+            }
             throw new IOException("Failed to parse Excel: " + ex.getMessage(), ex);
         }
     }
