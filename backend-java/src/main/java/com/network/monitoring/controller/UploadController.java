@@ -35,8 +35,9 @@ public class UploadController {
             @RequestParam(value = "uploadedBy", required = false) String uploadedBy,
             @RequestParam(value = "appendOption", required = false) String appendOption,
             @RequestParam(value = "fileId", required = false) Long fileId,
-            @RequestParam(value = "targetFileId", required = false) Long targetFileId) {
-        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId));
+            @RequestParam(value = "targetFileId", required = false) Long targetFileId,
+            @RequestParam(value = "columnMapping", required = false) String columnMapping) {
+        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping));
     }
 
     @PostMapping("/kpi")
@@ -46,8 +47,9 @@ public class UploadController {
             @RequestParam(value = "uploadedBy", required = false) String uploadedBy,
             @RequestParam(value = "appendOption", required = false) String appendOption,
             @RequestParam(value = "fileId", required = false) Long fileId,
-            @RequestParam(value = "targetFileId", required = false) Long targetFileId) {
-        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId));
+            @RequestParam(value = "targetFileId", required = false) Long targetFileId,
+            @RequestParam(value = "columnMapping", required = false) String columnMapping) {
+        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping));
     }
 
     @PostMapping("/kpi/preview")

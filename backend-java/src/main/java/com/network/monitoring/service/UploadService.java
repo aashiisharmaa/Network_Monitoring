@@ -1,5 +1,6 @@
 package com.network.monitoring.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.network.monitoring.entity.AlarmData;
 import com.network.monitoring.entity.SiteData;
@@ -102,15 +103,19 @@ public class UploadService {
     }
 
     public Map<String, Object> uploadKpiData(MultipartFile file, String remarks, String uploadedBy, String appendOption, Long targetFileId) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.KPI, parseAppendOption(appendOption), targetFileId);
+        return uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId, null);
+    }
+
+    public Map<String, Object> uploadKpiData(MultipartFile file, String remarks, String uploadedBy, String appendOption, Long targetFileId, String columnMappingJson) throws IOException {
+        return runUpload(file, remarks, uploadedBy, DatasetType.KPI, parseAppendOption(appendOption), targetFileId, parseColumnMapping(columnMappingJson));
     }
 
     public Map<String, Object> uploadSiteData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.SITE, AppendOption.APPEND, null);
+        return runUpload(file, remarks, uploadedBy, DatasetType.SITE, AppendOption.APPEND, null, Map.of());
     }
 
     public Map<String, Object> uploadAlarmData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.ALARM, AppendOption.APPEND, null);
+        return runUpload(file, remarks, uploadedBy, DatasetType.ALARM, AppendOption.APPEND, null, Map.of());
     }
 
     public Map<String, Object> getUploadHistory() {
@@ -286,7 +291,7 @@ public class UploadService {
     }
 
     @Transactional
-    private Map<String, Object> runUpload(MultipartFile file, String remarks, String uploadedBy, DatasetType datasetType, AppendOption appendOption, Long targetFileId) throws IOException {
+    private Map<String, Object> runUpload(MultipartFile file, String remarks, String uploadedBy, DatasetType datasetType, AppendOption appendOption, Long targetFileId, Map<String, String> columnMapping) throws IOException {
         long requestStartedAt = System.currentTimeMillis();
         if (file == null || file.isEmpty()) {
             return Map.of("success", false, "message", "No file uploaded.");
@@ -317,6 +322,9 @@ public class UploadService {
             }
 
             List<Map<String, Object>> parsedRows = parserService.parseFile(storedPath);
+            if (datasetType == DatasetType.KPI && columnMapping != null && !columnMapping.isEmpty()) {
+                parsedRows = applyColumnMapping(parsedRows, columnMapping);
+            }
             if (parsedRows.isEmpty()) {
                 return Map.of(
                         "success", true,
@@ -370,21 +378,22 @@ public class UploadService {
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload));
                 clearRedisKpiCaches(uploadRecord.getId());
+                Map<String, Object> uploadData = new LinkedHashMap<>();
+                uploadData.put("uploadId", uploadRecord.getId());
+                uploadData.put("datasetType", "kpi");
+                uploadData.put("appendOption", appendOption.name().toLowerCase(Locale.ROOT));
+                uploadData.put("totalRows", parsedRows.size());
+                uploadData.put("insertedRows", insertedRows);
+                uploadData.put("dynamicRowsStored", kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload).size());
+                uploadData.put("replacedRows", replacedRows);
+                uploadData.put("skippedRows", parsedRows.size() - insertedRows);
+                uploadData.put("duplicateRows", mergedSkippedRows);
+                uploadData.put("appliedColumnMapping", columnMapping == null ? Map.of() : columnMapping);
+                uploadData.put("detectedHeaders", detectedHeaders);
                 return Map.of(
                         "success", true,
                         "message", "KPI upload complete. Inserted " + insertedRows + " row(s).",
-                        "data", Map.of(
-                                "uploadId", uploadRecord.getId(),
-                                "datasetType", "kpi",
-                                "appendOption", appendOption.name().toLowerCase(Locale.ROOT),
-                                "totalRows", parsedRows.size(),
-                                "insertedRows", insertedRows,
-                                "dynamicRowsStored", kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload).size(),
-                                "replacedRows", replacedRows,
-                                "skippedRows", parsedRows.size() - insertedRows,
-                                "duplicateRows", mergedSkippedRows,
-                                "detectedHeaders", detectedHeaders
-                        )
+                        "data", uploadData
                 );
             }
 
@@ -620,6 +629,70 @@ public class UploadService {
             normalized.put(canonicalizeHeader(entry.getKey()), entry.getValue());
         }
         return normalized;
+    }
+
+    private Map<String, String> parseColumnMapping(String columnMappingJson) {
+        if (columnMappingJson == null || columnMappingJson.isBlank()) {
+            return Map.of();
+        }
+        try {
+            Map<String, String> rawMapping = objectMapper.readValue(columnMappingJson, new TypeReference<Map<String, String>>() {});
+            Map<String, String> cleanedMapping = new LinkedHashMap<>();
+            rawMapping.forEach((targetField, sourceColumn) -> {
+                if (targetField == null || targetField.isBlank() || sourceColumn == null || sourceColumn.isBlank()) {
+                    return;
+                }
+                String standardTarget = toMappedTargetColumn(targetField);
+                if (standardTarget != null) {
+                    cleanedMapping.put(standardTarget, sourceColumn.trim());
+                }
+            });
+            return cleanedMapping;
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Invalid columnMapping JSON. Expected format like {\"cell\":\"Short_name\",\"site\":\"Site_ID\",\"technology\":\"Tech\"}.");
+        }
+    }
+
+    private List<Map<String, Object>> applyColumnMapping(List<Map<String, Object>> rows, Map<String, String> columnMapping) {
+        if (rows == null || rows.isEmpty() || columnMapping == null || columnMapping.isEmpty()) {
+            return rows;
+        }
+        List<Map<String, Object>> mappedRows = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> mappedRow = new LinkedHashMap<>(row);
+            for (Map.Entry<String, String> mapping : columnMapping.entrySet()) {
+                Object value = findMappedColumnValue(row, mapping.getValue());
+                if (value != null) {
+                    mappedRow.put(mapping.getKey(), value);
+                }
+            }
+            mappedRows.add(mappedRow);
+        }
+        return mappedRows;
+    }
+
+    private Object findMappedColumnValue(Map<String, Object> row, String sourceColumn) {
+        String sourceKey = canonicalizeHeader(sourceColumn);
+        for (Map.Entry<String, Object> entry : row.entrySet()) {
+            if (canonicalizeHeader(entry.getKey()).equals(sourceKey)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    private String toMappedTargetColumn(String targetField) {
+        return switch (canonicalizeHeader(targetField)) {
+            case "cell", "cellname", "cellid" -> "Cell_Name";
+            case "site", "siteid", "sitename" -> "Site";
+            case "technology", "tech", "rat" -> "Tech";
+            case "band", "carrier", "layer", "frequencyband" -> "Band";
+            case "sector", "sectorid", "sec", "secid" -> "Sector_ID";
+            case "sectorname" -> "Sector_Name";
+            case "group", "groups", "region", "cluster" -> "Groups";
+            case "date", "datetime", "timestamp", "time" -> "Date";
+            default -> null;
+        };
     }
 
     private AppendOption parseAppendOption(String value) {
