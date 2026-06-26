@@ -105,25 +105,6 @@ public class UploadService {
         return runUpload(file, remarks, uploadedBy, DatasetType.KPI, parseAppendOption(appendOption), targetFileId);
     }
 
-    public Map<String, Object> previewKpiData(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return Map.of("success", false, "message", "No file uploaded.");
-        }
-
-        String originalName = file.getOriginalFilename() == null ? "upload" : file.getOriginalFilename();
-        String ext = getExtension(originalName);
-        if (!ALLOWED_EXTENSIONS.contains(ext.toLowerCase(Locale.ROOT))) {
-            return Map.of("success", false, "message", "Invalid file type. Only .xlsx, .xls, and .csv files are supported.");
-        }
-
-        Path storedPath = fileStorageService.storeFile(file);
-        try {
-            return parserService.previewFile(storedPath);
-        } finally {
-            deleteTempFile(storedPath);
-        }
-    }
-
     public Map<String, Object> uploadSiteData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
         return runUpload(file, remarks, uploadedBy, DatasetType.SITE, AppendOption.APPEND, null);
     }

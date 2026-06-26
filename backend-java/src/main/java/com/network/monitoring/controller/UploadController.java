@@ -1,5 +1,6 @@
 package com.network.monitoring.controller;
 
+import com.network.monitoring.service.KpiUploadPreviewService;
 import com.network.monitoring.service.UploadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,9 +21,11 @@ import java.util.Map;
 public class UploadController {
 
     private final UploadService uploadService;
+    private final KpiUploadPreviewService kpiUploadPreviewService;
 
-    public UploadController(UploadService uploadService) {
+    public UploadController(UploadService uploadService, KpiUploadPreviewService kpiUploadPreviewService) {
         this.uploadService = uploadService;
+        this.kpiUploadPreviewService = kpiUploadPreviewService;
     }
 
     @PostMapping("/upload")
@@ -49,7 +52,7 @@ public class UploadController {
 
     @PostMapping("/kpi/preview")
     public ResponseEntity<Map<String, Object>> previewKpiData(@RequestParam("file") MultipartFile file) {
-        return executeUpload(() -> uploadService.previewKpiData(file));
+        return executeUpload(() -> kpiUploadPreviewService.preview(file));
     }
 
     @PostMapping("/site")
