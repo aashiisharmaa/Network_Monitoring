@@ -47,6 +47,11 @@ public class UploadController {
         return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId));
     }
 
+    @PostMapping("/kpi/preview")
+    public ResponseEntity<Map<String, Object>> previewKpiData(@RequestParam("file") MultipartFile file) {
+        return executeUpload(() -> uploadService.previewKpiData(file));
+    }
+
     @PostMapping("/site")
     public ResponseEntity<Map<String, Object>> uploadSiteData(
             @RequestParam("file") MultipartFile file,
