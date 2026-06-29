@@ -64,6 +64,7 @@ public class UploadService {
     private final ThresholdRepository thresholdRepository;
     private final KpiCacheService kpiCacheService;
     private final KpiDynamicDataService kpiDynamicDataService;
+    private final KpiThresholdRuleService kpiThresholdRuleService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
@@ -83,6 +84,7 @@ public class UploadService {
                          ThresholdRepository thresholdRepository,
                          KpiCacheService kpiCacheService,
                          KpiDynamicDataService kpiDynamicDataService,
+                         KpiThresholdRuleService kpiThresholdRuleService,
                          JdbcTemplate jdbcTemplate,
                          ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
         this.parserService = parserService;
@@ -94,6 +96,7 @@ public class UploadService {
         this.thresholdRepository = thresholdRepository;
         this.kpiCacheService = kpiCacheService;
         this.kpiDynamicDataService = kpiDynamicDataService;
+        this.kpiThresholdRuleService = kpiThresholdRuleService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
     }
@@ -377,6 +380,7 @@ public class UploadService {
                 );
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload));
+                Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateFile(uploadRecord.getId());
                 clearRedisKpiCaches(uploadRecord.getId());
                 Map<String, Object> uploadData = new LinkedHashMap<>();
                 uploadData.put("uploadId", uploadRecord.getId());
@@ -390,6 +394,7 @@ public class UploadService {
                 uploadData.put("duplicateRows", mergedSkippedRows);
                 uploadData.put("appliedColumnMapping", columnMapping == null ? Map.of() : columnMapping);
                 uploadData.put("detectedHeaders", detectedHeaders);
+                uploadData.put("thresholdSummary", thresholdSummary);
                 return Map.of(
                         "success", true,
                         "message", "KPI upload complete. Inserted " + insertedRows + " row(s).",

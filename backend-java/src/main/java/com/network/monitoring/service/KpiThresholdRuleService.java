@@ -23,10 +23,14 @@ public class KpiThresholdRuleService {
     private static final String HIGHER_IS_BAD = "HIGHER_IS_BAD";
 
     private final KpiThresholdRuleRepository repository;
+    private final KpiDynamicDataService kpiDynamicDataService;
     private final JdbcTemplate jdbcTemplate;
 
-    public KpiThresholdRuleService(KpiThresholdRuleRepository repository, JdbcTemplate jdbcTemplate) {
+    public KpiThresholdRuleService(KpiThresholdRuleRepository repository,
+                                   KpiDynamicDataService kpiDynamicDataService,
+                                   JdbcTemplate jdbcTemplate) {
         this.repository = repository;
+        this.kpiDynamicDataService = kpiDynamicDataService;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -105,6 +109,57 @@ public class KpiThresholdRuleService {
         return response;
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> evaluateFile(Long fileId) {
+        if (fileId == null) {
+            throw new IllegalArgumentException("fileId is required.");
+        }
+
+        List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
+        List<Map<String, Object>> records = kpiDynamicDataService.findRecordsByFileId(fileId);
+        Map<String, Integer> severityCounts = createSeverityCounts();
+        Map<String, Map<String, Object>> metricSummaries = new LinkedHashMap<>();
+        int evaluatedValues = 0;
+        int matchedRules = 0;
+        int valuesWithoutRule = 0;
+
+        for (Map<String, Object> record : records) {
+            String technology = technologyFrom(record);
+            Map<String, Object> metrics = objectMap(record.get("metrics"));
+            for (Map.Entry<String, Object> metric : metrics.entrySet()) {
+                Double value = parseNumber(metric.getValue());
+                if (value == null) {
+                    continue;
+                }
+
+                evaluatedValues++;
+                KpiThresholdRule rule = findBestRule(metric.getKey(), technology, rules);
+                if (rule == null) {
+                    valuesWithoutRule++;
+                    continue;
+                }
+
+                matchedRules++;
+                String severity = calculateSeverity(rule, value);
+                incrementSeverity(severityCounts, severity);
+                incrementMetricSummary(metricSummaries, metric.getKey(), severity);
+            }
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("fileId", fileId);
+        response.put("totalRows", records.size());
+        response.put("activeRules", rules.size());
+        response.put("evaluatedValues", evaluatedValues);
+        response.put("matchedRules", matchedRules);
+        response.put("valuesWithoutRule", valuesWithoutRule);
+        response.put("severityCounts", severityCounts);
+        response.put("hasBreaches", hasBreaches(severityCounts));
+        response.put("metrics", metricSummaries.values().stream().toList());
+        response.put("generatedAt", LocalDateTime.now());
+        return response;
+    }
+
     public String calculateSeverity(KpiThresholdRule rule, Double value) {
         if (rule == null || value == null || !Boolean.TRUE.equals(rule.getEnabled())) {
             return "NORMAL";
@@ -118,9 +173,12 @@ public class KpiThresholdRuleService {
     }
 
     private KpiThresholdRule findBestRule(String metricName, String technology) {
+        return findBestRule(metricName, technology, repository.findAllByEnabledTrue());
+    }
+
+    private KpiThresholdRule findBestRule(String metricName, String technology, List<KpiThresholdRule> rules) {
         String metricKey = normalize(metricName);
         String techKey = normalize(technology);
-        List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
 
         return rules.stream()
                 .filter(rule -> normalize(rule.getMetricName()).equals(metricKey))
@@ -173,6 +231,92 @@ public class KpiThresholdRuleService {
             return false;
         }
         return lowerIsBad ? value <= threshold : value >= threshold;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> objectMap(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (entry.getKey() != null) {
+                    result.put(String.valueOf(entry.getKey()), entry.getValue());
+                }
+            }
+            return result;
+        }
+        return Map.of();
+    }
+
+    private String technologyFrom(Map<String, Object> record) {
+        String topLevel = stringValue(record.get("tech"));
+        if (!topLevel.isBlank()) {
+            return topLevel;
+        }
+        Map<String, Object> dimensions = objectMap(record.get("dimensions"));
+        for (String key : List.of("tech", "technology", "rat")) {
+            String value = stringValue(dimensions.get(key));
+            if (!value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
+    }
+
+    private Double parseNumber(Object value) {
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        String text = stringValue(value)
+                .replace(",", "")
+                .replace("%", "")
+                .trim();
+        if (text.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private String stringValue(Object value) {
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private Map<String, Integer> createSeverityCounts() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put("CRITICAL", 0);
+        counts.put("MAJOR", 0);
+        counts.put("MINOR", 0);
+        counts.put("WARNING", 0);
+        counts.put("NORMAL", 0);
+        return counts;
+    }
+
+    private void incrementSeverity(Map<String, Integer> counts, String severity) {
+        counts.compute(severity == null ? "NORMAL" : severity, (key, value) -> value == null ? 1 : value + 1);
+    }
+
+    private void incrementMetricSummary(Map<String, Map<String, Object>> metricSummaries, String metricName, String severity) {
+        Map<String, Object> summary = metricSummaries.computeIfAbsent(metricName, ignored -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("metricName", metricName);
+            item.put("severityCounts", createSeverityCounts());
+            item.put("evaluatedValues", 0);
+            return item;
+        });
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> counts = (Map<String, Integer>) summary.get("severityCounts");
+        incrementSeverity(counts, severity);
+        summary.put("evaluatedValues", ((Number) summary.get("evaluatedValues")).intValue() + 1);
+    }
+
+    private boolean hasBreaches(Map<String, Integer> severityCounts) {
+        return severityCounts.getOrDefault("CRITICAL", 0) > 0
+                || severityCounts.getOrDefault("MAJOR", 0) > 0
+                || severityCounts.getOrDefault("MINOR", 0) > 0
+                || severityCounts.getOrDefault("WARNING", 0) > 0;
     }
 
     private String normalize(String value) {

@@ -55,6 +55,11 @@ public class KpiThresholdRuleController {
         return ResponseEntity.ok(response("Threshold severity evaluated successfully.", true, thresholdRuleService.evaluate(metricName, value, technology)));
     }
 
+    @GetMapping("/evaluate-file")
+    public ResponseEntity<Map<String, Object>> evaluateFile(@RequestParam("fileId") Long fileId) {
+        return ResponseEntity.ok(response("File threshold summary evaluated successfully.", true, thresholdRuleService.evaluateFile(fileId)));
+    }
+
     private Map<String, Object> response(String message, boolean success, Object data) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", success);
