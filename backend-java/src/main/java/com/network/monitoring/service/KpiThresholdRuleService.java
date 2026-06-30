@@ -1,5 +1,7 @@
 package com.network.monitoring.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.network.monitoring.dto.request.KpiThresholdRuleRequest;
 import com.network.monitoring.entity.KpiThresholdRule;
 import com.network.monitoring.exception.ResourceNotFoundException;
@@ -25,6 +27,7 @@ public class KpiThresholdRuleService {
 
     private static final String LOWER_IS_BAD = "LOWER_IS_BAD";
     private static final String HIGHER_IS_BAD = "HIGHER_IS_BAD";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, List<String>> KPI_ALIAS_FAMILIES = Map.ofEntries(
             Map.entry("availability", List.of("availability", "networkavailability", "radionwavailability", "rna", "4grna")),
             Map.entry("dcr", List.of("dcr", "dropcallrate", "dropcall", "psdropcallrate", "voltedcr")),
@@ -73,6 +76,29 @@ public class KpiThresholdRuleService {
                   `updatedAt` DATETIME NULL,
                   PRIMARY KEY (`id`),
                   INDEX `idx_kpi_threshold_rules_metric` (`metricName`, `technology`, `enabled`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """);
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS `kpi_threshold_results` (
+                  `id` BIGINT NOT NULL AUTO_INCREMENT,
+                  `fileId` BIGINT NOT NULL,
+                  `totalRows` INT NOT NULL DEFAULT 0,
+                  `activeRules` INT NOT NULL DEFAULT 0,
+                  `evaluatedValues` INT NOT NULL DEFAULT 0,
+                  `matchedRules` INT NOT NULL DEFAULT 0,
+                  `valuesWithoutRule` INT NOT NULL DEFAULT 0,
+                  `criticalCount` INT NOT NULL DEFAULT 0,
+                  `majorCount` INT NOT NULL DEFAULT 0,
+                  `minorCount` INT NOT NULL DEFAULT 0,
+                  `warningCount` INT NOT NULL DEFAULT 0,
+                  `normalCount` INT NOT NULL DEFAULT 0,
+                  `hasBreaches` BIT(1) NOT NULL DEFAULT b'0',
+                  `summaryJson` LONGTEXT NULL,
+                  `createdAt` DATETIME NULL,
+                  `updatedAt` DATETIME NULL,
+                  PRIMARY KEY (`id`),
+                  UNIQUE INDEX `uk_kpi_threshold_results_file` (`fileId`),
+                  INDEX `idx_kpi_threshold_results_updated` (`updatedAt`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
     }
@@ -131,7 +157,7 @@ public class KpiThresholdRuleService {
         return response;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, Object> evaluateFile(Long fileId) {
         if (fileId == null) {
             throw new IllegalArgumentException("fileId is required.");
@@ -139,12 +165,128 @@ public class KpiThresholdRuleService {
 
         List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
         List<Map<String, Object>> records = kpiDynamicDataService.findRecordsByFileId(fileId);
-        return evaluateRecords(fileId, records, rules);
+        Map<String, Object> summary = evaluateRecords(fileId, records, rules);
+        saveEvaluationResult(fileId, summary);
+        return summary;
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> evaluateUploadedRecords(Long fileId, List<Map<String, Object>> records) {
         return evaluateRecords(fileId, records, repository.findAllByEnabledTrue());
+    }
+
+    @Transactional
+    public void saveEvaluationResult(Long fileId, Map<String, Object> summary) {
+        if (fileId == null || summary == null) {
+            return;
+        }
+        Map<String, Integer> counts = integerMap(summary.get("severityCounts"));
+        LocalDateTime now = LocalDateTime.now();
+        jdbcTemplate.update("""
+                INSERT INTO `kpi_threshold_results`
+                (`fileId`, `totalRows`, `activeRules`, `evaluatedValues`, `matchedRules`, `valuesWithoutRule`,
+                 `criticalCount`, `majorCount`, `minorCount`, `warningCount`, `normalCount`, `hasBreaches`,
+                 `summaryJson`, `createdAt`, `updatedAt`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                  `totalRows` = VALUES(`totalRows`),
+                  `activeRules` = VALUES(`activeRules`),
+                  `evaluatedValues` = VALUES(`evaluatedValues`),
+                  `matchedRules` = VALUES(`matchedRules`),
+                  `valuesWithoutRule` = VALUES(`valuesWithoutRule`),
+                  `criticalCount` = VALUES(`criticalCount`),
+                  `majorCount` = VALUES(`majorCount`),
+                  `minorCount` = VALUES(`minorCount`),
+                  `warningCount` = VALUES(`warningCount`),
+                  `normalCount` = VALUES(`normalCount`),
+                  `hasBreaches` = VALUES(`hasBreaches`),
+                  `summaryJson` = VALUES(`summaryJson`),
+                  `updatedAt` = VALUES(`updatedAt`)
+                """,
+                fileId,
+                intValue(summary.get("totalRows")),
+                intValue(summary.get("activeRules")),
+                intValue(summary.get("evaluatedValues")),
+                intValue(summary.get("matchedRules")),
+                intValue(summary.get("valuesWithoutRule")),
+                counts.getOrDefault("CRITICAL", 0),
+                counts.getOrDefault("MAJOR", 0),
+                counts.getOrDefault("MINOR", 0),
+                counts.getOrDefault("WARNING", 0),
+                counts.getOrDefault("NORMAL", 0),
+                Boolean.TRUE.equals(summary.get("hasBreaches")),
+                writeJson(summary),
+                now,
+                now
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listStoredResults(Integer limit) {
+        int safeLimit = limit == null ? 20 : Math.max(1, Math.min(limit, 100));
+        return jdbcTemplate.query("""
+                SELECT r.*, h.`fileName`, h.`uploadedBy`, h.`createdAt` AS `uploadedAt`
+                FROM `kpi_threshold_results` r
+                LEFT JOIN `uploadhistory` h ON h.`id` = r.`fileId`
+                ORDER BY r.`updatedAt` DESC
+                LIMIT ?
+                """, (rs, rowNum) -> {
+            Map<String, Object> result = baseResultPayload(
+                    rs.getLong("fileId"),
+                    rs.getString("fileName"),
+                    rs.getString("uploadedBy"),
+                    rs.getObject("uploadedAt"),
+                    rs.getObject("updatedAt"),
+                    rs.getInt("totalRows"),
+                    rs.getInt("activeRules"),
+                    rs.getInt("evaluatedValues"),
+                    rs.getInt("matchedRules"),
+                    rs.getInt("valuesWithoutRule"),
+                    rs.getBoolean("hasBreaches"),
+                    rs.getInt("criticalCount"),
+                    rs.getInt("majorCount"),
+                    rs.getInt("minorCount"),
+                    rs.getInt("warningCount"),
+                    rs.getInt("normalCount")
+            );
+            result.put("summary", readJsonMap(rs.getString("summaryJson")));
+            return result;
+        }, safeLimit);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getStoredResult(Long fileId) {
+        if (fileId == null) {
+            throw new IllegalArgumentException("fileId is required.");
+        }
+        List<Map<String, Object>> results = jdbcTemplate.query("""
+                SELECT r.*, h.`fileName`, h.`uploadedBy`, h.`createdAt` AS `uploadedAt`
+                FROM `kpi_threshold_results` r
+                LEFT JOIN `uploadhistory` h ON h.`id` = r.`fileId`
+                WHERE r.`fileId` = ?
+                """, (rs, rowNum) -> {
+            Map<String, Object> result = baseResultPayload(
+                    rs.getLong("fileId"),
+                    rs.getString("fileName"),
+                    rs.getString("uploadedBy"),
+                    rs.getObject("uploadedAt"),
+                    rs.getObject("updatedAt"),
+                    rs.getInt("totalRows"),
+                    rs.getInt("activeRules"),
+                    rs.getInt("evaluatedValues"),
+                    rs.getInt("matchedRules"),
+                    rs.getInt("valuesWithoutRule"),
+                    rs.getBoolean("hasBreaches"),
+                    rs.getInt("criticalCount"),
+                    rs.getInt("majorCount"),
+                    rs.getInt("minorCount"),
+                    rs.getInt("warningCount"),
+                    rs.getInt("normalCount")
+            );
+            result.put("summary", readJsonMap(rs.getString("summaryJson")));
+            return result;
+        }, fileId);
+        return results.isEmpty() ? null : results.get(0);
     }
 
     private Map<String, Object> evaluateRecords(Long fileId, List<Map<String, Object>> records, List<KpiThresholdRule> rules) {
@@ -435,6 +577,90 @@ public class KpiThresholdRuleService {
                 || severityCounts.getOrDefault("MAJOR", 0) > 0
                 || severityCounts.getOrDefault("MINOR", 0) > 0
                 || severityCounts.getOrDefault("WARNING", 0) > 0;
+    }
+
+    private Map<String, Object> baseResultPayload(Long fileId,
+                                                  String fileName,
+                                                  String uploadedBy,
+                                                  Object uploadedAt,
+                                                  Object evaluatedAt,
+                                                  int totalRows,
+                                                  int activeRules,
+                                                  int evaluatedValues,
+                                                  int matchedRules,
+                                                  int valuesWithoutRule,
+                                                  boolean hasBreaches,
+                                                  int critical,
+                                                  int major,
+                                                  int minor,
+                                                  int warning,
+                                                  int normal) {
+        Map<String, Integer> severityCounts = createSeverityCounts();
+        severityCounts.put("CRITICAL", critical);
+        severityCounts.put("MAJOR", major);
+        severityCounts.put("MINOR", minor);
+        severityCounts.put("WARNING", warning);
+        severityCounts.put("NORMAL", normal);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("fileId", fileId);
+        payload.put("fileName", fileName);
+        payload.put("uploadedBy", uploadedBy);
+        payload.put("uploadedAt", uploadedAt);
+        payload.put("evaluatedAt", evaluatedAt);
+        payload.put("totalRows", totalRows);
+        payload.put("activeRules", activeRules);
+        payload.put("evaluatedValues", evaluatedValues);
+        payload.put("matchedRules", matchedRules);
+        payload.put("valuesWithoutRule", valuesWithoutRule);
+        payload.put("hasBreaches", hasBreaches);
+        payload.put("severityCounts", severityCounts);
+        return payload;
+    }
+
+    private Map<String, Integer> integerMap(Object value) {
+        Map<String, Integer> result = createSeverityCounts();
+        if (value instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (entry.getKey() != null) {
+                    result.put(String.valueOf(entry.getKey()), intValue(entry.getValue()));
+                }
+            }
+        }
+        return result;
+    }
+
+    private int intValue(Object value) {
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
+    private String writeJson(Object value) {
+        try {
+            return MAPPER.writeValueAsString(value == null ? Map.of() : value);
+        } catch (Exception ex) {
+            return "{}";
+        }
+    }
+
+    private Map<String, Object> readJsonMap(String value) {
+        if (value == null || value.isBlank()) {
+            return Map.of();
+        }
+        try {
+            return MAPPER.readValue(value, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception ex) {
+            return Map.of();
+        }
     }
 
     private String normalize(String value) {

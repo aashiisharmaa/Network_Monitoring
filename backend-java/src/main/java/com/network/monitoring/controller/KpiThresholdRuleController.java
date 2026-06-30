@@ -60,6 +60,16 @@ public class KpiThresholdRuleController {
         return ResponseEntity.ok(response("File threshold summary evaluated successfully.", true, thresholdRuleService.evaluateFile(fileId)));
     }
 
+    @GetMapping("/results")
+    public ResponseEntity<Map<String, Object>> listResults(@RequestParam(value = "limit", required = false) Integer limit) {
+        return ResponseEntity.ok(response("Threshold results retrieved successfully.", true, thresholdRuleService.listStoredResults(limit)));
+    }
+
+    @GetMapping("/results/{fileId}")
+    public ResponseEntity<Map<String, Object>> getResult(@PathVariable Long fileId) {
+        return ResponseEntity.ok(response("Threshold result retrieved successfully.", true, thresholdRuleService.getStoredResult(fileId)));
+    }
+
     private Map<String, Object> response(String message, boolean success, Object data) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", success);

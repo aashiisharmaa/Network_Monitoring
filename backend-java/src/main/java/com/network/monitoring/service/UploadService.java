@@ -388,6 +388,7 @@ public class UploadService {
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
                 Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
+                kpiThresholdRuleService.saveEvaluationResult(uploadRecord.getId(), thresholdSummary);
                 clearRedisKpiCaches(uploadRecord.getId());
                 Map<String, Object> uploadData = new LinkedHashMap<>();
                 uploadData.put("uploadId", uploadRecord.getId());
