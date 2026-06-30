@@ -7,7 +7,7 @@ spring:
       max-file-size: 200MB
       max-request-size: 200MB
   datasource:
-    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/kpi_tool?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}"
+    url: "${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/kpi_tool?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true}"
     username: "${SPRING_DATASOURCE_USERNAME:root}"
     password: "${SPRING_DATASOURCE_PASSWORD:NewPassword@123}"
   jpa:

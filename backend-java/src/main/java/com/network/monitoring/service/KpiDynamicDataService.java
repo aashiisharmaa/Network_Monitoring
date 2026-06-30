@@ -50,7 +50,6 @@ public class KpiDynamicDataService {
     }
 
     private List<Map<String, Object>> findRecords(Long fileId) {
-        ensureTable();
         String sql = "SELECT `dateValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `sectorName`, `groupsName`, `dimensionsJson`, `metricsJson` " +
                 "FROM `kpidynamicdata` ";
         List<Object> args = new ArrayList<>();

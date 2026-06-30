@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -352,23 +353,28 @@ public class UploadService {
                         .toList();
                 int replacedRows = 0;
                 int mergedSkippedRows = 0;
-                if (appendOption == AppendOption.OVERWRITE) {
-                    replacedRows = jdbcTemplate.update("DELETE FROM `uploaddata` WHERE `fileId` = ?", uploadRecord.getId());
-                } else if (appendOption == AppendOption.MERGE) {
-                    Set<String> knownKeys = uploadDataRepository.findAllByFileId(uploadRecord.getId()).stream()
-                            .map(this::kpiBusinessKey)
-                            .collect(Collectors.toCollection(LinkedHashSet::new));
-                    List<UploadData> mergedRows = new ArrayList<>();
-                    for (UploadData row : uploadDataRows) {
-                        if (knownKeys.add(kpiBusinessKey(row))) {
-                            mergedRows.add(row);
-                        } else {
-                            mergedSkippedRows++;
+                boolean legacyKpiInsertEnabled = hasLegacyKpiMetrics(uploadDataRows);
+                if (legacyKpiInsertEnabled) {
+                    if (appendOption == AppendOption.OVERWRITE) {
+                        replacedRows = jdbcTemplate.update("DELETE FROM `uploaddata` WHERE `fileId` = ?", uploadRecord.getId());
+                    } else if (appendOption == AppendOption.MERGE) {
+                        Set<String> knownKeys = uploadDataRepository.findAllByFileId(uploadRecord.getId()).stream()
+                                .map(this::kpiBusinessKey)
+                                .collect(Collectors.toCollection(LinkedHashSet::new));
+                        List<UploadData> mergedRows = new ArrayList<>();
+                        for (UploadData row : uploadDataRows) {
+                            if (knownKeys.add(kpiBusinessKey(row))) {
+                                mergedRows.add(row);
+                            } else {
+                                mergedSkippedRows++;
+                            }
                         }
+                        uploadDataRows = mergedRows;
                     }
-                    uploadDataRows = mergedRows;
+                    insertedRows = insertInChunks(uploadDataRows, UploadData.class);
+                } else {
+                    insertedRows = 0;
                 }
-                insertedRows = insertInChunks(uploadDataRows, UploadData.class);
                 Map<String, Object> incomingKpiCachePayload = buildKpiDynamicCachePayload(parsedRows);
                 Map<String, Object> existingKpiCachePayload = appendOption == AppendOption.OVERWRITE
                         ? null
@@ -378,9 +384,10 @@ public class UploadService {
                         incomingKpiCachePayload,
                         appendOption == AppendOption.MERGE
                 );
+                List<Map<String, Object>> dynamicRecords = kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload);
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
-                kpiDynamicDataService.replaceRecords(uploadRecord.getId(), kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload));
-                Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateFile(uploadRecord.getId());
+                kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
+                Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
                 clearRedisKpiCaches(uploadRecord.getId());
                 Map<String, Object> uploadData = new LinkedHashMap<>();
                 uploadData.put("uploadId", uploadRecord.getId());
@@ -388,7 +395,8 @@ public class UploadService {
                 uploadData.put("appendOption", appendOption.name().toLowerCase(Locale.ROOT));
                 uploadData.put("totalRows", parsedRows.size());
                 uploadData.put("insertedRows", insertedRows);
-                uploadData.put("dynamicRowsStored", kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload).size());
+                uploadData.put("dynamicRowsStored", dynamicRecords.size());
+                uploadData.put("legacyKpiRowsStored", legacyKpiInsertEnabled);
                 uploadData.put("replacedRows", replacedRows);
                 uploadData.put("skippedRows", parsedRows.size() - insertedRows);
                 uploadData.put("duplicateRows", mergedSkippedRows);
@@ -397,7 +405,7 @@ public class UploadService {
                 uploadData.put("thresholdSummary", thresholdSummary);
                 return Map.of(
                         "success", true,
-                        "message", "KPI upload complete. Inserted " + insertedRows + " row(s).",
+                        "message", "KPI upload complete. Stored " + dynamicRecords.size() + " dynamic row(s).",
                         "data", uploadData
                 );
             }
@@ -1285,6 +1293,8 @@ public class UploadService {
         for (int count : counts) {
             if (count > 0) {
                 inserted += count;
+            } else if (count == Statement.SUCCESS_NO_INFO) {
+                inserted++;
             }
         }
         return inserted;
@@ -1335,6 +1345,31 @@ public class UploadService {
 
     private String quoteIdentifier(String identifier) {
         return "`" + identifier.replace("`", "``") + "`";
+    }
+
+    private boolean hasLegacyKpiMetrics(List<UploadData> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return false;
+        }
+        return rows.stream().anyMatch(row ->
+                row.getUlPrbUtilizationRate() != null
+                        || row.getDlPrbUtilizationRate() != null
+                        || row.getUme4gDataVolumeStdMapsMb9035931() != null
+                        || row.getUmeEutranIpThroughputUeUlStdKbps() != null
+                        || row.getUmeEutranIpThroughputUeDlStdKbps() != null
+                        || row.getErabDropRate() != null
+                        || row.getInitialErabEstablishmentSuccessRate() != null
+                        || row.getRrcEstablishmentSuccessRate() != null
+                        || row.getMeanRrcConnectedUserNumber() != null
+                        || row.getMaximumRrcConnectedUserNumber() != null
+                        || row.getErabSetupSuccessRate() != null
+                        || row.getRrcDropRate() != null
+                        || row.getVolteCssrEric() != null
+                        || row.getVolteDcrEric() != null
+                        || row.getInterFreqHosr() != null
+                        || row.getIntraFreqHosr() != null
+                        || row.getCsfbSuccessRate() != null
+        );
     }
 
     private UploadData mapKpiRow(Map<String, Object> row, Long fileId) {

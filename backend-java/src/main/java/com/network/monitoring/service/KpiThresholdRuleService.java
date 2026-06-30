@@ -10,17 +10,39 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class KpiThresholdRuleService {
 
     private static final String LOWER_IS_BAD = "LOWER_IS_BAD";
     private static final String HIGHER_IS_BAD = "HIGHER_IS_BAD";
+    private static final Map<String, List<String>> KPI_ALIAS_FAMILIES = Map.ofEntries(
+            Map.entry("availability", List.of("availability", "networkavailability", "radionwavailability", "rna", "4grna")),
+            Map.entry("dcr", List.of("dcr", "dropcallrate", "dropcall", "psdropcallrate", "voltedcr")),
+            Map.entry("cssr", List.of("cssr", "setupsuccess", "setupsuccessrate", "erabsetupsuccess", "rrcsetupsuccess", "callsetupsuccess")),
+            Map.entry("prb", List.of("prb", "prbutilisation", "prbutilization", "useddlprbs", "usedulprbs")),
+            Map.entry("throughput", List.of("throughput", "userthroughput", "dluserthroughput", "uluserthroughput", "tput")),
+            Map.entry("packetloss", List.of("packetloss", "packetlossdl", "packetlossul", "lossdl", "lossul")),
+            Map.entry("handover", List.of("hosr", "handover", "interfhosr", "intrafhosr", "interfreqhosr", "intrafreqhosr")),
+            Map.entry("sinr", List.of("sinr", "puschsinr")),
+            Map.entry("cqi", List.of("cqi", "averagecqi")),
+            Map.entry("traffic", List.of("traffic", "volume", "datavolume", "4gdatavolume", "voltetraffic")),
+            Map.entry("rssi", List.of("rssi", "avgssi", "pucchrssi", "puschrssi", "ni", "noiseinterference")),
+            Map.entry("distance", List.of("distance", "uedistance", "averageuedistance"))
+    );
+    private static final Set<String> TOKEN_STOP_WORDS = Set.of(
+            "mv", "kpi", "avg", "average", "rate", "ratio", "percent", "percentage", "std",
+            "maps", "mb", "gb", "kbps", "mbps", "dl", "ul", "nw", "ue", "eric", "cbbh", "cdbh"
+    );
 
     private final KpiThresholdRuleRepository repository;
     private final KpiDynamicDataService kpiDynamicDataService;
@@ -117,13 +139,24 @@ public class KpiThresholdRuleService {
 
         List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
         List<Map<String, Object>> records = kpiDynamicDataService.findRecordsByFileId(fileId);
+        return evaluateRecords(fileId, records, rules);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> evaluateUploadedRecords(Long fileId, List<Map<String, Object>> records) {
+        return evaluateRecords(fileId, records, repository.findAllByEnabledTrue());
+    }
+
+    private Map<String, Object> evaluateRecords(Long fileId, List<Map<String, Object>> records, List<KpiThresholdRule> rules) {
+        List<Map<String, Object>> safeRecords = records == null ? List.of() : records;
         Map<String, Integer> severityCounts = createSeverityCounts();
         Map<String, Map<String, Object>> metricSummaries = new LinkedHashMap<>();
+        Map<String, Optional<KpiThresholdRule>> ruleMatchCache = new LinkedHashMap<>();
         int evaluatedValues = 0;
         int matchedRules = 0;
         int valuesWithoutRule = 0;
 
-        for (Map<String, Object> record : records) {
+        for (Map<String, Object> record : safeRecords) {
             String technology = technologyFrom(record);
             Map<String, Object> metrics = objectMap(record.get("metrics"));
             for (Map.Entry<String, Object> metric : metrics.entrySet()) {
@@ -133,7 +166,11 @@ public class KpiThresholdRuleService {
                 }
 
                 evaluatedValues++;
-                KpiThresholdRule rule = findBestRule(metric.getKey(), technology, rules);
+                String ruleCacheKey = normalize(technology) + "|" + normalize(metric.getKey());
+                KpiThresholdRule rule = ruleMatchCache.computeIfAbsent(
+                        ruleCacheKey,
+                        ignored -> Optional.ofNullable(findBestRule(metric.getKey(), technology, rules))
+                ).orElse(null);
                 if (rule == null) {
                     valuesWithoutRule++;
                     continue;
@@ -148,7 +185,7 @@ public class KpiThresholdRuleService {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("fileId", fileId);
-        response.put("totalRows", records.size());
+        response.put("totalRows", safeRecords.size());
         response.put("activeRules", rules.size());
         response.put("evaluatedValues", evaluatedValues);
         response.put("matchedRules", matchedRules);
@@ -177,18 +214,99 @@ public class KpiThresholdRuleService {
     }
 
     private KpiThresholdRule findBestRule(String metricName, String technology, List<KpiThresholdRule> rules) {
-        String metricKey = normalize(metricName);
         String techKey = normalize(technology);
 
         return rules.stream()
-                .filter(rule -> normalize(rule.getMetricName()).equals(metricKey))
-                .filter(rule -> !techKey.isBlank() && normalize(rule.getTechnology()).equals(techKey))
-                .findFirst()
-                .orElseGet(() -> rules.stream()
-                        .filter(rule -> normalize(rule.getMetricName()).equals(metricKey))
-                        .filter(rule -> normalize(rule.getTechnology()).isBlank())
-                        .findFirst()
-                        .orElse(null));
+                .map(rule -> Map.entry(rule, ruleScore(rule, metricName, techKey)))
+                .filter(entry -> entry.getValue() > 0)
+                .max((left, right) -> Integer.compare(left.getValue(), right.getValue()))
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    private int ruleScore(KpiThresholdRule rule, String metricName, String techKey) {
+        int score = metricScore(rule.getMetricName(), metricName);
+        if (score <= 0) {
+            return 0;
+        }
+
+        String ruleTechKey = normalize(rule.getTechnology());
+        if (!techKey.isBlank() && ruleTechKey.equals(techKey)) {
+            score += 30;
+        } else if (ruleTechKey.isBlank()) {
+            score += 20;
+        } else {
+            score += 5;
+        }
+        return score;
+    }
+
+    private int metricScore(String ruleMetricName, String uploadedMetricName) {
+        String ruleMetricKey = normalize(ruleMetricName);
+        String uploadedMetricKey = normalize(uploadedMetricName);
+        if (ruleMetricKey.isBlank() || uploadedMetricKey.isBlank()) {
+            return 0;
+        }
+
+        if (ruleMetricKey.equals(uploadedMetricKey)) {
+            return 120;
+        }
+        if (uploadedMetricKey.contains(ruleMetricKey) || ruleMetricKey.contains(uploadedMetricKey)) {
+            return 95;
+        }
+        if (sameAliasFamily(ruleMetricKey, uploadedMetricKey)) {
+            return 85;
+        }
+
+        Set<String> ruleTokens = metricTokens(ruleMetricName);
+        Set<String> uploadedTokens = metricTokens(uploadedMetricName);
+        if (ruleTokens.isEmpty() || uploadedTokens.isEmpty()) {
+            return 0;
+        }
+
+        long overlap = ruleTokens.stream().filter(uploadedTokens::contains).count();
+        if (overlap == ruleTokens.size()) {
+            return 80;
+        }
+        double overlapRatio = (double) overlap / ruleTokens.size();
+        return overlapRatio >= 0.6 ? 55 : 0;
+    }
+
+    private boolean sameAliasFamily(String ruleMetricKey, String uploadedMetricKey) {
+        return KPI_ALIAS_FAMILIES.values().stream()
+                .anyMatch(aliases -> hasAlias(ruleMetricKey, aliases) && hasAlias(uploadedMetricKey, aliases));
+    }
+
+    private boolean hasAlias(String metricKey, List<String> aliases) {
+        return aliases.stream()
+                .map(this::normalize)
+                .anyMatch(alias -> metricKey.equals(alias) || metricKey.contains(alias) || alias.contains(metricKey));
+    }
+
+    private Set<String> metricTokens(String value) {
+        Set<String> tokens = new LinkedHashSet<>();
+        for (String token : splitMetricWords(value)) {
+            String normalized = normalize(token);
+            if (!normalized.isBlank() && !TOKEN_STOP_WORDS.contains(normalized)) {
+                tokens.add(normalized);
+            }
+        }
+        return tokens;
+    }
+
+    private List<String> splitMetricWords(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        String spaced = value.replaceAll("([a-z])([A-Z])", "$1 $2")
+                .replaceAll("[^A-Za-z0-9]+", " ");
+        List<String> words = new ArrayList<>();
+        for (String word : spaced.trim().split("\\s+")) {
+            if (!word.isBlank()) {
+                words.add(word);
+            }
+        }
+        return words;
     }
 
     private void applyRequest(KpiThresholdRule rule, KpiThresholdRuleRequest request, boolean creating) {
