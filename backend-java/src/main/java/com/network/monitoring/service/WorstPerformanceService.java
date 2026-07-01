@@ -35,6 +35,72 @@ public class WorstPerformanceService {
         return worst(fileId, metric, limit, "site");
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> worstCellDetail(Long fileId, String cellName, String metric) {
+        if (fileId == null) {
+            throw new IllegalArgumentException("fileId is required.");
+        }
+        if (cellName == null || cellName.isBlank()) {
+            throw new IllegalArgumentException("cellName is required.");
+        }
+        if (metric == null || metric.isBlank()) {
+            throw new IllegalArgumentException("metric is required.");
+        }
+
+        List<Map<String, Object>> records = findDynamicRecords(fileId);
+        String metricKey = resolveMetricKey(records, metric);
+        List<Map<String, Object>> points = new ArrayList<>();
+        Aggregate aggregate = new Aggregate(cellName);
+        String normalizedCell = normalize(cellName);
+
+        for (Map<String, Object> record : records) {
+            String recordCell = dimensionValue(record, "cellName", "cellid", "cell_id", "cell", "shortname", "short_name");
+            if (!normalize(recordCell).equals(normalizedCell)) {
+                continue;
+            }
+            Map<String, Object> metrics = objectMap(record.get("metrics"));
+            Double value = number(metrics.get(metricKey));
+            if (value == null) {
+                continue;
+            }
+
+            String site = dimensionValue(record, "site", "siteid", "site_id", "sitename", "site_name");
+            String technology = dimensionValue(record, "tech", "technology", "rat");
+            String severity = string(thresholdRuleService.evaluate(metricKey, value, technology).get("severity"));
+            aggregate.add(value);
+            aggregate.cell = first(recordCell, aggregate.cell);
+            aggregate.site = first(site, aggregate.site);
+            aggregate.technology = first(technology, aggregate.technology);
+            aggregate.severity = worseSeverity(aggregate.severity, severity);
+            if (!"NORMAL".equalsIgnoreCase(severity)) {
+                aggregate.breachCount++;
+            }
+
+            Map<String, Object> point = new LinkedHashMap<>();
+            point.put("date", first(record.get("date"), dimensionValue(record, "date", "date", "datetime", "timestamp")));
+            point.put("value", round(value));
+            point.put("severity", severity);
+            point.put("site", site);
+            point.put("technology", technology);
+            point.put("band", dimensionValue(record, "band", "band", "frequencyband", "frequency_band", "layer", "carrier"));
+            point.put("sectorId", dimensionValue(record, "sectorid", "sectorid", "sector_id", "secid", "sec_id", "sec"));
+            points.add(point);
+        }
+
+        points.sort(Comparator.comparing(point -> string(point.get("date"))));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("fileId", fileId);
+        response.put("cellName", cellName);
+        response.put("metric", metric);
+        response.put("metricKey", metricKey);
+        response.put("direction", higherIsBad(metric, metricKey) ? "HIGHER_IS_BAD" : "LOWER_IS_BAD");
+        response.put("summary", toPayload(aggregate, "cell"));
+        response.put("points", points);
+        response.put("pointCount", points.size());
+        return response;
+    }
+
     private Map<String, Object> worst(Long fileId, String requestedMetric, Integer limit, String groupType) {
         if (fileId == null) {
             throw new IllegalArgumentException("fileId is required.");
