@@ -37,12 +37,12 @@ public class KpiThresholdRuleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateRule(@PathVariable Long id, @RequestBody KpiThresholdRuleRequest request) {
+    public ResponseEntity<Map<String, Object>> updateRule(@PathVariable("id") Long id, @RequestBody KpiThresholdRuleRequest request) {
         return ResponseEntity.ok(response("Threshold rule updated successfully.", true, thresholdRuleService.updateRule(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteRule(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteRule(@PathVariable("id") Long id) {
         thresholdRuleService.deleteRule(id);
         return ResponseEntity.ok(response("Threshold rule deleted successfully.", true, Map.of("id", id)));
     }
@@ -66,7 +66,7 @@ public class KpiThresholdRuleController {
     }
 
     @GetMapping("/results/{fileId}")
-    public ResponseEntity<Map<String, Object>> getResult(@PathVariable Long fileId) {
+    public ResponseEntity<Map<String, Object>> getResult(@PathVariable("fileId") Long fileId) {
         return ResponseEntity.ok(response("Threshold result retrieved successfully.", true, thresholdRuleService.getStoredResult(fileId)));
     }
 
