@@ -68,6 +68,7 @@ public class UploadService {
     private final KpiCacheService kpiCacheService;
     private final KpiDynamicDataService kpiDynamicDataService;
     private final KpiThresholdRuleService kpiThresholdRuleService;
+    private final KpiAlarmService kpiAlarmService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
@@ -88,6 +89,7 @@ public class UploadService {
                          KpiCacheService kpiCacheService,
                          KpiDynamicDataService kpiDynamicDataService,
                          KpiThresholdRuleService kpiThresholdRuleService,
+                         KpiAlarmService kpiAlarmService,
                          JdbcTemplate jdbcTemplate,
                          ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
         this.parserService = parserService;
@@ -100,6 +102,7 @@ public class UploadService {
         this.kpiCacheService = kpiCacheService;
         this.kpiDynamicDataService = kpiDynamicDataService;
         this.kpiThresholdRuleService = kpiThresholdRuleService;
+        this.kpiAlarmService = kpiAlarmService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
     }
@@ -401,6 +404,7 @@ public class UploadService {
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
                 Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
                 kpiThresholdRuleService.saveEvaluationResult(uploadRecord.getId(), thresholdSummary);
+                Map<String, Object> alarmSummary = kpiAlarmService.generateAlarms(uploadRecord.getId());
                 clearRedisKpiCaches(uploadRecord.getId());
                 Map<String, Object> uploadData = new LinkedHashMap<>();
                 uploadData.put("uploadId", uploadRecord.getId());
@@ -418,9 +422,10 @@ public class UploadService {
                 uploadData.put("appliedColumnMapping", columnMapping == null ? Map.of() : columnMapping);
                 uploadData.put("detectedHeaders", detectedHeaders);
                 uploadData.put("thresholdSummary", thresholdSummary);
+                uploadData.put("alarmSummary", alarmSummary);
                 return Map.of(
                         "success", true,
-                        "message", "KPI upload complete. Stored " + dynamicRecords.size() + " dynamic row(s).",
+                        "message", "KPI upload complete. Stored " + dynamicRecords.size() + " dynamic row(s). Generated " + alarmSummary.getOrDefault("generated", 0) + " alarm(s).",
                         "data", uploadData
                 );
             }

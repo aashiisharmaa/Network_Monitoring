@@ -402,13 +402,15 @@ public class UploadJobService {
     }
 
     private void addColumnIfMissing(String columnName, String sql) {
-        try {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'upload_jobs'
+                  AND COLUMN_NAME = ?
+                """, Integer.class, columnName);
+        if (count == null || count == 0) {
             jdbcTemplate.execute(sql);
-        } catch (Exception ex) {
-            String message = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase(Locale.ROOT);
-            if (!message.contains("duplicate") && !message.contains("exists")) {
-                throw ex;
-            }
         }
     }
 
