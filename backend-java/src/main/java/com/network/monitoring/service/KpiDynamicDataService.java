@@ -2,6 +2,7 @@ package com.network.monitoring.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ import java.util.regex.Pattern;
 public class KpiDynamicDataService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectWriter JSON_WRITER = MAPPER.writer();
+    private static final int INSERT_BATCH_SIZE = 1000;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -185,9 +188,16 @@ public class KpiDynamicDataService {
                     writeJson(getObjectMap(record.get("metrics"))),
                     Timestamp.valueOf(createdAt)
             });
+
+            if (args.size() >= INSERT_BATCH_SIZE) {
+                jdbcTemplate.batchUpdate(sql, args);
+                args.clear();
+            }
         }
 
-        jdbcTemplate.batchUpdate(sql, args);
+        if (!args.isEmpty()) {
+            jdbcTemplate.batchUpdate(sql, args);
+        }
     }
 
     private Map<String, Object> readJsonMap(String value) {
@@ -203,7 +213,7 @@ public class KpiDynamicDataService {
 
     private String writeJson(Map<String, Object> value) {
         try {
-            return MAPPER.writeValueAsString(value == null ? Map.of() : value);
+            return JSON_WRITER.writeValueAsString(value == null ? Map.of() : value);
         } catch (Exception ex) {
             throw new IllegalStateException("Unable to serialize dynamic KPI row", ex);
         }
@@ -241,11 +251,14 @@ public class KpiDynamicDataService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(String.valueOf(value).getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(hash.length * 2);
-            for (byte item : hash) {
-                hex.append(String.format("%02x", item));
+            char[] chars = new char[hash.length * 2];
+            char[] hex = "0123456789abcdef".toCharArray();
+            for (int index = 0; index < hash.length; index++) {
+                int item = hash[index] & 0xff;
+                chars[index * 2] = hex[item >>> 4];
+                chars[index * 2 + 1] = hex[item & 0x0f];
             }
-            return hex.toString();
+            return new String(chars);
         } catch (Exception ex) {
             return String.valueOf(value == null ? "" : value.hashCode());
         }

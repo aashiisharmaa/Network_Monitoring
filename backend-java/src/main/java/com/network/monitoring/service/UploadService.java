@@ -26,9 +26,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -111,15 +113,19 @@ public class UploadService {
     }
 
     public Map<String, Object> uploadKpiData(MultipartFile file, String remarks, String uploadedBy, String appendOption, Long targetFileId, String columnMappingJson) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.KPI, parseAppendOption(appendOption), targetFileId, parseColumnMapping(columnMappingJson));
+        return uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId, columnMappingJson, false);
+    }
+
+    public Map<String, Object> uploadKpiData(MultipartFile file, String remarks, String uploadedBy, String appendOption, Long targetFileId, String columnMappingJson, boolean cleanKpiData) throws IOException {
+        return runUpload(file, remarks, uploadedBy, DatasetType.KPI, parseAppendOption(appendOption), targetFileId, parseColumnMapping(columnMappingJson), cleanKpiData);
     }
 
     public Map<String, Object> uploadSiteData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.SITE, AppendOption.APPEND, null, Map.of());
+        return runUpload(file, remarks, uploadedBy, DatasetType.SITE, AppendOption.APPEND, null, Map.of(), false);
     }
 
     public Map<String, Object> uploadAlarmData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
-        return runUpload(file, remarks, uploadedBy, DatasetType.ALARM, AppendOption.APPEND, null, Map.of());
+        return runUpload(file, remarks, uploadedBy, DatasetType.ALARM, AppendOption.APPEND, null, Map.of(), false);
     }
 
     public Map<String, Object> getUploadHistory() {
@@ -295,7 +301,7 @@ public class UploadService {
     }
 
     @Transactional
-    private Map<String, Object> runUpload(MultipartFile file, String remarks, String uploadedBy, DatasetType datasetType, AppendOption appendOption, Long targetFileId, Map<String, String> columnMapping) throws IOException {
+    private Map<String, Object> runUpload(MultipartFile file, String remarks, String uploadedBy, DatasetType datasetType, AppendOption appendOption, Long targetFileId, Map<String, String> columnMapping, boolean cleanKpiData) throws IOException {
         long requestStartedAt = System.currentTimeMillis();
         if (file == null || file.isEmpty()) {
             return Map.of("success", false, "message", "No file uploaded.");
@@ -384,7 +390,13 @@ public class UploadService {
                         incomingKpiCachePayload,
                         appendOption == AppendOption.MERGE
                 );
-                List<Map<String, Object>> dynamicRecords = kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload);
+                List<Map<String, Object>> mergedDynamicRecords = kpiDynamicDataService.getRecordsFromCachePayload(kpiCachePayload);
+                CleanKpiRecordsResult cleanResult = cleanKpiData
+                        ? cleanKpiRecords(mergedDynamicRecords)
+                        : CleanKpiRecordsResult.unchanged(mergedDynamicRecords);
+                kpiCachePayload.put("records", cleanResult.records());
+                kpiCachePayload.put("cleaningStats", cleanResult.stats());
+                List<Map<String, Object>> dynamicRecords = cleanResult.records();
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
                 Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
@@ -397,6 +409,8 @@ public class UploadService {
                 uploadData.put("totalRows", parsedRows.size());
                 uploadData.put("insertedRows", insertedRows);
                 uploadData.put("dynamicRowsStored", dynamicRecords.size());
+                uploadData.put("cleanKpiData", cleanKpiData);
+                uploadData.put("cleaningStats", cleanResult.stats());
                 uploadData.put("legacyKpiRowsStored", legacyKpiInsertEnabled);
                 uploadData.put("replacedRows", replacedRows);
                 uploadData.put("skippedRows", parsedRows.size() - insertedRows);
@@ -984,18 +998,93 @@ public class UploadService {
         }
     }
 
+    private CleanKpiRecordsResult cleanKpiRecords(List<Map<String, Object>> records) {
+        List<Map<String, Object>> cleaned = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        int emptyMetricRows = 0;
+        int duplicateRows = 0;
+        int invalidDimensionRows = 0;
+
+        for (Map<String, Object> record : records) {
+            if (getObjectMap(record.get("metrics")).isEmpty()) {
+                emptyMetricRows++;
+                continue;
+            }
+            if (missingRequiredDynamicDimensions(record)) {
+                invalidDimensionRows++;
+                continue;
+            }
+            String rowKey = dynamicRecordKey(record);
+            if (!seen.add(rowKey)) {
+                duplicateRows++;
+                continue;
+            }
+            cleaned.add(record);
+        }
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("enabled", true);
+        stats.put("inputRows", records.size());
+        stats.put("storedRows", cleaned.size());
+        stats.put("removedEmptyMetricRows", emptyMetricRows);
+        stats.put("removedDuplicateRows", duplicateRows);
+        stats.put("removedInvalidDimensionRows", invalidDimensionRows);
+        stats.put("removedRows", emptyMetricRows + duplicateRows + invalidDimensionRows);
+        return new CleanKpiRecordsResult(cleaned, stats);
+    }
+
+    private boolean missingRequiredDynamicDimensions(Map<String, Object> record) {
+        return dimensionValue(record, "date", "date", "datetime", "timestamp") == null
+                || dimensionValue(record, "cellName", "cellid", "cell_id", "cell", "shortname", "short_name") == null
+                || dimensionValue(record, "site", "siteid", "site_id", "sitename", "site_name") == null
+                || dimensionValue(record, "tech", "tech", "technology", "rat") == null;
+    }
+
+    private String dimensionValue(Map<String, Object> record, String topLevelKey, String... dimensionKeys) {
+        String topLevel = safeString(record.get(topLevelKey));
+        if (topLevel != null) {
+            return topLevel;
+        }
+        Map<String, Object> dimensions = getObjectMap(record.get("dimensions"));
+        for (String key : dimensionKeys) {
+            String value = safeString(dimensions.get(key));
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     private String dynamicRecordKey(Map<String, Object> record) {
-        return String.join("|",
-                keyPart(record.get("date")),
-                keyPart(record.get("cellName")),
-                keyPart(record.get("site")),
-                keyPart(record.get("band")),
-                keyPart(record.get("tech")),
-                keyPart(record.get("sectorid")),
-                keyPart(record.get("sectorname")),
-                keyPart(record.get("groups")),
+        String rawKey = String.join("|",
+                keyPart(dimensionValue(record, "date", "date", "datetime", "timestamp")),
+                keyPart(dimensionValue(record, "cellName", "cellid", "cell_id", "cell", "shortname", "short_name")),
+                keyPart(dimensionValue(record, "site", "siteid", "site_id", "sitename", "site_name")),
+                keyPart(dimensionValue(record, "band", "band", "frequencyband", "frequency_band", "layer", "carrier")),
+                keyPart(dimensionValue(record, "tech", "tech", "technology", "rat")),
+                keyPart(dimensionValue(record, "sectorid", "sectorid", "sector_id", "secid", "sec_id", "sec")),
+                keyPart(dimensionValue(record, "sectorname", "sectorname", "sector_name", "sector")),
+                keyPart(dimensionValue(record, "groups", "groups", "group", "region", "cluster")),
                 keyPart(getObjectMap(record.get("metrics")).toString())
         );
+        return sha256Hex(rawKey);
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(String.valueOf(value).getBytes(StandardCharsets.UTF_8));
+            char[] chars = new char[hash.length * 2];
+            char[] hex = "0123456789abcdef".toCharArray();
+            for (int index = 0; index < hash.length; index++) {
+                int item = hash[index] & 0xff;
+                chars[index * 2] = hex[item >>> 4];
+                chars[index * 2 + 1] = hex[item & 0x0f];
+            }
+            return new String(chars);
+        } catch (Exception ex) {
+            return String.valueOf(value == null ? "" : value.hashCode());
+        }
     }
 
     private List<String> unionStringLists(Object first, Object second) {
@@ -1483,6 +1572,20 @@ public class UploadService {
         APPEND,
         MERGE,
         OVERWRITE
+    }
+
+    private record CleanKpiRecordsResult(List<Map<String, Object>> records, Map<String, Object> stats) {
+        private static CleanKpiRecordsResult unchanged(List<Map<String, Object>> records) {
+            Map<String, Object> stats = new LinkedHashMap<>();
+            stats.put("enabled", false);
+            stats.put("inputRows", records == null ? 0 : records.size());
+            stats.put("storedRows", records == null ? 0 : records.size());
+            stats.put("removedEmptyMetricRows", 0);
+            stats.put("removedDuplicateRows", 0);
+            stats.put("removedInvalidDimensionRows", 0);
+            stats.put("removedRows", 0);
+            return new CleanKpiRecordsResult(records == null ? List.of() : records, stats);
+        }
     }
 
     private void ensureKpiThreshold(Long fileId) {

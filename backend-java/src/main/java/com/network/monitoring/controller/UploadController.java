@@ -1,6 +1,7 @@
 package com.network.monitoring.controller;
 
 import com.network.monitoring.service.KpiUploadPreviewService;
+import com.network.monitoring.service.UploadJobService;
 import com.network.monitoring.service.UploadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,10 +23,12 @@ public class UploadController {
 
     private final UploadService uploadService;
     private final KpiUploadPreviewService kpiUploadPreviewService;
+    private final UploadJobService uploadJobService;
 
-    public UploadController(UploadService uploadService, KpiUploadPreviewService kpiUploadPreviewService) {
+    public UploadController(UploadService uploadService, KpiUploadPreviewService kpiUploadPreviewService, UploadJobService uploadJobService) {
         this.uploadService = uploadService;
         this.kpiUploadPreviewService = kpiUploadPreviewService;
+        this.uploadJobService = uploadJobService;
     }
 
     @PostMapping("/upload")
@@ -36,8 +39,9 @@ public class UploadController {
             @RequestParam(value = "appendOption", required = false) String appendOption,
             @RequestParam(value = "fileId", required = false) Long fileId,
             @RequestParam(value = "targetFileId", required = false) Long targetFileId,
-            @RequestParam(value = "columnMapping", required = false) String columnMapping) {
-        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping));
+            @RequestParam(value = "columnMapping", required = false) String columnMapping,
+            @RequestParam(value = "cleanKpiData", required = false) Boolean cleanKpiData) {
+        return executeUpload(() -> uploadJobService.startKpiUploadJob(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping, Boolean.TRUE.equals(cleanKpiData)));
     }
 
     @PostMapping("/kpi")
@@ -48,8 +52,40 @@ public class UploadController {
             @RequestParam(value = "appendOption", required = false) String appendOption,
             @RequestParam(value = "fileId", required = false) Long fileId,
             @RequestParam(value = "targetFileId", required = false) Long targetFileId,
-            @RequestParam(value = "columnMapping", required = false) String columnMapping) {
-        return executeUpload(() -> uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping));
+            @RequestParam(value = "columnMapping", required = false) String columnMapping,
+            @RequestParam(value = "cleanKpiData", required = false) Boolean cleanKpiData) {
+        return executeUpload(() -> uploadJobService.startKpiUploadJob(file, remarks, uploadedBy, appendOption, targetFileId != null ? targetFileId : fileId, columnMapping, Boolean.TRUE.equals(cleanKpiData)));
+    }
+
+    @GetMapping("/jobs/{jobId}")
+    public ResponseEntity<Map<String, Object>> getUploadJob(@PathVariable("jobId") Long jobId) {
+        try {
+            return ResponseEntity.ok(uploadJobService.getJob(jobId));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/jobs")
+    public ResponseEntity<Map<String, Object>> listUploadJobs(@RequestParam(value = "limit", required = false) Integer limit) {
+        try {
+            return ResponseEntity.ok(uploadJobService.listJobs(limit));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/jobs/{jobId}/retry")
+    public ResponseEntity<Map<String, Object>> retryUploadJob(@PathVariable("jobId") Long jobId) {
+        try {
+            return ResponseEntity.ok(uploadJobService.retryJob(jobId));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
     }
 
     @PostMapping("/kpi/preview")

@@ -36,6 +36,14 @@ public class WorstPerformanceController {
         return ResponseEntity.ok(response("Worst sites retrieved successfully.", worstPerformanceService.worstSites(fileId, metric, limit)));
     }
 
+    @GetMapping("/worst-cells/detail")
+    public ResponseEntity<Map<String, Object>> worstCellDetail(
+            @RequestParam("fileId") Long fileId,
+            @RequestParam("cellName") String cellName,
+            @RequestParam("metric") String metric) {
+        return ResponseEntity.ok(response("Worst cell detail retrieved successfully.", worstPerformanceService.worstCellDetail(fileId, cellName, metric)));
+    }
+
     private Map<String, Object> response(String message, Object data) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
