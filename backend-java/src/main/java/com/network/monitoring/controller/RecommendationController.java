@@ -1,6 +1,7 @@
 package com.network.monitoring.controller;
 
 import com.network.monitoring.service.RecommendationService;
+import com.network.monitoring.service.RecommendationJobService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,9 +25,36 @@ import java.util.Map;
 public class RecommendationController {
 
     private final RecommendationService recommendationService;
+    private final RecommendationJobService recommendationJobService;
 
-    public RecommendationController(RecommendationService recommendationService) {
+    public RecommendationController(RecommendationService recommendationService,
+                                    RecommendationJobService recommendationJobService) {
         this.recommendationService = recommendationService;
+        this.recommendationJobService = recommendationJobService;
+    }
+
+    @PostMapping("/jobs")
+    public ResponseEntity<Map<String, Object>> startRecommendationJob(
+            @RequestParam(value = "fileId", required = false) Long fileId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(recommendationJobService.startJob(fileId, body == null ? Map.of() : body));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/jobs/{jobId}")
+    public ResponseEntity<Map<String, Object>> getRecommendationJob(@PathVariable("jobId") Long jobId) {
+        try {
+            return ResponseEntity.ok(recommendationJobService.getJob(jobId));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+        }
     }
 
     @PostMapping("/run")

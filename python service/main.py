@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 import analyser
+import lb_service
 
 
 PRESETS_FILE = Path(__file__).with_name("rca_presets.json")
@@ -993,6 +994,18 @@ def _parse_args() -> argparse.Namespace:
     run_parser.add_argument("--export-excel", action="store_true", help="Export Excel output")
     run_parser.add_argument("--excel-out", required=False, help="Excel output path")
 
+    lb_parser = sub.add_parser("run-lb-wcf", help="Run load-balancing worst-cell feature engineering and recommendations")
+    lb_parser.add_argument("--kpi-input", required=True, help="Input KPI Excel/CSV path")
+    lb_parser.add_argument("--ta-input", required=False, help="Input TA Excel/CSV path. Optional if KPI input is already feature-engineered.")
+    lb_parser.add_argument("--config", required=True, help="Path to LB config JSON")
+    lb_parser.add_argument("--json-out", required=False, help="Write response JSON to file")
+    lb_parser.add_argument("--output", required=False, help="Write recommendation output to .xlsx or .csv")
+
+    lb_strategy_parser = sub.add_parser("run-lb-layer-strategy", help="Build load-balancing layer strategy setup output")
+    lb_strategy_parser.add_argument("--config", required=True, help="Path to LB layer strategy config JSON")
+    lb_strategy_parser.add_argument("--json-out", required=False, help="Write response JSON to file")
+    lb_strategy_parser.add_argument("--output", required=False, help="Write layer strategy output to .xlsx or .csv")
+
     save_parser = sub.add_parser("save-preset", help="Save config preset")
     save_parser.add_argument("--name", required=True, help="Preset name")
     save_parser.add_argument("--config", required=True, help="Config JSON path")
@@ -1024,6 +1037,29 @@ def main() -> int:
     if args.command == "list-presets":
         for name in list_presets():
             print(name)
+        return 0
+
+    if args.command == "run-lb-wcf":
+        config = _read_config(args.config)
+        response = lb_service.run_lb_wcf(
+            kpi_path=args.kpi_input,
+            ta_path=args.ta_input,
+            config=config,
+            output_path=args.output,
+        )
+        if args.json_out:
+            lb_service.write_json(args.json_out, response)
+        else:
+            print(json.dumps(response, indent=2, default=_json_default))
+        return 0
+
+    if args.command == "run-lb-layer-strategy":
+        config = _read_config(args.config)
+        response = lb_service.build_layer_strategy(config=config, output_path=args.output)
+        if args.json_out:
+            lb_service.write_json(args.json_out, response)
+        else:
+            print(json.dumps(response, indent=2, default=_json_default))
         return 0
 
     if args.command == "run":

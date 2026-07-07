@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SiteDataRepository extends JpaRepository<SiteData, Long> {
     Page<SiteData> findAllByOrderByIdDesc(Pageable pageable);
+    Page<SiteData> findAllByFileId(Long fileId, Pageable pageable);
+    long deleteByFileId(Long fileId);
 }

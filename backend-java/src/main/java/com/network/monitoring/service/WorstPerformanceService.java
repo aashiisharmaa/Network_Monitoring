@@ -1,14 +1,18 @@
 package com.network.monitoring.service;
 
+import com.network.monitoring.entity.KpiThresholdRule;
+import com.network.monitoring.repository.KpiThresholdRuleRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class WorstPerformanceService {
@@ -16,26 +20,27 @@ public class WorstPerformanceService {
     private final KpiDynamicDataService kpiDynamicDataService;
     private final KpiCacheService kpiCacheService;
     private final KpiThresholdRuleService thresholdRuleService;
+    private final KpiThresholdRuleRepository thresholdRuleRepository;
+    private final Map<String, CachedResult> worstCache = new ConcurrentHashMap<>();
 
     public WorstPerformanceService(KpiDynamicDataService kpiDynamicDataService,
                                    KpiCacheService kpiCacheService,
-                                   KpiThresholdRuleService thresholdRuleService) {
+                                   KpiThresholdRuleService thresholdRuleService,
+                                   KpiThresholdRuleRepository thresholdRuleRepository) {
         this.kpiDynamicDataService = kpiDynamicDataService;
         this.kpiCacheService = kpiCacheService;
         this.thresholdRuleService = thresholdRuleService;
+        this.thresholdRuleRepository = thresholdRuleRepository;
     }
 
-    @Transactional(readOnly = true)
     public Map<String, Object> worstCells(Long fileId, String metric, Integer limit) {
         return worst(fileId, metric, limit, "cell");
     }
 
-    @Transactional(readOnly = true)
     public Map<String, Object> worstSites(Long fileId, String metric, Integer limit) {
         return worst(fileId, metric, limit, "site");
     }
 
-    @Transactional(readOnly = true)
     public Map<String, Object> worstCellDetail(Long fileId, String cellName, String metric) {
         if (fileId == null) {
             throw new IllegalArgumentException("fileId is required.");
@@ -49,6 +54,8 @@ public class WorstPerformanceService {
 
         List<Map<String, Object>> records = findDynamicRecords(fileId);
         String metricKey = resolveMetricKey(records, metric);
+        List<KpiThresholdRule> rules = thresholdRuleRepository.findAllByEnabledTrue();
+        Map<String, KpiThresholdRule> ruleCache = new LinkedHashMap<>();
         List<Map<String, Object>> points = new ArrayList<>();
         Aggregate aggregate = new Aggregate(cellName);
         String normalizedCell = normalize(cellName);
@@ -66,7 +73,7 @@ public class WorstPerformanceService {
 
             String site = dimensionValue(record, "site", "siteid", "site_id", "sitename", "site_name");
             String technology = dimensionValue(record, "tech", "technology", "rat");
-            String severity = string(thresholdRuleService.evaluate(metricKey, value, technology).get("severity"));
+            String severity = severity(metricKey, value, technology, rules, ruleCache);
             aggregate.add(value);
             aggregate.cell = first(recordCell, aggregate.cell);
             aggregate.site = first(site, aggregate.site);
@@ -109,9 +116,18 @@ public class WorstPerformanceService {
             throw new IllegalArgumentException("metric is required.");
         }
 
+        int safeLimit = limit == null ? 10 : Math.max(1, Math.min(limit, 100));
+        String cacheKey = fileId + "|" + normalize(requestedMetric) + "|" + groupType + "|" + safeLimit;
+        CachedResult cached = worstCache.get(cacheKey);
+        if (cached != null && cached.expiresAtMillis() > System.currentTimeMillis()) {
+            return copyMap(cached.payload());
+        }
+
         List<Map<String, Object>> records = findDynamicRecords(fileId);
         String metricKey = resolveMetricKey(records, requestedMetric);
         boolean higherIsBad = higherIsBad(requestedMetric, metricKey);
+        List<KpiThresholdRule> rules = thresholdRuleRepository.findAllByEnabledTrue();
+        Map<String, KpiThresholdRule> ruleCache = new LinkedHashMap<>();
         Map<String, Aggregate> aggregates = new LinkedHashMap<>();
 
         for (Map<String, Object> record : records) {
@@ -129,7 +145,7 @@ public class WorstPerformanceService {
             aggregate.site = first(site, aggregate.site);
             aggregate.cell = first(cell, aggregate.cell);
             aggregate.technology = first(technology, aggregate.technology);
-            String severity = string(thresholdRuleService.evaluate(metricKey, value, aggregate.technology).get("severity"));
+            String severity = severity(metricKey, value, aggregate.technology, rules, ruleCache);
             if (!"NORMAL".equalsIgnoreCase(severity)) {
                 aggregate.breachCount++;
             }
@@ -140,7 +156,6 @@ public class WorstPerformanceService {
         if (higherIsBad) {
             comparator = comparator.reversed();
         }
-        int safeLimit = limit == null ? 10 : Math.max(1, Math.min(limit, 100));
         List<Map<String, Object>> items = aggregates.values().stream()
                 .sorted(comparator)
                 .limit(safeLimit)
@@ -158,6 +173,7 @@ public class WorstPerformanceService {
         response.put("groupType", groupType);
         response.put("count", items.size());
         response.put("data", items);
+        worstCache.put(cacheKey, new CachedResult(copyMap(response), System.currentTimeMillis() + 120_000L));
         return response;
     }
 
@@ -231,6 +247,69 @@ public class WorstPerformanceService {
                 || key.contains("utilization");
     }
 
+    private String severity(String metricKey,
+                            Double value,
+                            String technology,
+                            List<KpiThresholdRule> rules,
+                            Map<String, KpiThresholdRule> ruleCache) {
+        KpiThresholdRule rule = bestRule(metricKey, technology, rules, ruleCache);
+        return thresholdRuleService.calculateSeverity(rule, value);
+    }
+
+    private KpiThresholdRule bestRule(String metricName,
+                                      String technology,
+                                      List<KpiThresholdRule> rules,
+                                      Map<String, KpiThresholdRule> cache) {
+        String cacheKey = normalize(metricName) + "|" + normalize(technology);
+        if (cache.containsKey(cacheKey)) {
+            return cache.get(cacheKey);
+        }
+
+        String metricKey = normalize(metricName);
+        String techKey = normalize(technology);
+        KpiThresholdRule best = null;
+        int bestScore = 0;
+        for (KpiThresholdRule rule : rules) {
+            int score = ruleMetricScore(normalize(rule.getMetricName()), metricKey);
+            if (score <= 0) {
+                continue;
+            }
+            String ruleTech = normalize(rule.getTechnology());
+            if (!techKey.isBlank() && ruleTech.equals(techKey)) {
+                score += 30;
+            } else if (ruleTech.isBlank()) {
+                score += 20;
+            } else {
+                score += 5;
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                best = rule;
+            }
+        }
+        cache.put(cacheKey, best);
+        return best;
+    }
+
+    private int ruleMetricScore(String ruleMetric, String uploadedMetric) {
+        if (ruleMetric.isBlank() || uploadedMetric.isBlank()) return 0;
+        if (ruleMetric.equals(uploadedMetric)) return 120;
+        if (uploadedMetric.contains(ruleMetric) || ruleMetric.contains(uploadedMetric)) return 95;
+        Set<String> ruleTokens = tokens(ruleMetric);
+        Set<String> uploadedTokens = tokens(uploadedMetric);
+        if (ruleTokens.isEmpty() || uploadedTokens.isEmpty()) return 0;
+        long overlap = ruleTokens.stream().filter(uploadedTokens::contains).count();
+        return overlap == ruleTokens.size() ? 70 : 0;
+    }
+
+    private Set<String> tokens(String value) {
+        Set<String> result = new LinkedHashSet<>();
+        for (String item : String.valueOf(value).split("[^a-z0-9]+")) {
+            if (!item.isBlank()) result.add(item);
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> objectMap(Object value) {
         if (!(value instanceof Map<?, ?> map)) {
@@ -298,6 +377,13 @@ public class WorstPerformanceService {
 
     private String string(Object value) {
         return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private Map<String, Object> copyMap(Map<String, Object> source) {
+        return new LinkedHashMap<>(source == null ? Map.of() : source);
+    }
+
+    private record CachedResult(Map<String, Object> payload, long expiresAtMillis) {
     }
 
     private static class Aggregate {

@@ -12,6 +12,9 @@ public class SiteData {
     @Id
     private Long id;
 
+    @Column(name = "fileId")
+    private Long fileId;
+
     @Column(name = "Cell Name")
     private String cellName;
 
@@ -108,6 +111,14 @@ public class SiteData {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(Long fileId) {
+        this.fileId = fileId;
     }
 
     public String getCellName() {

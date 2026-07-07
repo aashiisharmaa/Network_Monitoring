@@ -1,8 +1,7 @@
 package com.network.monitoring.security;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.network.monitoring.entity.Session;
-import com.network.monitoring.repository.SessionRepository;
+import com.network.monitoring.service.SessionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,19 +11,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Optional;
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final SessionRepository sessionRepository;
+    private final SessionService sessionService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, SessionRepository sessionRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService, SessionService sessionService) {
         this.jwtService = jwtService;
-        this.sessionRepository = sessionRepository;
+        this.sessionService = sessionService;
     }
 
     @Override
@@ -55,8 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        Optional<Session> session = sessionRepository.findByToken(token);
-        if (session.isEmpty() || session.get().getExpiresAt().isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
+        if (!sessionService.isTokenActive(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Session expired or invalid\"}");

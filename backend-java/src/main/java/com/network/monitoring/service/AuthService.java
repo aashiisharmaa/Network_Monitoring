@@ -23,14 +23,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final JwtService jwtService;
+    private final SessionService sessionService;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository,
                        SessionRepository sessionRepository,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       SessionService sessionService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtService = jwtService;
+        this.sessionService = sessionService;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -77,7 +80,7 @@ public class AuthService {
         if (token == null || token.isBlank()) {
             return;
         }
-        sessionRepository.findByToken(token).ifPresent(sessionRepository::delete);
+        sessionService.deleteByToken(token);
     }
 
     private AuthResult createSessionAndRespond(User user) {

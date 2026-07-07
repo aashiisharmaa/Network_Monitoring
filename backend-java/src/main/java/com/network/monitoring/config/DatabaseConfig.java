@@ -32,6 +32,24 @@ public class DatabaseConfig {
     @Value("${DB_PASSWORD:}")
     private String dbPassword;
 
+    @Value("${spring.datasource.hikari.maximum-pool-size:20}")
+    private int maximumPoolSize;
+
+    @Value("${spring.datasource.hikari.minimum-idle:5}")
+    private int minimumIdle;
+
+    @Value("${spring.datasource.hikari.connection-timeout:20000}")
+    private long connectionTimeout;
+
+    @Value("${spring.datasource.hikari.idle-timeout:300000}")
+    private long idleTimeout;
+
+    @Value("${spring.datasource.hikari.max-lifetime:1200000}")
+    private long maxLifetime;
+
+    @Value("${spring.datasource.hikari.leak-detection-threshold:60000}")
+    private long leakDetectionThreshold;
+
     @Bean
     @Primary
     public DataSource dataSource() {
@@ -45,6 +63,13 @@ public class DatabaseConfig {
             dataSource.setPassword(info.password());
         }
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setMaximumPoolSize(Math.max(5, maximumPoolSize));
+        dataSource.setMinimumIdle(Math.max(1, Math.min(minimumIdle, dataSource.getMaximumPoolSize())));
+        dataSource.setConnectionTimeout(connectionTimeout);
+        dataSource.setIdleTimeout(idleTimeout);
+        dataSource.setMaxLifetime(maxLifetime);
+        dataSource.setLeakDetectionThreshold(leakDetectionThreshold);
+        dataSource.setPoolName("network-monitoring-hikari");
         return dataSource;
     }
 

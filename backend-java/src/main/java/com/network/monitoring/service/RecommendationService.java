@@ -7,8 +7,8 @@ import com.network.monitoring.repository.UploadDataRepository;
 import com.network.monitoring.service.KpiCacheService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +31,9 @@ import java.util.Locale;
 
 @Service
 public class RecommendationService {
+
+    private static final int DEFAULT_INPUT_ROW_LIMIT = 10000;
+    private static final int MAX_INPUT_ROW_LIMIT = 50000;
 
     private final KpiCacheService kpiCacheService;
     private final KpiDynamicDataService kpiDynamicDataService;
@@ -73,14 +76,20 @@ public class RecommendationService {
             throw new IllegalStateException("No KPI data found for fileId " + fileId + ".");
         }
 
+        int inputRowLimit = normalizeRowLimit(body == null ? null : body.get("inputRowLimit"));
+        List<Map<String, Object>> preparedRows = prepareRowsForPython(rows, body == null ? Map.of() : body, inputRowLimit);
+
         Path workDir = Files.createTempDirectory("rca-run-");
         Path inputPath = workDir.resolve("input.xlsx");
         Path configPath = workDir.resolve("config.json");
         Path jsonOutPath = workDir.resolve("result.json");
         Path excelOutPath = workDir.resolve("result.xlsx");
 
-        writeWorkbook(rows, inputPath);
+        writeWorkbook(preparedRows, inputPath);
         Map<String, Object> config = buildPythonConfig(body);
+        config.put("input_row_limit", inputRowLimit);
+        config.put("input_rows_sent", preparedRows.size());
+        config.put("source_rows_available", rows.size());
         Files.writeString(configPath, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), StandardCharsets.UTF_8);
 
         List<String> args = new ArrayList<>(resolvePythonCommand());
@@ -111,7 +120,7 @@ public class RecommendationService {
 
         Map<String, Object> payload = mapper.readValue(Files.readString(jsonOutPath, StandardCharsets.UTF_8), new TypeReference<>() {});
         if (isTruthy(perfLogsEnabledRaw)) {
-            logPerf("runRecommendation", fileId, rows.size(), System.currentTimeMillis() - startedAt);
+            logPerf("runRecommendation", fileId, preparedRows.size(), System.currentTimeMillis() - startedAt);
         }
 
         return new RecommendationResult(payload, exportExcel ? excelOutPath : null, workDir);
@@ -140,8 +149,9 @@ public class RecommendationService {
     }
 
     private void writeWorkbook(List<Map<String, Object>> rows, Path outputPath) throws IOException {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            XSSFSheet sheet = workbook.createSheet("Input");
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
+            workbook.setCompressTempFiles(true);
+            Sheet sheet = workbook.createSheet("Input");
             LinkedHashSet<String> headers = new LinkedHashSet<>();
             for (Map<String, Object> row : rows) {
                 headers.addAll(row.keySet());
@@ -174,8 +184,92 @@ public class RecommendationService {
             Files.createDirectories(outputPath.getParent());
             try (var stream = Files.newOutputStream(outputPath)) {
                 workbook.write(stream);
+                workbook.dispose();
             }
         }
+    }
+
+    private List<Map<String, Object>> prepareRowsForPython(List<Map<String, Object>> rows,
+                                                           Map<String, Object> body,
+                                                           int rowLimit) {
+        if (rows == null || rows.isEmpty()) {
+            return List.of();
+        }
+        List<String> neededColumns = resolveNeededColumns(body);
+        List<Map<String, Object>> source = rows.size() <= rowLimit ? rows : evenlySample(rows, rowLimit);
+        if (neededColumns.isEmpty()) {
+            return source;
+        }
+        List<Map<String, Object>> prepared = new ArrayList<>(source.size());
+        for (Map<String, Object> row : source) {
+            Map<String, Object> slim = new java.util.LinkedHashMap<>();
+            for (String column : neededColumns) {
+                if (row.containsKey(column)) {
+                    slim.put(column, row.get(column));
+                }
+            }
+            if (!slim.isEmpty()) {
+                prepared.add(slim);
+            }
+        }
+        return prepared.isEmpty() ? source : prepared;
+    }
+
+    private List<Map<String, Object>> evenlySample(List<Map<String, Object>> rows, int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, rows.size()));
+        if (rows.size() <= safeLimit) {
+            return rows;
+        }
+        List<Map<String, Object>> sampled = new ArrayList<>(safeLimit);
+        double step = (double) rows.size() / safeLimit;
+        for (int i = 0; i < safeLimit; i++) {
+            sampled.add(rows.get(Math.min(rows.size() - 1, (int) Math.floor(i * step))));
+        }
+        return sampled;
+    }
+
+    private List<String> resolveNeededColumns(Map<String, Object> body) {
+        LinkedHashSet<String> columns = new LinkedHashSet<>();
+        if (body == null) {
+            return List.of();
+        }
+        addMapValues(columns, body.get("columnMapping"));
+        addMapValues(columns, body.get("kpiMapping"));
+        return columns.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .toList();
+    }
+
+    private void addMapValues(LinkedHashSet<String> columns, Object value) {
+        if (!(value instanceof Map<?, ?> map)) {
+            return;
+        }
+        for (Object item : map.values()) {
+            if (item == null) {
+                continue;
+            }
+            String text = String.valueOf(item).trim();
+            if (!text.isBlank()) {
+                columns.add(text);
+            }
+        }
+    }
+
+    private int normalizeRowLimit(Object value) {
+        int parsed = DEFAULT_INPUT_ROW_LIMIT;
+        if (value instanceof Number number) {
+            parsed = number.intValue();
+        } else if (value != null) {
+            try {
+                parsed = Integer.parseInt(String.valueOf(value));
+            } catch (Exception ignored) {
+                parsed = DEFAULT_INPUT_ROW_LIMIT;
+            }
+        }
+        if (parsed <= 0) {
+            return DEFAULT_INPUT_ROW_LIMIT;
+        }
+        return Math.min(parsed, MAX_INPUT_ROW_LIMIT);
     }
 
     private Map<String, Object> buildPythonConfig(Map<String, Object> body) {

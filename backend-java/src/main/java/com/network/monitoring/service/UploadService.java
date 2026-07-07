@@ -12,6 +12,7 @@ import com.network.monitoring.repository.SiteDataRepository;
 import com.network.monitoring.repository.ThresholdRepository;
 import com.network.monitoring.repository.UploadDataRepository;
 import com.network.monitoring.repository.UploadHistoryRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -69,6 +70,7 @@ public class UploadService {
     private final KpiDynamicDataService kpiDynamicDataService;
     private final KpiThresholdRuleService kpiThresholdRuleService;
     private final KpiAlarmService kpiAlarmService;
+    private final SitePredictionService sitePredictionService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
@@ -78,6 +80,9 @@ public class UploadService {
 
     @Value("${app.kpi-debug-logs-enabled:false}")
     private String kpiDebugLogsEnabledRaw;
+
+    @Value("${app.kpi-post-upload-analysis-enabled:false}")
+    private String kpiPostUploadAnalysisEnabledRaw;
 
     public UploadService(ParserService parserService,
                          FileStorageService fileStorageService,
@@ -90,6 +95,7 @@ public class UploadService {
                          KpiDynamicDataService kpiDynamicDataService,
                          KpiThresholdRuleService kpiThresholdRuleService,
                          KpiAlarmService kpiAlarmService,
+                         SitePredictionService sitePredictionService,
                          JdbcTemplate jdbcTemplate,
                          ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
         this.parserService = parserService;
@@ -103,8 +109,15 @@ public class UploadService {
         this.kpiDynamicDataService = kpiDynamicDataService;
         this.kpiThresholdRuleService = kpiThresholdRuleService;
         this.kpiAlarmService = kpiAlarmService;
+        this.sitePredictionService = sitePredictionService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
+    }
+
+    @PostConstruct
+    public void ensureSiteDataSchema() {
+        addSiteDataColumnIfMissing("fileId", "ALTER TABLE `sitedata` ADD COLUMN `fileId` BIGINT NULL");
+        addSiteDataIndexIfMissing("idx_sitedata_fileId", "CREATE INDEX `idx_sitedata_fileId` ON `sitedata` (`fileId`)");
     }
 
     public Map<String, Object> uploadKpiData(MultipartFile file, String remarks, String uploadedBy) throws IOException {
@@ -154,12 +167,14 @@ public class UploadService {
         }
         alarmDataRepository.findAllByFileId(id).forEach(alarmDataRepository::delete);
         uploadDataRepository.findAllByFileId(id).forEach(uploadDataRepository::delete);
+        siteDataRepository.deleteByFileId(id);
         kpiDynamicDataService.deleteByFileId(id);
         alarmDataRepository.flush();
         uploadDataRepository.flush();
         uploadHistoryRepository.findById(id).ifPresent(uploadHistoryRepository::delete);
         uploadHistoryRepository.flush();
         kpiCacheService.deleteKpiCache(id);
+        sitePredictionService.invalidateFile(id);
         clearRedisKpiCaches(id);
         return Map.of("success", true, "message", "Upload and related KPI/alarm data deleted successfully");
     }
@@ -182,8 +197,14 @@ public class UploadService {
     }
 
     public Map<String, Object> getSiteData(int page, int limit) {
+        return getSiteData(page, limit, null);
+    }
+
+    public Map<String, Object> getSiteData(int page, int limit, Long fileId) {
         PageRequest pageRequest = PageRequest.of(Math.max(page, 1) - 1, Math.max(limit, 1), Sort.by(Sort.Direction.ASC, "id"));
-        Page<SiteData> result = siteDataRepository.findAll(pageRequest);
+        Page<SiteData> result = fileId == null
+                ? siteDataRepository.findAll(pageRequest)
+                : siteDataRepository.findAllByFileId(fileId, pageRequest);
 
         List<Map<String, Object>> data = result.getContent().stream()
                 .map(this::toSiteDataPayload)
@@ -192,6 +213,7 @@ public class UploadService {
         Map<String, Object> pagination = new LinkedHashMap<>();
         pagination.put("page", page);
         pagination.put("limit", limit);
+        pagination.put("fileId", fileId);
         pagination.put("totalCount", result.getTotalElements());
         pagination.put("totalPages", result.getTotalPages());
         pagination.put("hasNextPage", result.hasNext());
@@ -402,9 +424,21 @@ public class UploadService {
                 List<Map<String, Object>> dynamicRecords = cleanResult.records();
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
                 kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
-                Map<String, Object> thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
-                kpiThresholdRuleService.saveEvaluationResult(uploadRecord.getId(), thresholdSummary);
-                Map<String, Object> alarmSummary = kpiAlarmService.generateAlarms(uploadRecord.getId());
+                sitePredictionService.invalidateFile(uploadRecord.getId());
+                sitePredictionService.warmFileAsync(uploadRecord.getId());
+                Map<String, Object> thresholdSummary = Map.of(
+                        "status", "SKIPPED",
+                        "message", "Post-upload threshold analysis skipped for faster upload. Use Threshold Rules recheck to generate it."
+                );
+                Map<String, Object> alarmSummary = Map.of(
+                        "status", "SKIPPED",
+                        "message", "Post-upload alarm generation skipped for faster upload. Use Alarms generate to create alarms."
+                );
+                if (isTruthy(kpiPostUploadAnalysisEnabledRaw)) {
+                    thresholdSummary = kpiThresholdRuleService.evaluateUploadedRecords(uploadRecord.getId(), dynamicRecords);
+                    kpiThresholdRuleService.saveEvaluationResult(uploadRecord.getId(), thresholdSummary);
+                    alarmSummary = kpiAlarmService.generateAlarms(uploadRecord.getId());
+                }
                 clearRedisKpiCaches(uploadRecord.getId());
                 Map<String, Object> uploadData = new LinkedHashMap<>();
                 uploadData.put("uploadId", uploadRecord.getId());
@@ -425,20 +459,25 @@ public class UploadService {
                 uploadData.put("alarmSummary", alarmSummary);
                 return Map.of(
                         "success", true,
-                        "message", "KPI upload complete. Stored " + dynamicRecords.size() + " dynamic row(s). Generated " + alarmSummary.getOrDefault("generated", 0) + " alarm(s).",
+                        "message", "KPI upload complete. Stored " + dynamicRecords.size() + " dynamic row(s). Analysis can be run from Threshold Rules or Alarms.",
                         "data", uploadData
                 );
             }
 
             if (datasetType == DatasetType.SITE) {
-                List<SiteData> rows = normalizedRows.stream()
-                        .map(this::mapSiteRow)
-                        .filter(row -> row != null && row.getId() != null)
-                        .toList();
+                long nextGeneratedSiteId = nextSiteDataId();
+                List<SiteData> rows = new ArrayList<>();
+                for (Map<String, Object> row : normalizedRows) {
+                    SiteData mapped = mapSiteRow(row, nextGeneratedSiteId, uploadRecord.getId());
+                    if (mapped != null && mapped.getId() != null) {
+                        rows.add(mapped);
+                        nextGeneratedSiteId = Math.max(nextGeneratedSiteId + 1, mapped.getId() + 1);
+                    }
+                }
                 if (rows.isEmpty()) {
                     return Map.of(
                             "success", false,
-                            "message", "No valid site rows found. Ensure the file contains a valid 'id' column.",
+                            "message", "No valid site rows found. Ensure the file contains site/cell columns such as siteid, site_name, cell_id, cell_name, or short_name.",
                             "data", Map.of(
                                     "uploadId", uploadRecord.getId(),
                                     "datasetType", "site",
@@ -561,6 +600,7 @@ public class UploadService {
     private Map<String, Object> toSiteDataPayload(SiteData row) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("id", row.getId());
+        payload.put("fileId", row.getFileId());
         payload.put("Cell_Name", row.getCellName());
         payload.put("SI_CI", row.getSiCi());
         payload.put("EGCI", row.getEgci());
@@ -1341,6 +1381,32 @@ public class UploadService {
         return cleaned.equals("1") || cleaned.equals("true") || cleaned.equals("yes") || cleaned.equals("on");
     }
 
+    private void addSiteDataColumnIfMissing(String columnName, String alterSql) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'sitedata'
+                  AND COLUMN_NAME = ?
+                """, Integer.class, columnName);
+        if (count == null || count == 0) {
+            jdbcTemplate.execute(alterSql);
+        }
+    }
+
+    private void addSiteDataIndexIfMissing(String indexName, String createSql) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'sitedata'
+                  AND INDEX_NAME = ?
+                """, Integer.class, indexName);
+        if (count == null || count == 0) {
+            jdbcTemplate.execute(createSql);
+        }
+    }
+
     private <T> int insertInChunks(List<T> rows, Class<T> type) {
         if (rows == null || rows.isEmpty()) {
             return 0;
@@ -1498,21 +1564,30 @@ public class UploadService {
         return data;
     }
 
-    private SiteData mapSiteRow(Map<String, Object> row) {
-        Integer id = parseIntSafe(pickValue(row, "id"));
-        if (id == null) {
+    private long nextSiteDataId() {
+        Long next = jdbcTemplate.queryForObject("SELECT COALESCE(MAX(`id`), 0) + 1 FROM `sitedata`", Long.class);
+        return next == null || next < 1 ? 1L : next;
+    }
+
+    private SiteData mapSiteRow(Map<String, Object> row, long generatedId, Long fileId) {
+        String cellName = safeString(pickValue(row, "cell_name", "cellname", "short_name", "shortname"));
+        String cellId = safeString(pickValue(row, "cell_id", "cellid"));
+        String siteId = safeString(pickValue(row, "siteid", "site_id", "site"));
+        String siteName = safeString(pickValue(row, "site_name", "sitename"));
+        if (isBlank(cellName) && isBlank(cellId) && isBlank(siteId) && isBlank(siteName)) {
             return null;
         }
         SiteData data = new SiteData();
-        data.setId(id.longValue());
-        data.setCellName(safeString(pickValue(row, "cell_name", "cellname")));
+        data.setId(generatedId);
+        data.setFileId(fileId);
+        data.setCellName(cellName);
         data.setSiCi(safeString(pickValue(row, "si_ci", "sici")));
         data.setEgci(safeString(pickValue(row, "egci")));
         data.setSuNetworkId(safeString(pickValue(row, "sunetwork_id", "sunetworkid")));
-        data.setSiteId(safeString(pickValue(row, "siteid")));
-        data.setSiteName(safeString(pickValue(row, "site_name", "sitename")));
-        data.setCellId(safeString(pickValue(row, "cell_id", "cellid")));
-        data.setSecId(safeString(pickValue(row, "sec_id", "secid")));
+        data.setSiteId(siteId);
+        data.setSiteName(siteName);
+        data.setCellId(cellId);
+        data.setSecId(safeString(pickValue(row, "sec_id", "secid", "sectorid", "sector_id", "sector")));
         data.setLon(parseFloatSafe(pickValue(row, "lon", "longitude")));
         data.setLat(parseFloatSafe(pickValue(row, "lat", "latitude")));
         data.setTac(parseIntSafe(pickValue(row, "tac")));
@@ -1536,6 +1611,10 @@ public class UploadService {
         data.setAntenna(safeString(pickValue(row, "antenna")));
         data.setRet(safeString(pickValue(row, "ret")));
         return data;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private AlarmData mapAlarmRow(Map<String, Object> row, Long fileId) {

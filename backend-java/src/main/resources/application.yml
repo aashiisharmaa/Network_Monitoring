@@ -10,7 +10,15 @@ spring:
     url: "${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/kpi_tool?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true}"
     username: "${SPRING_DATASOURCE_USERNAME:root}"
     password: "${SPRING_DATASOURCE_PASSWORD:NewPassword@123}"
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:20000}
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT:300000}
+      max-lifetime: ${DB_POOL_MAX_LIFETIME:1200000}
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION:60000}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
       naming:
@@ -20,6 +28,10 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
   redis:
     timeout: 60000
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 app:
   cors:

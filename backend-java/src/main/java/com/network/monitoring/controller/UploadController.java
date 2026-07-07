@@ -144,8 +144,9 @@ public class UploadController {
 
     @GetMapping("/site-data")
     public ResponseEntity<Map<String, Object>> getSiteData(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
-                                                           @RequestParam(value = "limit", required = false, defaultValue = "10000") int limit) {
-        return ResponseEntity.ok(uploadService.getSiteData(page, limit));
+                                                           @RequestParam(value = "limit", required = false, defaultValue = "10000") int limit,
+                                                           @RequestParam(value = "fileId", required = false) Long fileId) {
+        return ResponseEntity.ok(uploadService.getSiteData(page, limit, fileId));
     }
 
     @GetMapping("/alarm-data")

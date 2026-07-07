@@ -16,62 +16,22 @@ if ([string]::IsNullOrWhiteSpace($env:CORS_ORIGINS)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($env:SPRING_JPA_HIBERNATE_DDL_AUTO)) {
-    $env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'update'
+    $env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'none'
 }
 
-$buildDir = 'run-classes'
-if (Test-Path $buildDir) {
-    Remove-Item -Recurse -Force $buildDir
-}
-New-Item -ItemType Directory -Path $buildDir | Out-Null
-
-$projectM2Repo = Join-Path $root '.m2\repository'
-if (Test-Path $projectM2Repo) {
-    $m2Repo = $projectM2Repo
-} else {
-    $m2Repo = Join-Path $env:USERPROFILE '.m2\repository'
+$maven = Join-Path $root 'tools\apache-maven-3.9.15\bin\mvn.cmd'
+if (-not (Test-Path $maven)) {
+    throw "Maven executable not found: $maven"
 }
 
-if (-not (Test-Path $m2Repo)) {
-    throw "Maven local repository not found: $m2Repo"
+& $maven -q "-Dmaven.repo.local=.m2" -DskipTests package
+if ($LASTEXITCODE -ne 0) {
+    throw "Backend package failed with exit code $LASTEXITCODE"
 }
 
-$jarPaths = Get-ChildItem $m2Repo -Recurse -Filter *.jar |
-    Where-Object { $_.Name -notmatch '-(sources|javadoc)\.jar$' } |
-    Where-Object {
-        $_.FullName -notmatch '\\org\\apache\\maven\\' -and
-        $_.FullName -notmatch '\\org\\apache\\maven\\plugins\\' -and
-        $_.FullName -notmatch '\\org\\apache\\maven\\shared\\' -and
-        $_.FullName -notmatch '\\org\\apache\\maven\\resolver\\' -and
-        $_.FullName -notmatch '\\org\\codehaus\\plexus\\' -and
-        $_.FullName -notmatch '\\org\\sonatype\\' -and
-        $_.FullName -notmatch '\\org\\eclipse\\aether\\' -and
-        $_.FullName -notmatch '\\org\\slf4j\\slf4j-api\\1\.7\.'
-    } |
-    ForEach-Object { $_.FullName }
+$jar = Join-Path $root 'target\network-monitoring-backend-1.0.0.jar'
+if (-not (Test-Path $jar)) {
+    throw "Backend jar not found: $jar"
+}
 
-$compileClasspath = $jarPaths -join ';'
-$runtimeClasspath = (@('src\main\resources', $buildDir) + $jarPaths) -join ';'
-
-$compileArgsFile = 'compile-backend.args'
-@"
--cp
-$compileClasspath
--d
-"$buildDir"
-"@ | Set-Content -Encoding ASCII $compileArgsFile
-
-Get-ChildItem 'src\main\java' -Recurse -Filter *.java |
-    ForEach-Object { $_.FullName.Substring($root.Length + 1) } |
-    Add-Content -Encoding ASCII $compileArgsFile
-
-& javac "@$compileArgsFile"
-
-$runArgsFile = 'run-backend.args'
-@"
--cp
-$runtimeClasspath
-com.network.monitoring.Application
-"@ | Set-Content -Encoding ASCII $runArgsFile
-
-& java "@$runArgsFile"
+& java -jar $jar

@@ -6,7 +6,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/kpi")
 public class KpiController {
+
+    private static final int DEFAULT_EXPORT_LONG_ROW_LIMIT = 10000;
+    private static final int MAX_EXPORT_LONG_ROW_LIMIT = 50000;
+    private static final int MAX_EXPORT_GROUP_SHEETS = 6;
 
     private final KpiService kpiService;
 
@@ -626,6 +630,13 @@ public class KpiController {
         }
     }
 
+    private int normalizeExportLimit(int value) {
+        if (value <= 0) {
+            return DEFAULT_EXPORT_LONG_ROW_LIMIT;
+        }
+        return Math.min(value, MAX_EXPORT_LONG_ROW_LIMIT);
+    }
+
     private double toDouble(Object value) {
         if (value == null) {
             return Double.NaN;
@@ -785,6 +796,7 @@ public class KpiController {
         Map<String, Object> activeFiltersInput = getObjectMap(body.get("activeFilters"));
         Map<String, Object> compareRangesInput = getObjectMap(body.get("compareRanges"));
         String exportFormat = "date_matrix".equalsIgnoreCase(String.valueOf(body.getOrDefault("exportFormat", "standard"))) ? "date_matrix" : "standard";
+        int longRowLimit = normalizeExportLimit(toInt(body.getOrDefault("maxLongRows", DEFAULT_EXPORT_LONG_ROW_LIMIT)));
 
         Map<String, String> compareRanges = new LinkedHashMap<>();
         compareRanges.put("preStart", toFilterString(compareRangesInput.getOrDefault("preStart", "")));
@@ -809,6 +821,7 @@ public class KpiController {
                 .toList();
         List<String> groupByKeys = (requestedGroupByKeys.isEmpty() ? selectedFilterKeys : requestedGroupByKeys).stream()
                 .filter(selectedFilterKeys::contains)
+                .limit(MAX_EXPORT_GROUP_SHEETS)
                 .toList();
 
         List<Map<String, Object>> filteredRecords = records.stream()
@@ -850,12 +863,14 @@ public class KpiController {
                 compareRanges,
                 preRecordCount,
                 postRecordCount,
-                activeFilters
+                activeFilters,
+                longRowLimit
         );
         List<Map<String, Object>> kpiOverviewRows = buildDynamicExportOverviewRows(periodRecords, metricKeys, metricLabels, isComparisonMode);
-        List<Map<String, Object>> longRows = buildDynamicExportLongRows(periodRecords, metricKeys, selectedFilterKeys, metricLabels);
+        List<Map<String, Object>> longRows = buildDynamicExportLongRows(periodRecords, metricKeys, selectedFilterKeys, metricLabels, longRowLimit);
 
-        try (Workbook workbook = new XSSFWorkbook()) {
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
+            workbook.setCompressTempFiles(true);
             writeSheetFromRows(workbook, "Summary", summaryRows);
             writeSheetFromRows(workbook, "KPI_Overview", kpiOverviewRows);
             writeSheetFromRows(workbook, "KPI_Data_Long", longRows);
@@ -874,6 +889,7 @@ public class KpiController {
 
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 workbook.write(out);
+                workbook.dispose();
                 return out.toByteArray();
             }
         }
@@ -891,12 +907,15 @@ public class KpiController {
             Map<String, String> compareRanges,
             int preRecordCount,
             int postRecordCount,
-            Map<String, List<String>> activeFilters) {
+            Map<String, List<String>> activeFilters,
+            int longRowLimit) {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(rowOf("Field", "File ID", "Value", fileId));
         rows.add(rowOf("Field", "Exported At", "Value", java.time.Instant.now().toString()));
         rows.add(rowOf("Field", "Total Records (cache)", "Value", records.size()));
         rows.add(rowOf("Field", "Records After Filters", "Value", filteredRecords.size()));
+        rows.add(rowOf("Field", "KPI Data Long Row Limit", "Value", longRowLimit));
+        rows.add(rowOf("Field", "Group Sheets Included", "Value", groupByKeys.size()));
         rows.add(rowOf("Field", "Selected KPI Count", "Value", metricKeys.size()));
         rows.add(rowOf("Field", "Selected KPI Keys", "Value", String.join(", ", metricKeys)));
         rows.add(rowOf("Field", "Selected Filter Keys", "Value", String.join(", ", selectedFilterKeys)));
@@ -989,8 +1008,10 @@ public class KpiController {
             List<PeriodRow> periodRecords,
             List<String> metricKeys,
             List<String> selectedFilterKeys,
-            Map<String, String> metricLabels) {
+            Map<String, String> metricLabels,
+            int rowLimit) {
         List<Map<String, Object>> rows = new ArrayList<>();
+        int safeLimit = normalizeExportLimit(rowLimit);
         for (PeriodRow periodRow : periodRecords) {
             Map<String, Object> row = periodRow.row();
             Map<String, Object> baseDimensions = new LinkedHashMap<>();
@@ -1015,6 +1036,9 @@ public class KpiController {
                 payload.put("value", numeric);
                 payload.putAll(baseDimensions);
                 rows.add(payload);
+                if (rows.size() >= safeLimit) {
+                    return rows;
+                }
             }
         }
         return rows;
@@ -1750,7 +1774,8 @@ public class KpiController {
     }
 
     private byte[] buildExcelPayload(List<Map<String, Object>> rows) throws Exception {
-        try (org.apache.poi.ss.usermodel.Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
+            workbook.setCompressTempFiles(true);
             org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Export");
             if (rows.isEmpty()) {
                 sheet.createRow(0).createCell(0).setCellValue("No data");
@@ -1776,6 +1801,7 @@ public class KpiController {
             }
             try (var out = new java.io.ByteArrayOutputStream()) {
                 workbook.write(out);
+                workbook.dispose();
                 return out.toByteArray();
             }
         }

@@ -163,16 +163,29 @@ public class KpiThresholdRuleService {
             throw new IllegalArgumentException("fileId is required.");
         }
 
-        List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
         List<Map<String, Object>> records = kpiDynamicDataService.findRecordsByFileId(fileId);
+        Map<String, Object> coverage = ensureRulesForRecords(records);
+        List<KpiThresholdRule> rules = repository.findAllByEnabledTrue();
         Map<String, Object> summary = evaluateRecords(fileId, records, rules);
+        summary.put("ruleCoverage", coverage);
         saveEvaluationResult(fileId, summary);
         return summary;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, Object> evaluateUploadedRecords(Long fileId, List<Map<String, Object>> records) {
-        return evaluateRecords(fileId, records, repository.findAllByEnabledTrue());
+        Map<String, Object> coverage = ensureRulesForRecords(records);
+        Map<String, Object> summary = evaluateRecords(fileId, records, repository.findAllByEnabledTrue());
+        summary.put("ruleCoverage", coverage);
+        return summary;
+    }
+
+    @Transactional
+    public Map<String, Object> ensureRulesForFile(Long fileId) {
+        if (fileId == null) {
+            throw new IllegalArgumentException("fileId is required.");
+        }
+        return ensureRulesForRecords(kpiDynamicDataService.findRecordsByFileId(fileId));
     }
 
     @Transactional
@@ -337,6 +350,129 @@ public class KpiThresholdRuleService {
         response.put("metrics", metricSummaries.values().stream().toList());
         response.put("generatedAt", LocalDateTime.now());
         return response;
+    }
+
+    private Map<String, Object> ensureRulesForRecords(List<Map<String, Object>> records) {
+        List<Map<String, Object>> safeRecords = records == null ? List.of() : records;
+        List<KpiThresholdRule> existingRules = repository.findAllByEnabledTrue();
+        Map<String, List<Double>> valuesByMetric = new LinkedHashMap<>();
+
+        for (Map<String, Object> record : safeRecords) {
+            Map<String, Object> metrics = objectMap(record.get("metrics"));
+            for (Map.Entry<String, Object> metric : metrics.entrySet()) {
+                Double value = parseNumber(metric.getValue());
+                if (value == null || !Double.isFinite(value)) {
+                    continue;
+                }
+                valuesByMetric.computeIfAbsent(metric.getKey(), ignored -> new ArrayList<>()).add(value);
+            }
+        }
+
+        List<KpiThresholdRule> created = new ArrayList<>();
+        for (Map.Entry<String, List<Double>> entry : valuesByMetric.entrySet()) {
+            String metricName = entry.getKey();
+            if (metricName == null || metricName.isBlank()) {
+                continue;
+            }
+            if (findBestRule(metricName, null, existingRules) != null) {
+                continue;
+            }
+
+            KpiThresholdRule rule = buildAutoRule(metricName, entry.getValue());
+            created.add(rule);
+            existingRules.add(rule);
+        }
+
+        if (!created.isEmpty()) {
+            repository.saveAll(created);
+        }
+
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("totalNumericMetrics", valuesByMetric.size());
+        coverage.put("createdRules", created.size());
+        coverage.put("existingRules", Math.max(0, valuesByMetric.size() - created.size()));
+        coverage.put("createdMetricNames", created.stream().map(KpiThresholdRule::getMetricName).toList());
+        return coverage;
+    }
+
+    private KpiThresholdRule buildAutoRule(String metricName, List<Double> values) {
+        List<Double> sorted = values == null ? List.of() : values.stream()
+                .filter(value -> value != null && Double.isFinite(value))
+                .sorted()
+                .toList();
+        String direction = inferDirection(metricName);
+
+        KpiThresholdRule rule = new KpiThresholdRule();
+        rule.setMetricName(metricName.trim());
+        rule.setTechnology(null);
+        rule.setDirection(direction);
+        rule.setEnabled(true);
+        rule.setCreatedAt(LocalDateTime.now());
+        rule.setUpdatedAt(LocalDateTime.now());
+
+        if (sorted.isEmpty()) {
+            applyFallbackThresholds(rule, direction);
+            return rule;
+        }
+
+        if (LOWER_IS_BAD.equals(direction)) {
+            rule.setCriticalValue(round(percentile(sorted, 0.05)));
+            rule.setMajorValue(round(percentile(sorted, 0.10)));
+            rule.setMinorValue(round(percentile(sorted, 0.20)));
+            rule.setWarningValue(round(percentile(sorted, 0.30)));
+        } else {
+            rule.setCriticalValue(round(percentile(sorted, 0.95)));
+            rule.setMajorValue(round(percentile(sorted, 0.90)));
+            rule.setMinorValue(round(percentile(sorted, 0.80)));
+            rule.setWarningValue(round(percentile(sorted, 0.70)));
+        }
+        return rule;
+    }
+
+    private void applyFallbackThresholds(KpiThresholdRule rule, String direction) {
+        if (LOWER_IS_BAD.equals(direction)) {
+            rule.setCriticalValue(70.0);
+            rule.setMajorValue(80.0);
+            rule.setMinorValue(85.0);
+            rule.setWarningValue(90.0);
+        } else {
+            rule.setCriticalValue(95.0);
+            rule.setMajorValue(90.0);
+            rule.setMinorValue(80.0);
+            rule.setWarningValue(70.0);
+        }
+    }
+
+    private String inferDirection(String metricName) {
+        String normalized = normalize(metricName);
+        if (containsAny(normalized, List.of(
+                "dcr", "drop", "fail", "failure", "block", "blocked", "congestion", "util", "usage",
+                "latency", "delay", "packetloss", "loss", "rssi", "interference", "noise", "distance"
+        ))) {
+            return HIGHER_IS_BAD;
+        }
+        return LOWER_IS_BAD;
+    }
+
+    private boolean containsAny(String text, List<String> needles) {
+        for (String needle : needles) {
+            if (text.contains(normalize(needle))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private double percentile(List<Double> sortedValues, double percentile) {
+        if (sortedValues == null || sortedValues.isEmpty()) {
+            return 0.0;
+        }
+        int index = (int) Math.round((sortedValues.size() - 1) * Math.max(0.0, Math.min(1.0, percentile)));
+        return sortedValues.get(Math.max(0, Math.min(sortedValues.size() - 1, index)));
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
     public String calculateSeverity(KpiThresholdRule rule, Double value) {
