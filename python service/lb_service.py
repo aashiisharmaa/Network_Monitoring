@@ -183,6 +183,12 @@ def perform_feature_engineering(kpi_df: pd.DataFrame, ta_df: pd.DataFrame) -> pd
     _require_columns(ta_df, ["Cell", "Site", "Band"], "TA input")
     _require_columns(ta_df, DISTANCE_COLUMNS, "TA input")
 
+    kpi_df = kpi_df.copy()
+    ta_df = ta_df.copy()
+    for key in ["Cell", "Site", "Band"]:
+        kpi_df[key] = kpi_df[key].astype(str).str.strip()
+        ta_df[key] = ta_df[key].astype(str).str.strip()
+
     merged = pd.merge(kpi_df, ta_df, how="inner", on=["Cell", "Site", "Band"])
     if merged.empty:
         raise ValueError("No matching KPI/TA rows found on Cell, Site, and Band.")
@@ -234,6 +240,16 @@ def perform_feature_engineering(kpi_df: pd.DataFrame, ta_df: pd.DataFrame) -> pd
         }
     )
     return merged
+
+
+def prepare_kpi_only_input(kpi_df: pd.DataFrame) -> pd.DataFrame:
+    return kpi_df.rename(
+        columns={
+            "User_DL_Averg_THP_Mbps": "DL_throughput",
+            "Inter_freq HOSR%": "Inter_freq_HOSR%",
+            "RRC SR%": "RRC_SR%",
+        }
+    )
 
 
 def _rule_based_recommendations(row: pd.Series, throughput_threshold: float) -> Tuple[List[str], List[float]]:
@@ -371,17 +387,23 @@ def analyze_worst_cells(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 def run_lb_wcf(kpi_path: str, ta_path: Optional[str], config: Dict[str, Any], output_path: Optional[str] = None) -> Dict[str, Any]:
     input_sheet = config.get("sheet_name")
     kpi_df = _read_frame(kpi_path, input_sheet)
+    warnings: List[str] = []
+    ta_input_used = False
     if ta_path:
         ta_df = _read_frame(ta_path, config.get("ta_sheet_name"))
-        engineered = perform_feature_engineering(kpi_df, ta_df)
+        missing_ta_columns = [col for col in ["Cell", "Site", "Band", *DISTANCE_COLUMNS] if col not in ta_df.columns]
+        if missing_ta_columns:
+            warnings.append(
+                "TA distance columns were not found, so LB/WCF ran with KPI data only. "
+                "Coverage features were skipped."
+            )
+            engineered = prepare_kpi_only_input(kpi_df)
+        else:
+            engineered = perform_feature_engineering(kpi_df, ta_df)
+            ta_input_used = True
     else:
-        engineered = kpi_df.rename(
-            columns={
-                "User_DL_Averg_THP_Mbps": "DL_throughput",
-                "Inter_freq HOSR%": "Inter_freq_HOSR%",
-                "RRC SR%": "RRC_SR%",
-            }
-        )
+        warnings.append("No TA file was provided, so LB/WCF ran with KPI data only. Coverage features were skipped.")
+        engineered = prepare_kpi_only_input(kpi_df)
     result_df = analyze_worst_cells(engineered, config)
     if output_path:
         _write_frame(result_df, output_path)
@@ -393,6 +415,8 @@ def run_lb_wcf(kpi_path: str, ta_path: Optional[str], config: Dict[str, Any], ou
             "unbalanced_count": unbalanced_count,
             "balanced_count": int(len(result_df) - unbalanced_count),
             "method": str(config.get("method", "both")),
+            "ta_input_used": ta_input_used,
+            "warnings": warnings,
         },
         "records": _to_records(result_df),
         "exported_file": str(output_path) if output_path else None,
