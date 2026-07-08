@@ -51,7 +51,6 @@ public class LbPredictionService {
         if (fileId == null || fileId <= 0) {
             throw new IllegalArgumentException("fileId is required.");
         }
-
         List<Map<String, Object>> records = kpiDynamicDataService.findRecordsByFileId(fileId);
         if (records.isEmpty()) {
             records = kpiDynamicDataService.getRecordsFromCachePayload(kpiCacheService.readKpiCache(fileId));
@@ -96,7 +95,7 @@ public class LbPredictionService {
 
             ProcessResult result = executeProcess(args, getWorkspaceRoot());
             if (result.exitCode != 0) {
-                throw new IllegalStateException(result.stderr.isBlank() ? result.stdout : result.stderr);
+                throw new IllegalArgumentException(cleanPythonError(result.stderr.isBlank() ? result.stdout : result.stderr));
             }
             if (!Files.exists(resultPath)) {
                 throw new IllegalStateException("Python LB prediction did not produce JSON output.");
@@ -104,7 +103,7 @@ public class LbPredictionService {
 
             Map<String, Object> payload = mapper.readValue(Files.readString(resultPath, StandardCharsets.UTF_8), new TypeReference<>() {});
             payload.put("fileId", fileId);
-            payload.put("taInputUsed", taInput != null);
+            payload.putIfAbsent("taInputUsed", taInput != null);
             return payload;
         } finally {
             cleanup(workDir);
@@ -323,6 +322,25 @@ public class LbPredictionService {
     private String safeFilename(String value) {
         String cleaned = String.valueOf(value == null ? "input.xlsx" : value).replaceAll("[\\\\/:*?\"<>|]", "_");
         return cleaned.isBlank() ? "input.xlsx" : cleaned;
+    }
+
+    private String cleanPythonError(String value) {
+        String message = stringValue(value);
+        if (message.isBlank()) {
+            return "LB/WCF prediction failed.";
+        }
+        String[] lines = message.split("\\R");
+        for (int i = lines.length - 1; i >= 0; i--) {
+            String line = lines[i].trim();
+            int valueErrorIndex = line.indexOf("ValueError:");
+            if (valueErrorIndex >= 0) {
+                return line.substring(valueErrorIndex + "ValueError:".length()).trim();
+            }
+            if (!line.isBlank() && !line.startsWith("File ") && !line.startsWith("Traceback")) {
+                return line;
+            }
+        }
+        return message;
     }
 
     private record ProcessResult(int exitCode, String stdout, String stderr) {
