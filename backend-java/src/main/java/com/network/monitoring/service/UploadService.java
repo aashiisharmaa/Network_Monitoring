@@ -117,6 +117,10 @@ public class UploadService {
     @PostConstruct
     public void ensureSiteDataSchema() {
         addSiteDataColumnIfMissing("fileId", "ALTER TABLE `sitedata` ADD COLUMN `fileId` BIGINT NULL");
+        addSiteDataColumnIfMissing("Sector", "ALTER TABLE `sitedata` ADD COLUMN `Sector` VARCHAR(50) NULL");
+        addSiteDataColumnIfMissing("Band", "ALTER TABLE `sitedata` ADD COLUMN `Band` VARCHAR(50) NULL");
+        addSiteDataColumnIfMissing("Technology", "ALTER TABLE `sitedata` ADD COLUMN `Technology` VARCHAR(50) NULL");
+        addSiteDataColumnIfMissing("EARFCN", "ALTER TABLE `sitedata` ADD COLUMN `EARFCN` INT NULL");
         addSiteDataIndexIfMissing("idx_sitedata_fileId", "CREATE INDEX `idx_sitedata_fileId` ON `sitedata` (`fileId`)");
     }
 
@@ -609,6 +613,7 @@ public class UploadService {
         payload.put("Site_Name", row.getSiteName());
         payload.put("Cell_ID", row.getCellId());
         payload.put("SEC_ID", row.getSecId());
+        payload.put("Sector", row.getSector());
         payload.put("lon", row.getLon());
         payload.put("lat", row.getLat());
         payload.put("TAC", row.getTac());
@@ -624,6 +629,9 @@ public class UploadService {
         payload.put("cellRadius", row.getCellRadius());
         payload.put("RachRootSequence", row.getRachRootSequence());
         payload.put("Bandwidth", row.getBandwidth());
+        payload.put("Band", row.getBand());
+        payload.put("Technology", row.getTechnology());
+        payload.put("EARFCN", row.getEarfcn());
         payload.put("Frequency", row.getFrequency());
         payload.put("Downlink_Center_Frequency", row.getDownlinkCenterFrequency());
         payload.put("Region", row.getRegion());
@@ -1537,12 +1545,12 @@ public class UploadService {
         UploadData data = new UploadData();
         data.setFileId(fileId);
         data.setDate(parseDateSafe(pickValue(row, "date", "datetime")));
-        data.setCellName(safeString(pickValue(row, "cell_name", "cellname")));
+        data.setCellName(safeString(pickValue(row, "cell_name", "cellname", "cell", "short_name", "shortname", "4g_cell_name", "4gcellname")));
         data.setSite(safeString(pickValue(row, "site")));
         data.setBand(safeString(pickValue(row, "band")));
-        data.setTech(safeString(pickValue(row, "tech")));
-        data.setSectorId(safeString(pickValue(row, "sector_id", "sectorid")));
-        data.setSectorName(safeString(pickValue(row, "sector_name", "sectorname")));
+        data.setTech(safeString(pickValue(row, "tech", "technology", "rat")));
+        data.setSectorId(safeString(pickValue(row, "sector_id", "sectorid", "sector", "sec_id", "secid", "sec")));
+        data.setSectorName(safeString(pickValue(row, "sector_name", "sectorname", "sector")));
         data.setGroups(safeString(pickValue(row, "groups", "group")));
         data.setUlPrbUtilizationRate(parseFloatSafe(pickValue(row, "ul_prb_utilization_rate", "ulprbutilizationrate")));
         data.setDlPrbUtilizationRate(parseFloatSafe(pickValue(row, "dl_prb_utilization_rate", "dlprbutilizationrate")));
@@ -1570,10 +1578,13 @@ public class UploadService {
     }
 
     private SiteData mapSiteRow(Map<String, Object> row, long generatedId, Long fileId) {
-        String cellName = safeString(pickValue(row, "cell_name", "cellname", "short_name", "shortname"));
-        String cellId = safeString(pickValue(row, "cell_id", "cellid"));
-        String siteId = safeString(pickValue(row, "siteid", "site_id", "site"));
-        String siteName = safeString(pickValue(row, "site_name", "sitename"));
+        String cellName = safeString(pickValue(row, "4g_cell_name", "4gcellname", "lte_cell_name", "ltecellname", "cell_name", "cellname", "cell", "short_name", "shortname", "eutrancell", "eutrancellfdd", "eutrancelltdd", "localcellname", "local_cell_name", "cell_name_full"));
+        String cellId = safeString(pickValue(row, "4g_cell_id", "4gcellid", "lte_cell_id", "ltecellid", "cell_id", "cellid"));
+        CellNameParts cellParts = parseCellNameParts(cellName);
+        Integer earfcn = parseIntSafe(pickValue(row, "earfcn", "earcfcn", "dl_earfcn", "dl_earcfcn", "dlearfcn", "dlearcfcn", "earfcndl", "earcfcndl", "earfcn_dl", "earcfcn_dl", "earfcn_downlink", "earcfcn_downlink", "downlink_earfcn", "downlink_earcfcn", "dl_channel_number", "dlchannelnumber", "channel_number", "channelnumber", "e_arfcn", "e-arfcn"));
+        String bandFromEarfcn = lteBandFromEarfcn(earfcn);
+        String siteId = firstNonBlank(safeString(pickValue(row, "4g_site_name", "4gsitename", "lte_site_name", "ltesitename", "siteid", "site_id", "site")), cellParts.siteId);
+        String siteName = safeString(pickValue(row, "4g_site_name", "4gsitename", "lte_site_name", "ltesitename", "site_name", "sitename"));
         if (isBlank(cellName) && isBlank(cellId) && isBlank(siteId) && isBlank(siteName)) {
             return null;
         }
@@ -1585,15 +1596,16 @@ public class UploadService {
         data.setEgci(safeString(pickValue(row, "egci")));
         data.setSuNetworkId(safeString(pickValue(row, "sunetwork_id", "sunetworkid")));
         data.setSiteId(siteId);
-        data.setSiteName(siteName);
+        data.setSiteName(firstNonBlank(siteName, siteId));
         data.setCellId(cellId);
         data.setSecId(safeString(pickValue(row, "sec_id", "secid", "sectorid", "sector_id", "sector")));
-        data.setLon(parseFloatSafe(pickValue(row, "lon", "longitude")));
-        data.setLat(parseFloatSafe(pickValue(row, "lat", "latitude")));
+        data.setSector(firstNonBlank(safeString(pickValue(row, "sector", "sec", "sector_id", "sectorid", "sec_id", "secid", "sector_name", "sectorname")), cellParts.sector));
+        data.setLon(parseFloatSafe(pickValue(row, "lon", "lng", "long", "longitude", "site_longitude", "sitelongitude", "cell_longitude", "celllongitude", "x", "decimal_longitude")));
+        data.setLat(parseFloatSafe(pickValue(row, "lat", "latitude", "site_latitude", "sitelatitude", "cell_latitude", "celllatitude", "y", "decimal_latitude")));
         data.setTac(parseIntSafe(pickValue(row, "tac")));
-        data.setPci(parseIntSafe(pickValue(row, "pci")));
+        data.setPci(parseIntSafe(pickValue(row, "pci", "physical_cell_id_pci", "physicalcellidpci")));
         data.setAzimuth(parseIntSafe(pickValue(row, "azimuth")));
-        data.setAntennaHeight(parseFloatSafe(pickValue(row, "antenna_height", "antennaheight")));
+        data.setAntennaHeight(parseFloatSafe(pickValue(row, "antenna_height", "antennaheight", "height_in_m", "heightinm", "height")));
         data.setMTilt(parseFloatSafe(pickValue(row, "m_tilt", "mtilt")));
         data.setETilt(parseFloatSafe(pickValue(row, "e_tilt", "etilt")));
         data.setTxRx(safeString(pickValue(row, "tx_rx", "txrx")));
@@ -1603,6 +1615,9 @@ public class UploadService {
         data.setCellRadius(parseFloatSafe(pickValue(row, "cellradius", "cell_radius")));
         data.setRachRootSequence(parseIntSafe(pickValue(row, "rachrootsequence", "rach_root_sequence")));
         data.setBandwidth(parseIntSafe(pickValue(row, "bandwidth")));
+        data.setBand(firstNonBlank(bandFromEarfcn, safeString(pickValue(row, "band", "frequency_band", "frequencyband", "freq_band", "freqband", "band_name", "bandname", "lte_band", "lteband", "band_indicator", "bandindicator")), cellParts.band));
+        data.setTechnology(firstNonBlank(safeString(pickValue(row, "technology", "tech", "rat", "radio_access_technology", "radioaccesstechnology", "rat_type", "rattype", "technology_type", "technologytype")), cellParts.technology, isBlank(bandFromEarfcn) ? "" : "LTE"));
+        data.setEarfcn(earfcn);
         data.setFrequency(parseIntSafe(pickValue(row, "frequency")));
         data.setDownlinkCenterFrequency(parseIntSafe(pickValue(row, "downlink_center_frequency", "downlinkcenterfrequency", "downlink_frequency")));
         data.setRegion(safeString(pickValue(row, "region")));
@@ -1615,6 +1630,72 @@ public class UploadService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private CellNameParts parseCellNameParts(String cellName) {
+        if (isBlank(cellName)) {
+            return CellNameParts.empty();
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("^(.+?)_([A-Za-z])(\\d{1,3})(?:_?([A-Za-z0-9]+))?$")
+                .matcher(cellName.trim());
+        if (!matcher.matches()) {
+            return CellNameParts.empty();
+        }
+
+        String techCode = matcher.group(2).toUpperCase(Locale.ROOT);
+        String technology = switch (techCode) {
+            case "L" -> "LTE";
+            case "N" -> "NR";
+            case "G" -> "GSM";
+            case "U" -> "UMTS";
+            case "W" -> "WCDMA";
+            default -> techCode;
+        };
+        String band = techCode + String.format(Locale.ROOT, "%02d", Integer.parseInt(matcher.group(3)));
+        String sectorGroup = matcher.group(4);
+        String sector = isBlank(sectorGroup)
+                ? ""
+                : sectorGroup.substring(sectorGroup.length() - 1).toUpperCase(Locale.ROOT);
+        return new CellNameParts(matcher.group(1), technology, band, sector);
+    }
+
+    private String lteBandFromEarfcn(Integer earfcn) {
+        if (earfcn == null) {
+            return "";
+        }
+        int[][] ranges = new int[][] {
+                {0, 599, 1}, {600, 1199, 2}, {1200, 1949, 3}, {1950, 2399, 4},
+                {2400, 2649, 5}, {2650, 2749, 6}, {2750, 3449, 7}, {3450, 3799, 8},
+                {3800, 4149, 9}, {4150, 4749, 10}, {4750, 4949, 11}, {5010, 5179, 12},
+                {5180, 5279, 13}, {5280, 5379, 14}, {5730, 5849, 17}, {5850, 5999, 18},
+                {6000, 6149, 19}, {6150, 6449, 20}, {6450, 6599, 21}, {6600, 7399, 22},
+                {7500, 7699, 23}, {7700, 8039, 24}, {8040, 8689, 25}, {8690, 9039, 26},
+                {9040, 9209, 27}, {9210, 9659, 28}, {9660, 9769, 29}, {9770, 9869, 30},
+                {9870, 9919, 31}, {9920, 10359, 32}, {36000, 36199, 33}, {36200, 36349, 34},
+                {36350, 36949, 35}, {36950, 37549, 36}, {37550, 37749, 37}, {37750, 38249, 38},
+                {38250, 38649, 39}, {38650, 39649, 40}, {39650, 41589, 41}, {41590, 43589, 42},
+                {43590, 45589, 43}, {45590, 46589, 44}, {46590, 46789, 45}, {46790, 54539, 46},
+                {54540, 55239, 47}, {55240, 56739, 48}, {56740, 58239, 49}, {58240, 59089, 50},
+                {59090, 59139, 51}, {59140, 60139, 52}, {60140, 60254, 53}, {65536, 66435, 65},
+                {66436, 67335, 66}, {67336, 67535, 67}, {67536, 67835, 68}, {67836, 68335, 69},
+                {68336, 68585, 70}, {68586, 68935, 71}, {68936, 68985, 72}, {68986, 69035, 73},
+                {69036, 69465, 74}, {69466, 70315, 75}, {70316, 70365, 76}, {70366, 70545, 85},
+                {70546, 70595, 87}, {70596, 70645, 88}
+        };
+
+        for (int[] range : ranges) {
+            if (earfcn >= range[0] && earfcn <= range[1]) {
+                return "L" + String.format(Locale.ROOT, "%02d", range[2]);
+            }
+        }
+        return "";
+    }
+
+    private record CellNameParts(String siteId, String technology, String band, String sector) {
+        private static CellNameParts empty() {
+            return new CellNameParts("", "", "", "");
+        }
     }
 
     private AlarmData mapAlarmRow(Map<String, Object> row, Long fileId) {

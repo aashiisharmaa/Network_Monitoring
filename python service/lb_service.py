@@ -35,10 +35,20 @@ LB_OUTPUT_COLUMNS = [
     "Total Traffic(GB)",
     "DL_throughput",
     "Avg_number_of_RRC_users",
+    "Inter_freq_HOSR%",
+    "RRC_SR%",
+    "CQI Avg",
+    "Cell Availability %",
     "Total Traffic(MB)_share%",
     "%coverage_upto_2km",
     "%coverage_2_6km",
     "%coverage_6km_plus",
+    "coverage_category",
+    "90%_coverage_distance",
+    "95%_coverage_distance",
+    "% Deviation from Mean",
+    "% Deviation from SD",
+    "Deviation in SD",
     "Target",
     "Band_Unbalanced",
     "ML_Cluster",
@@ -49,6 +59,11 @@ LB_OUTPUT_COLUMNS = [
     "Recommendations",
     "Probabilities",
 ]
+
+
+def _overlap_column_name(band: Any) -> str:
+    clean = str(band or "Unknown").strip().replace(" ", "_")
+    return f"overlapping_%_{clean}"
 
 
 def _json_default(value: Any) -> Any:
@@ -177,6 +192,38 @@ def _add_coverage_cluster(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _add_overlap_analysis(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    sector_col = "Sector_x" if "Sector_x" in out.columns else "Sector"
+    group_cols = ["Site"]
+    if sector_col in out.columns:
+        group_cols.append(sector_col)
+
+    for band in out["Band"].dropna().astype(str).unique():
+        out[_overlap_column_name(band)] = 0.0
+
+    for _, group in out.groupby(group_cols, dropna=False):
+        if len(group) < 2:
+            continue
+        vectors = group[DISTANCE_COLUMNS].fillna(0)
+        totals = vectors.sum(axis=1).replace(0, np.nan)
+
+        for row_index, row_vector in vectors.iterrows():
+            row_total = totals.loc[row_index]
+            if pd.isna(row_total) or row_total <= 0:
+                continue
+            for peer_index, peer_vector in vectors.iterrows():
+                if peer_index == row_index:
+                    continue
+                peer_band = str(out.at[peer_index, "Band"])
+                overlap = np.minimum(row_vector.values, peer_vector.values).sum() / row_total * 100
+                out.at[row_index, _overlap_column_name(peer_band)] = max(
+                    float(out.at[row_index, _overlap_column_name(peer_band)] or 0),
+                    float(overlap),
+                )
+    return out
+
+
 def perform_feature_engineering(kpi_df: pd.DataFrame, ta_df: pd.DataFrame) -> pd.DataFrame:
     kpi_df = calculate_traffic_share(kpi_df)
     _require_columns(kpi_df, ["Cell", "Site", "Band"], "KPI input")
@@ -211,6 +258,7 @@ def perform_feature_engineering(kpi_df: pd.DataFrame, ta_df: pd.DataFrame) -> pd
     merged["%coverage_6km_plus"] = (merged["coverage_6km_plus"] / total * 100).fillna(0)
 
     merged = _add_coverage_cluster(merged)
+    merged = _add_overlap_analysis(merged)
     cumulative = merged[DISTANCE_COLUMNS].cumsum(axis=1).div(total, axis=0)
     merged["90%_coverage_distance"] = cumulative.ge(0.90).idxmax(axis=1)
     merged["95%_coverage_distance"] = cumulative.ge(0.95).idxmax(axis=1)
@@ -268,7 +316,7 @@ def _rule_based_recommendations(row: pd.Series, throughput_threshold: float) -> 
     if _float_value(row.get("RRC_SR%"), 100) < 98:
         recommendations.extend(["Adjust threshXLow", "Enable mobilityLoadBalancing"])
         probabilities.extend([0.70, 0.80])
-    if _float_value(row.get("coverage_upto_2km"), 100) < 80:
+    if _float_value(row.get("%coverage_upto_2km"), _float_value(row.get("coverage_upto_2km"), 100)) < 80:
         recommendations.extend(["Lower a5Threshold1Rsrp", "Optimize antenna tilt"])
         probabilities.extend([0.85, 0.90])
     return recommendations, probabilities
@@ -295,7 +343,7 @@ def _ml_recommendations(row: pd.Series, mode: int) -> Tuple[List[str], List[floa
     if mode in {1, 3} and _float_value(row.get("DL_throughput"), 0) < _float_value(row.get("DL_Threshold"), 0):
         recommendations.extend(["Reduce threshXLow", "Lower a5Threshold1Rsrp"])
         probabilities.extend([0.85, 0.80])
-    if mode in {2, 3} and _float_value(row.get("PRB DL Utilization %"), 0) < _float_value(row.get("PRB_Threshold"), 0):
+    if mode in {2, 3} and _float_value(row.get("PRB DL Utilization %"), 0) > _float_value(row.get("PRB_Threshold"), 100):
         recommendations.extend(["Optimize PRB allocation", "Adjust schedulers"])
         probabilities.extend([0.80, 0.75])
     if _float_value(row.get("Inter_freq_HOSR%"), 100) < 95:
@@ -304,7 +352,7 @@ def _ml_recommendations(row: pd.Series, mode: int) -> Tuple[List[str], List[floa
     if _float_value(row.get("RRC_SR%"), 100) < 98:
         recommendations.extend(["Adjust hysteresis", "Enable mobilityLoadBalancing"])
         probabilities.extend([0.70, 0.80])
-    if _float_value(row.get("coverage_upto_2km"), 100) < 80:
+    if _float_value(row.get("%coverage_upto_2km"), _float_value(row.get("coverage_upto_2km"), 100)) < 80:
         recommendations.append("Optimize antenna tilt")
         probabilities.append(0.90)
     return recommendations, probabilities
@@ -329,9 +377,9 @@ def _apply_ml_based(df: pd.DataFrame, mode: int) -> pd.DataFrame:
     if mode == 1:
         out["Target"] = (out["DL_throughput"] < out["DL_Threshold"]).astype(int)
     elif mode == 2:
-        out["Target"] = (out["PRB DL Utilization %"] < out["PRB_Threshold"]).astype(int)
+        out["Target"] = (out["PRB DL Utilization %"] > out["PRB_Threshold"]).astype(int)
     else:
-        out["Target"] = ((out["DL_throughput"] < out["DL_Threshold"]) | (out["PRB DL Utilization %"] < out["PRB_Threshold"])).astype(int)
+        out["Target"] = ((out["DL_throughput"] < out["DL_Threshold"]) | (out["PRB DL Utilization %"] > out["PRB_Threshold"])).astype(int)
     out["Band_Unbalanced"] = np.where(out["Target"] == 1, "Not Balanced", "Balanced")
 
     numeric = out.select_dtypes(include=[np.number]).replace([np.inf, -np.inf], np.nan)
@@ -380,7 +428,8 @@ def analyze_worst_cells(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
     if method in {"ml", "ml-based", "both"}:
         out = _apply_ml_based(out, mode)
 
-    columns = [col for col in LB_OUTPUT_COLUMNS if col in out.columns and not out[col].isna().all()]
+    overlap_columns = [col for col in out.columns if str(col).startswith("overlapping_%_")]
+    columns = [col for col in [*LB_OUTPUT_COLUMNS, *overlap_columns] if col in out.columns and not out[col].isna().all()]
     return out[columns] if columns else out
 
 

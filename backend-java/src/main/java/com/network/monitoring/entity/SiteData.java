@@ -39,6 +39,9 @@ public class SiteData {
     @Column(name = "SEC ID")
     private String secId;
 
+    @Column(name = "Sector")
+    private String sector;
+
     @Column(name = "lon")
     private Double lon;
 
@@ -83,6 +86,15 @@ public class SiteData {
 
     @Column(name = "Bandwidth")
     private Integer bandwidth;
+
+    @Column(name = "Band")
+    private String band;
+
+    @Column(name = "Technology")
+    private String technology;
+
+    @Column(name = "EARFCN")
+    private Integer earfcn;
 
     @Column(name = "Frequency")
     private Integer frequency;
@@ -183,6 +195,14 @@ public class SiteData {
 
     public void setSecId(String secId) {
         this.secId = secId;
+    }
+
+    public String getSector() {
+        return sector;
+    }
+
+    public void setSector(String sector) {
+        this.sector = sector;
     }
 
     public Double getLon() {
@@ -303,6 +323,30 @@ public class SiteData {
 
     public void setBandwidth(Integer bandwidth) {
         this.bandwidth = bandwidth;
+    }
+
+    public String getBand() {
+        return band;
+    }
+
+    public void setBand(String band) {
+        this.band = band;
+    }
+
+    public String getTechnology() {
+        return technology;
+    }
+
+    public void setTechnology(String technology) {
+        this.technology = technology;
+    }
+
+    public Integer getEarfcn() {
+        return earfcn;
+    }
+
+    public void setEarfcn(Integer earfcn) {
+        this.earfcn = earfcn;
     }
 
     public Integer getFrequency() {
