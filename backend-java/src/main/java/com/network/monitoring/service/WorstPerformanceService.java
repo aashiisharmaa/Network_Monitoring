@@ -16,6 +16,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class WorstPerformanceService {
+    private static final String COMBINED_RADIO_METRIC = "__combined_radio__";
+    private static final String COMBINED_RADIO_LABEL = "Combined Radio KPI Score";
+    private static final List<RadioKpiProfile> RADIO_KPI_PROFILES = List.of(
+            new RadioKpiProfile("Load / PRB", 1.25, true, "prb", "utilization", "utilisation", "load"),
+            new RadioKpiProfile("Throughput", 1.20, false, "throughput", "thp", "userdl", "userul", "dlthroughput", "ulthroughput"),
+            new RadioKpiProfile("Accessibility", 1.10, false, "rrc", "setupsuccess", "successrate", "accessibility", "cssr"),
+            new RadioKpiProfile("Availability", 1.00, false, "availability", "avail"),
+            new RadioKpiProfile("Radio Quality", 1.00, false, "cqi", "sinr", "rsrp", "rsrq", "quality"),
+            new RadioKpiProfile("Retainability / Drops", 1.10, true, "drop", "dcr", "loss", "retainability", "erabdrop")
+    );
 
     private final KpiDynamicDataService kpiDynamicDataService;
     private final KpiCacheService kpiCacheService;
@@ -117,6 +127,9 @@ public class WorstPerformanceService {
         }
 
         int safeLimit = limit == null ? 10 : Math.max(1, Math.min(limit, 100));
+        if (COMBINED_RADIO_METRIC.equalsIgnoreCase(requestedMetric) || "combined".equalsIgnoreCase(requestedMetric)) {
+            return combinedWorst(fileId, safeLimit, groupType);
+        }
         String cacheKey = fileId + "|" + normalize(requestedMetric) + "|" + groupType + "|" + safeLimit;
         CachedResult cached = worstCache.get(cacheKey);
         if (cached != null && cached.expiresAtMillis() > System.currentTimeMillis()) {
@@ -175,6 +188,166 @@ public class WorstPerformanceService {
         response.put("data", items);
         worstCache.put(cacheKey, new CachedResult(copyMap(response), System.currentTimeMillis() + 120_000L));
         return response;
+    }
+
+    private Map<String, Object> combinedWorst(Long fileId, int safeLimit, String groupType) {
+        String cacheKey = fileId + "|" + COMBINED_RADIO_METRIC + "|" + groupType + "|" + safeLimit;
+        CachedResult cached = worstCache.get(cacheKey);
+        if (cached != null && cached.expiresAtMillis() > System.currentTimeMillis()) {
+            return copyMap(cached.payload());
+        }
+
+        List<Map<String, Object>> records = findDynamicRecords(fileId);
+        List<SelectedRadioMetric> selectedMetrics = selectRadioMetrics(records);
+        if (selectedMetrics.isEmpty()) {
+            throw new IllegalArgumentException("No radio KPI metrics were found in this file.");
+        }
+
+        List<KpiThresholdRule> rules = thresholdRuleRepository.findAllByEnabledTrue();
+        Map<String, KpiThresholdRule> ruleCache = new LinkedHashMap<>();
+        Map<String, MetricRange> ranges = metricRanges(records, selectedMetrics);
+        Map<String, CombinedAggregate> aggregates = new LinkedHashMap<>();
+
+        for (Map<String, Object> record : records) {
+            Map<String, Object> metrics = objectMap(record.get("metrics"));
+            String site = dimensionValue(record, "site", "siteid", "site_id", "sitename", "site_name");
+            String cell = dimensionValue(record, "cellName", "cellid", "cell_id", "cell", "shortname", "short_name");
+            String technology = dimensionValue(record, "tech", "technology", "rat");
+            String groupKey = "site".equals(groupType) ? first(site, "Unknown Site") : first(cell, "Unknown Cell");
+            CombinedAggregate aggregate = aggregates.computeIfAbsent(groupKey, ignored -> new CombinedAggregate(groupKey));
+            aggregate.site = first(site, aggregate.site);
+            aggregate.cell = first(cell, aggregate.cell);
+            aggregate.technology = first(technology, aggregate.technology);
+
+            for (SelectedRadioMetric selectedMetric : selectedMetrics) {
+                Double value = number(metrics.get(selectedMetric.metricKey()));
+                if (value == null) {
+                    continue;
+                }
+                String severity = severity(selectedMetric.metricKey(), value, technology, rules, ruleCache);
+                MetricRange range = ranges.get(selectedMetric.metricKey());
+                double directionalScore = normalizedDirectionScore(value, range, selectedMetric.higherIsBad());
+                double severityScore = severityRank(severity) * 25.0;
+                double score = Math.max(directionalScore * 35.0, severityScore) * selectedMetric.weight();
+                aggregate.addMetricValue(selectedMetric, value, score, severity);
+            }
+        }
+
+        List<Map<String, Object>> items = aggregates.values().stream()
+                .filter(aggregate -> aggregate.metricSampleCount > 0)
+                .sorted(Comparator.comparingDouble(CombinedAggregate::combinedScore).reversed())
+                .limit(safeLimit)
+                .map(aggregate -> toCombinedPayload(aggregate, groupType))
+                .toList();
+        for (int index = 0; index < items.size(); index++) {
+            items.get(index).put("rank", index + 1);
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("fileId", fileId);
+        response.put("requestedMetric", COMBINED_RADIO_METRIC);
+        response.put("metric", COMBINED_RADIO_LABEL);
+        response.put("metricKey", COMBINED_RADIO_METRIC);
+        response.put("direction", "COMBINED_MULTI_KPI");
+        response.put("groupType", groupType);
+        response.put("count", items.size());
+        response.put("selectedMetrics", selectedMetrics.stream().map(SelectedRadioMetric::toPayload).toList());
+        response.put("data", items);
+        worstCache.put(cacheKey, new CachedResult(copyMap(response), System.currentTimeMillis() + 120_000L));
+        return response;
+    }
+
+    private List<SelectedRadioMetric> selectRadioMetrics(List<Map<String, Object>> records) {
+        Set<String> metricKeys = new LinkedHashSet<>();
+        for (Map<String, Object> record : records) {
+            metricKeys.addAll(objectMap(record.get("metrics")).keySet());
+        }
+
+        List<SelectedRadioMetric> selected = new ArrayList<>();
+        Set<String> usedKeys = new LinkedHashSet<>();
+        for (RadioKpiProfile profile : RADIO_KPI_PROFILES) {
+            String bestKey = null;
+            int bestScore = 0;
+            for (String metricKey : metricKeys) {
+                if (usedKeys.contains(metricKey)) {
+                    continue;
+                }
+                int score = profile.score(metricKey);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestKey = metricKey;
+                }
+            }
+            if (bestKey != null) {
+                usedKeys.add(bestKey);
+                selected.add(new SelectedRadioMetric(profile.label(), bestKey, profile.weight(), profile.higherIsBad()));
+            }
+            if (selected.size() >= 5) {
+                break;
+            }
+        }
+
+        if (selected.size() < 3) {
+            for (String metricKey : metricKeys) {
+                if (usedKeys.contains(metricKey)) {
+                    continue;
+                }
+                boolean higherIsBad = higherIsBad(metricKey, metricKey);
+                selected.add(new SelectedRadioMetric("Radio KPI", metricKey, 0.85, higherIsBad));
+                usedKeys.add(metricKey);
+                if (selected.size() >= 5) {
+                    break;
+                }
+            }
+        }
+        return selected;
+    }
+
+    private Map<String, MetricRange> metricRanges(List<Map<String, Object>> records, List<SelectedRadioMetric> selectedMetrics) {
+        Map<String, MetricRange> ranges = new LinkedHashMap<>();
+        for (SelectedRadioMetric metric : selectedMetrics) {
+            ranges.put(metric.metricKey(), new MetricRange());
+        }
+        for (Map<String, Object> record : records) {
+            Map<String, Object> values = objectMap(record.get("metrics"));
+            for (SelectedRadioMetric metric : selectedMetrics) {
+                Double value = number(values.get(metric.metricKey()));
+                if (value != null) {
+                    ranges.get(metric.metricKey()).add(value);
+                }
+            }
+        }
+        return ranges;
+    }
+
+    private double normalizedDirectionScore(double value, MetricRange range, boolean higherIsBad) {
+        if (range == null || !range.hasRange()) {
+            return 0.0;
+        }
+        double normalized = higherIsBad
+                ? (value - range.min) / (range.max - range.min)
+                : (range.max - value) / (range.max - range.min);
+        return Math.max(0.0, Math.min(1.0, normalized));
+    }
+
+    private Map<String, Object> toCombinedPayload(CombinedAggregate aggregate, String groupType) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put(groupType, aggregate.key);
+        payload.put("cellName", aggregate.cell);
+        payload.put("site", aggregate.site);
+        payload.put("technology", aggregate.technology);
+        payload.put("sampleCount", aggregate.metricSampleCount);
+        payload.put("averageValue", round(aggregate.combinedScore()));
+        payload.put("combinedScore", round(aggregate.combinedScore()));
+        payload.put("minValue", round(aggregate.minScore()));
+        payload.put("maxValue", round(aggregate.maxScore()));
+        payload.put("breachCount", aggregate.breachCount);
+        payload.put("affectedMetricCount", aggregate.affectedMetricCount());
+        payload.put("severity", aggregate.severity);
+        payload.put("metricName", COMBINED_RADIO_LABEL);
+        payload.put("metric", COMBINED_RADIO_LABEL);
+        payload.put("metricBreakdown", aggregate.metricPayloads());
+        return payload;
     }
 
     private List<Map<String, Object>> findDynamicRecords(Long fileId) {
@@ -412,5 +585,145 @@ public class WorstPerformanceService {
         private double average() {
             return count == 0 ? 0.0 : sum / count;
         }
+    }
+
+    private record RadioKpiProfile(String label, double weight, boolean higherIsBad, String... tokens) {
+        private int score(String metricKey) {
+            String normalized = metricKey == null ? "" : metricKey.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+            int score = 0;
+            for (String token : tokens) {
+                String normalizedToken = token == null ? "" : token.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+                if (!normalizedToken.isBlank() && normalized.contains(normalizedToken)) {
+                    score += normalizedToken.length() >= 5 ? 20 : 12;
+                }
+            }
+            return score;
+        }
+    }
+
+    private record SelectedRadioMetric(String category, String metricKey, double weight, boolean higherIsBad) {
+        private Map<String, Object> toPayload() {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("category", category);
+            payload.put("metricKey", metricKey);
+            payload.put("weight", weight);
+            payload.put("direction", higherIsBad ? "HIGHER_IS_BAD" : "LOWER_IS_BAD");
+            return payload;
+        }
+    }
+
+    private static class MetricRange {
+        private double min = Double.POSITIVE_INFINITY;
+        private double max = Double.NEGATIVE_INFINITY;
+
+        private void add(double value) {
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+        }
+
+        private boolean hasRange() {
+            return Double.isFinite(min) && Double.isFinite(max) && max > min;
+        }
+    }
+
+    private static class MetricScore {
+        private final SelectedRadioMetric metric;
+        private int count = 0;
+        private int breachCount = 0;
+        private double valueSum = 0.0;
+        private double scoreSum = 0.0;
+        private String severity = "NORMAL";
+
+        private MetricScore(SelectedRadioMetric metric) {
+            this.metric = metric;
+        }
+
+        private void add(double value, double score, String nextSeverity) {
+            count++;
+            valueSum += value;
+            scoreSum += score;
+            if (!"NORMAL".equalsIgnoreCase(nextSeverity)) {
+                breachCount++;
+            }
+            severity = severityRankStatic(nextSeverity) > severityRankStatic(severity) ? nextSeverity : severity;
+        }
+
+        private double averageValue() {
+            return count == 0 ? 0.0 : valueSum / count;
+        }
+
+        private double averageScore() {
+            return count == 0 ? 0.0 : scoreSum / count;
+        }
+    }
+
+    private static class CombinedAggregate {
+        private final String key;
+        private String cell = "";
+        private String site = "";
+        private String technology = "";
+        private String severity = "NORMAL";
+        private int breachCount = 0;
+        private int metricSampleCount = 0;
+        private final Map<String, MetricScore> metricScores = new LinkedHashMap<>();
+
+        private CombinedAggregate(String key) {
+            this.key = key;
+        }
+
+        private void addMetricValue(SelectedRadioMetric metric, double value, double score, String nextSeverity) {
+            MetricScore metricScore = metricScores.computeIfAbsent(metric.metricKey(), ignored -> new MetricScore(metric));
+            metricScore.add(value, score, nextSeverity);
+            metricSampleCount++;
+            if (!"NORMAL".equalsIgnoreCase(nextSeverity)) {
+                breachCount++;
+            }
+            severity = severityRankStatic(nextSeverity) > severityRankStatic(severity) ? nextSeverity : severity;
+        }
+
+        private double combinedScore() {
+            double score = metricScores.values().stream().mapToDouble(MetricScore::averageScore).sum();
+            return score + (affectedMetricCount() * 8.0) + Math.min(40.0, breachCount * 1.5);
+        }
+
+        private double minScore() {
+            return metricScores.values().stream().mapToDouble(MetricScore::averageScore).min().orElse(0.0);
+        }
+
+        private double maxScore() {
+            return metricScores.values().stream().mapToDouble(MetricScore::averageScore).max().orElse(0.0);
+        }
+
+        private int affectedMetricCount() {
+            return (int) metricScores.values().stream().filter(metric -> metric.averageScore() > 12.0 || metric.breachCount > 0).count();
+        }
+
+        private List<Map<String, Object>> metricPayloads() {
+            return metricScores.values().stream()
+                    .sorted(Comparator.comparingDouble(MetricScore::averageScore).reversed())
+                    .map(metric -> {
+                        Map<String, Object> payload = new LinkedHashMap<>();
+                        payload.put("category", metric.metric.category());
+                        payload.put("metricKey", metric.metric.metricKey());
+                        payload.put("direction", metric.metric.higherIsBad() ? "HIGHER_IS_BAD" : "LOWER_IS_BAD");
+                        payload.put("averageValue", Math.round(metric.averageValue() * 100.0) / 100.0);
+                        payload.put("score", Math.round(metric.averageScore() * 100.0) / 100.0);
+                        payload.put("sampleCount", metric.count);
+                        payload.put("breachCount", metric.breachCount);
+                        payload.put("severity", metric.severity);
+                        return payload;
+                    })
+                    .toList();
+        }
+    }
+
+    private static int severityRankStatic(String severity) {
+        return switch (String.valueOf(severity).toUpperCase(Locale.ROOT)) {
+            case "CRITICAL" -> 4;
+            case "MAJOR" -> 3;
+            case "MINOR" -> 2;
+            case "WARNING" -> 1;
+            default -> 0;
+        };
     }
 }

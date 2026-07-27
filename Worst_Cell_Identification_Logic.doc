@@ -1,0 +1,63 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+{\colortbl;\red31\green78\blue121;\red220\green38\blue38;\red15\green23\blue42;}
+\paperw12240\paperh15840\margl1440\margr1440\margt1440\margb1440
+\f0\fs24
+\pard\qc\b\fs36\cf1 Worst Cell Identification Logic\cf0\b0\fs24\par
+\pard\sa240\par
+\pard\b\fs28\cf1 Objective\cf0\b0\fs24\par
+\pard Worst cells are identified based on combined radio performance, not a single KPI. The goal is to find cells that show poor health across multiple important radio KPIs.\par
+\pard\sa200\par
+\pard\b\fs28\cf1 KPI Groups Used\cf0\b0\fs24\par
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl\b KPI Group\b0\cell\b Bad Condition\b0\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Load / PRB\cell High value is bad\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Throughput\cell Low value is bad\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Accessibility\cell Low value is bad\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Availability\cell Low value is bad\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Radio Quality\cell Low value is bad\cell\row
+\trowd\trgaph108\trleft0\cellx3600\cellx8200
+\intbl Retainability / Drops\cell High value is bad\cell\row
+\pard\sa200\par
+\pard\b\fs28\cf1 Example KPI Mapping\cf0\b0\fs24\par
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl\b Uploaded KPI Example\b0\cell\b KPI Group\b0\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl PRB DL Utilization\cell Load / PRB\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl User DL Throughput\cell Throughput\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl RRC Success Rate\cell Accessibility\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl Cell Availability\cell Availability\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl CQI / SINR / RSRP / RSRQ\cell Radio Quality\cell\row
+\trowd\trgaph108\trleft0\cellx4300\cellx8500
+\intbl Drop Rate / DCR / Packet Loss\cell Retainability / Drops\cell\row
+\pard\sa200\par
+\pard\b\fs28\cf1 Evaluation Process\cf0\b0\fs24\par
+\pard 1. Read all KPI records from the selected KPI upload.\par
+\pard 2. Automatically identify KPI columns that match the radio KPI groups.\par
+\pard 3. Evaluate each cell across the selected KPI groups.\par
+\pard 4. Compare KPI direction: high-is-bad KPIs increase badness when values are high, and low-is-bad KPIs increase badness when values are low.\par
+\pard 5. Check threshold rules and assign severity: CRITICAL, MAJOR, MINOR, WARNING, or NORMAL.\par
+\pard 6. Give each KPI a badness score using file comparison and threshold severity.\par
+\pard 7. Combine KPI scores for each cell.\par
+\pard 8. Add extra penalty when a cell has problems in multiple KPI groups.\par
+\pard 9. Sort cells by total combined badness score.\par
+\pard\sa200\par
+\pard\b\fs28\cf1 Final Ranking\cf0\b0\fs24\par
+\pard The final worst-cell rank is based on the combined badness score across multiple radio KPIs. A cell with multiple KPI issues ranks worse than a cell with only one KPI issue.\par
+\pard\sa200\par
+\pard\b\fs28\cf1 Example\cf0\b0\fs24\par
+\pard Cell A has high PRB, low throughput, poor CQI, and low availability. Cell B has only high PRB. Cell A ranks worse because its overall radio health is degraded across multiple KPI groups.\par
+\pard\sa200\par
+\pard\b\fs28\cf1 Conclusion\cf0\b0\fs24\par
+\pard\b Worst Cell = cell with the highest combined radio KPI degradation.\b0\par
+\pard This follows standard RF practice, where 4-5 key KPIs are reviewed together before identifying worst cells.\par
+}
