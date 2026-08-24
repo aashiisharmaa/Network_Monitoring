@@ -128,7 +128,7 @@ public class WorstPerformanceService {
 
         int safeLimit = limit == null ? 10 : Math.max(1, Math.min(limit, 100));
         if (COMBINED_RADIO_METRIC.equalsIgnoreCase(requestedMetric) || "combined".equalsIgnoreCase(requestedMetric)) {
-            return combinedWorst(fileId, safeLimit, groupType);
+            throw new IllegalArgumentException("Select a single KPI metric. Combined multi-KPI worst-cell scoring is disabled.");
         }
         String cacheKey = fileId + "|" + normalize(requestedMetric) + "|" + groupType + "|" + safeLimit;
         CachedResult cached = worstCache.get(cacheKey);
