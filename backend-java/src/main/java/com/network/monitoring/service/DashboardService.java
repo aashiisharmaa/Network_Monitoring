@@ -131,6 +131,21 @@ public class DashboardService {
     }
 
     @Transactional(readOnly = true)
+    public Map<String, Object> getDashboardSummary(Long fileId) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("fileId", fileId);
+        data.put("totalCells", countMergedDistinct("Cell_Name", "cellName", fileId));
+        data.put("totalSites", countMergedDistinct("Site", "site", fileId));
+        data.put("totalBands", countMergedDistinct("Band", "band", fileId));
+        data.put("totalTech", countMergedDistinct("Tech", "tech", fileId));
+        data.put("totalSectors", countMergedDistinct("Sector_ID", "sectorId", fileId));
+        data.put("totalGroups", countMergedDistinct("`Groups`", "groupsName", fileId));
+        data.put("totalRecords", countUploadRecords(fileId));
+        data.put("latestUpload", getLatestUploadPayload(fileId));
+        return data;
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, List<Map<String, Object>>> getDetailedStats() {
         Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
         result.put("bandDistribution", groupByCount("band"));
@@ -280,6 +295,36 @@ public class DashboardService {
         return merged.values().stream()
                 .sorted(Comparator.comparing(item -> String.valueOf(item.getOrDefault("id", "")), String.CASE_INSENSITIVE_ORDER))
                 .toList();
+    }
+
+    private long countMergedDistinct(String uploadColumn, String dynamicColumn, Long fileId) {
+        String uploadValue = "TRIM(CONVERT(" + uploadColumn + " USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
+        String dynamicValue = "TRIM(CONVERT(`" + dynamicColumn + "` USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
+        String uploadWhere = uploadColumn + " IS NOT NULL AND " + uploadValue + " <> ''";
+        String dynamicWhere = "`" + dynamicColumn + "` IS NOT NULL AND " + dynamicValue + " <> ''";
+        List<Object> args = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) FROM (");
+        sql.append("SELECT ").append(uploadValue).append(" AS value FROM `uploaddata` WHERE ").append(uploadWhere);
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(" UNION ");
+        sql.append("SELECT ").append(dynamicValue).append(" AS value FROM `kpidynamicdata` WHERE ").append(dynamicWhere);
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(") merged");
+
+        Query query = entityManager.createNativeQuery(sql.toString());
+        for (int index = 0; index < args.size(); index++) {
+            query.setParameter(index + 1, args.get(index));
+        }
+        Number count = (Number) query.getSingleResult();
+        return count == null ? 0L : count.longValue();
     }
 
     private void addNonBlank(Set<String> values, String value) {

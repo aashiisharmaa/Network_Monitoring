@@ -79,34 +79,75 @@ public class KpiDynamicDataService {
 
     public List<String> listDistinctDimensionValues(String dimension, Long fileId) {
         LinkedHashSet<String> values = new LinkedHashSet<>();
-        for (Map<String, Object> record : findRecords(fileId)) {
-            addNonBlank(values, dimensionValue(record, dimension));
+        String column = dimensionColumn(dimension);
+        if (column == null) {
+            return List.of();
+        }
+
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT `")
+                .append(column)
+                .append("` FROM `kpidynamicdata` WHERE `")
+                .append(column)
+                .append("` IS NOT NULL");
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(" ORDER BY `").append(column).append("` ASC");
+
+        for (String value : jdbcTemplate.queryForList(sql.toString(), String.class, args.toArray())) {
+            addNonBlank(values, value);
         }
         return values.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
     public List<Map<String, Object>> listDistinctSectorSummaries(Long fileId) {
         Map<String, Map<String, Object>> sectors = new LinkedHashMap<>();
-        for (Map<String, Object> record : findRecords(fileId)) {
-            String id = firstNonBlank(
-                    record.get("sectorid"),
-                    dimension(record, "sectorid", "sector_id", "secid", "sec_id", "sec"),
-                    deriveSectorFromCell(record)
-            );
+        StringBuilder sql = new StringBuilder("""
+                SELECT `sectorId` AS id, MIN(`sectorName`) AS name
+                FROM `kpidynamicdata`
+                WHERE `sectorId` IS NOT NULL
+                """);
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        sql.append(" GROUP BY `sectorId` ORDER BY `sectorId` ASC");
+
+        jdbcTemplate.query(sql.toString(), rs -> {
+            String id = rs.getString("id");
             if (id == null || id.isBlank()) {
-                continue;
+                return;
             }
-            String name = firstNonBlank(record.get("sectorname"), dimension(record, "sectorname", "sector_name", "sector"));
+            String name = rs.getString("name");
             sectors.computeIfAbsent(id, ignored -> {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("id", id);
                 item.put("name", name);
                 return item;
             });
-        }
+        }, args.toArray());
         return sectors.values().stream()
                 .sorted((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(String.valueOf(a.get("id")), String.valueOf(b.get("id"))))
                 .toList();
+    }
+
+    private String dimensionColumn(String dimension) {
+        if (dimension == null) {
+            return null;
+        }
+        return switch (dimension.toLowerCase()) {
+            case "cellname", "cell_name", "cell" -> "cellName";
+            case "site" -> "site";
+            case "band" -> "band";
+            case "tech", "technology" -> "tech";
+            case "groups", "group", "groupsname" -> "groupsName";
+            case "sectorid", "sector_id" -> "sectorId";
+            case "sectorname", "sector_name" -> "sectorName";
+            default -> null;
+        };
     }
 
     @SuppressWarnings("unchecked")

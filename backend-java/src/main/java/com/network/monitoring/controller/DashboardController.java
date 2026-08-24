@@ -27,25 +27,7 @@ public class DashboardController {
             @RequestParam(value = "fileId", required = false) Long fileId) {
         long startedAt = System.currentTimeMillis();
         try {
-            List<String> cells = fileId == null ? dashboardService.listDistinctCells() : dashboardService.listDistinctCells(fileId);
-            List<String> sites = fileId == null ? dashboardService.listDistinctSites() : dashboardService.listDistinctSites(fileId);
-            List<String> bands = fileId == null ? dashboardService.listDistinctBands() : dashboardService.listDistinctBands(fileId);
-            List<String> tech = fileId == null ? dashboardService.listDistinctTech() : dashboardService.listDistinctTech(fileId);
-            List<Map<String, Object>> sectors = fileId == null ? dashboardService.listDistinctSectors() : dashboardService.listDistinctSectors(fileId);
-            List<String> groups = fileId == null ? dashboardService.listDistinctGroups() : dashboardService.listDistinctGroups(fileId);
-            long totalRecords = dashboardService.countUploadRecords(fileId);
-            Map<String, Object> latestUpload = dashboardService.getLatestUploadPayload(fileId);
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("fileId", fileId);
-            data.put("totalCells", cells.size());
-            data.put("totalSites", sites.size());
-            data.put("totalBands", bands.size());
-            data.put("totalTech", tech.size());
-            data.put("totalSectors", sectors.size());
-            data.put("totalGroups", groups.size());
-            data.put("totalRecords", totalRecords);
-            data.put("latestUpload", latestUpload);
+            Map<String, Object> data = dashboardService.getDashboardSummary(fileId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
