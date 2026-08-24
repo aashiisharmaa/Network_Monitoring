@@ -1603,7 +1603,7 @@ public class UploadService {
         data.setLon(parseFloatSafe(pickValue(row, "lon", "lng", "long", "longitude", "site_longitude", "sitelongitude", "cell_longitude", "celllongitude", "x", "decimal_longitude")));
         data.setLat(parseFloatSafe(pickValue(row, "lat", "latitude", "site_latitude", "sitelatitude", "cell_latitude", "celllatitude", "y", "decimal_latitude")));
         data.setTac(parseIntSafe(pickValue(row, "tac")));
-        data.setPci(parseIntSafe(pickValue(row, "pci", "physical_cell_id_pci", "physicalcellidpci")));
+        data.setPci(parseIntSafe(pickValue(row, "pci", "physical_cell_id_pci", "physicalcellidpci", "physical_cell_id", "physicalcellid")));
         data.setAzimuth(parseIntSafe(pickValue(row, "azimuth")));
         data.setAntennaHeight(parseFloatSafe(pickValue(row, "antenna_height", "antennaheight", "height_in_m", "heightinm", "height")));
         data.setMTilt(parseFloatSafe(pickValue(row, "m_tilt", "mtilt")));
