@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -24,9 +25,12 @@ public class JwtService {
     }
 
     public String generateToken(Long userId) {
+        Instant now = Instant.now();
         return JWT.create()
                 .withClaim("userId", userId)
-                .withExpiresAt(Date.from(Instant.now().plus(7, ChronoUnit.DAYS)))
+                .withJWTId(UUID.randomUUID().toString())
+                .withIssuedAt(Date.from(now))
+                .withExpiresAt(Date.from(now.plus(7, ChronoUnit.DAYS)))
                 .sign(algorithm);
     }
 
