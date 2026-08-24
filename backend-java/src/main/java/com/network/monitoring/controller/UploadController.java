@@ -3,6 +3,8 @@ package com.network.monitoring.controller;
 import com.network.monitoring.service.KpiUploadPreviewService;
 import com.network.monitoring.service.UploadJobService;
 import com.network.monitoring.service.UploadService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/upload")
 public class UploadController {
+    private static final Logger log = LoggerFactory.getLogger(UploadController.class);
 
     private final UploadService uploadService;
     private final KpiUploadPreviewService kpiUploadPreviewService;
@@ -121,8 +124,8 @@ public class UploadController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
         } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.status(500).body(errorResponse(ex.toString()));
+            log.error("Failed to delete upload {}", id, ex);
+            return ResponseEntity.status(500).body(errorResponse("Internal server error occurred."));
         }
     }
 
@@ -174,9 +177,11 @@ public class UploadController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
         } catch (IOException ex) {
-            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+            log.error("File upload IO failure", ex);
+            return ResponseEntity.status(500).body(errorResponse("File processing failed."));
         } catch (Exception ex) {
-            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
+            log.error("File upload failure", ex);
+            return ResponseEntity.status(500).body(errorResponse("Internal server error occurred."));
         }
     }
 

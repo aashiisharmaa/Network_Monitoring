@@ -5,7 +5,7 @@ import com.network.monitoring.entity.User;
 import com.network.monitoring.repository.SessionRepository;
 import com.network.monitoring.repository.UserRepository;
 import com.network.monitoring.security.JwtService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +24,18 @@ public class AuthService {
     private final SessionRepository sessionRepository;
     private final JwtService jwtService;
     private final SessionService sessionService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository,
                        SessionRepository sessionRepository,
                        JwtService jwtService,
-                       SessionService sessionService) {
+                       SessionService sessionService,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtService = jwtService;
         this.sessionService = sessionService;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
     }
 
     public AuthResult register(String email, String password) {

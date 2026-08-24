@@ -1,6 +1,9 @@
 package com.network.monitoring.service;
 
-import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SessionService {
 
+    private static final Logger log = LoggerFactory.getLogger(SessionService.class);
     private static final long TOKEN_CACHE_TTL_MILLIS = 30_000L;
 
     private final JdbcTemplate jdbcTemplate;
@@ -24,8 +28,12 @@ public class SessionService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void ensureIndexes() {
+        if (!sessionTableExists()) {
+            log.warn("Skipping session index setup because session table does not exist yet.");
+            return;
+        }
         addIndexIfMissing("idx_session_token", "CREATE INDEX `idx_session_token` ON `session` (`token`(191))");
         addIndexIfMissing("idx_session_expires", "CREATE INDEX `idx_session_expires` ON `session` (`expiresAt`)");
         cleanupExpiredSessions();
@@ -62,10 +70,23 @@ public class SessionService {
 
     @Scheduled(cron = "0 10 2 * * *")
     public void cleanupExpiredSessions() {
+        if (!sessionTableExists()) {
+            return;
+        }
         long now = System.currentTimeMillis();
         tokenCache.entrySet().removeIf(entry -> entry.getValue().expiresAtMillis() <= now);
         jdbcTemplate.update("DELETE FROM `session` WHERE `expiresAt` <= ?",
                 Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC)));
+    }
+
+    private boolean sessionTableExists() {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'session'
+                """, Integer.class);
+        return count != null && count > 0;
     }
 
     private void addIndexIfMissing(String indexName, String ddl) {

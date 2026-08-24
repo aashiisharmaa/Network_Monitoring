@@ -17,6 +17,9 @@ public class JwtService {
     private final Algorithm algorithm;
 
     public JwtService(@Value("${app.jwt-secret}") String secret) {
+        if (secret == null || secret.isBlank() || "change-me-in-env".equals(secret)) {
+            throw new IllegalStateException("JWT secret must be configured through JWT_SECRET.");
+        }
         this.algorithm = Algorithm.HMAC256(secret);
     }
 

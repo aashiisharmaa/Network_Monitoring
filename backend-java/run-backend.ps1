@@ -3,8 +3,16 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $null = Push-Location $root
 
-if ([string]::IsNullOrWhiteSpace($env:DATABASE_URL)) {
-    $env:DATABASE_URL = 'mysql://nm_app_user:NmApp1234@127.0.0.1:3306/kpi_tool_nm'
+if ([string]::IsNullOrWhiteSpace($env:SPRING_DATASOURCE_URL)) {
+    $env:SPRING_DATASOURCE_URL = 'jdbc:mysql://127.0.0.1:3306/kpi_tool_nm?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true'
+}
+
+if ([string]::IsNullOrWhiteSpace($env:SPRING_DATASOURCE_USERNAME)) {
+    $env:SPRING_DATASOURCE_USERNAME = 'nm_app_user'
+}
+
+if ([string]::IsNullOrWhiteSpace($env:SPRING_DATASOURCE_PASSWORD)) {
+    $env:SPRING_DATASOURCE_PASSWORD = 'NmApp1234'
 }
 
 if ([string]::IsNullOrWhiteSpace($env:JWT_SECRET)) {
@@ -16,7 +24,7 @@ if ([string]::IsNullOrWhiteSpace($env:CORS_ORIGINS)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($env:SPRING_JPA_HIBERNATE_DDL_AUTO)) {
-    $env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'none'
+    $env:SPRING_JPA_HIBERNATE_DDL_AUTO = 'update'
 }
 
 $maven = Join-Path $root 'tools\apache-maven-3.9.15\bin\mvn.cmd'

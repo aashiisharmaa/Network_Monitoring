@@ -38,7 +38,7 @@ public class Settings {
     @Column(name = "Sector_Name")
     private String sectorName;
 
-    @Column(name = "Groups")
+    @Column(name = "`Groups`")
     private String groups;
 
     @Column(name = "updatedAt")
