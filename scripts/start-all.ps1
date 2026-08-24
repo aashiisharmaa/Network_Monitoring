@@ -29,7 +29,7 @@ if (-not $SkipInstall) {
 }
 
 if ([string]::IsNullOrWhiteSpace($env:SPRING_DATASOURCE_URL)) {
-  $env:SPRING_DATASOURCE_URL = "jdbc:mysql://127.0.0.1:3306/kpi_tool_nm?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true"
+  $env:SPRING_DATASOURCE_URL = "jdbc:mysql://127.0.0.1:3306/kpi_tool?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true"
 }
 if ([string]::IsNullOrWhiteSpace($env:SPRING_DATASOURCE_USERNAME)) {
   $env:SPRING_DATASOURCE_USERNAME = "nm_app_user"
