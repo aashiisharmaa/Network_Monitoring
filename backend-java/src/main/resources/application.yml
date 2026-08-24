@@ -35,7 +35,7 @@ spring:
 
 app:
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,file://}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:4173,http://127.0.0.1:4173,file://}
   upload-base-path: ${UPLOADS_BASE:uploads}
   kpi-cache-path: ${KPI_CACHE_DIR:uploads/kpi-cache}
   python-service-path: ${PYTHON_SERVICE_PATH:python service}
