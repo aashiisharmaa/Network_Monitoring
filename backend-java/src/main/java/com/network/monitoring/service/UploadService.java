@@ -1513,6 +1513,9 @@ public class UploadService {
     }
 
     private String quoteIdentifier(String identifier) {
+        if (identifier != null && identifier.length() >= 2 && identifier.startsWith("`") && identifier.endsWith("`")) {
+            return identifier;
+        }
         return "`" + identifier.replace("`", "``") + "`";
     }
 

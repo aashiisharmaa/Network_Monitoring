@@ -69,7 +69,7 @@ public class UploadJobService {
                   `fileName` VARCHAR(512) NULL,
                   `status` VARCHAR(32) NOT NULL,
                   `progressPercent` INT NOT NULL DEFAULT 0,
-                  `message` VARCHAR(512) NULL,
+                  `message` TEXT NULL,
                   `resultJson` LONGTEXT NULL,
                   `filePath` VARCHAR(1024) NULL,
                   `contentType` VARCHAR(255) NULL,
@@ -94,6 +94,7 @@ public class UploadJobService {
         addColumnIfMissing("targetFileId", "ALTER TABLE `upload_jobs` ADD COLUMN `targetFileId` BIGINT NULL");
         addColumnIfMissing("columnMapping", "ALTER TABLE `upload_jobs` ADD COLUMN `columnMapping` LONGTEXT NULL");
         addColumnIfMissing("cleanKpiData", "ALTER TABLE `upload_jobs` ADD COLUMN `cleanKpiData` BIT(1) NOT NULL DEFAULT b'0'");
+        jdbcTemplate.execute("ALTER TABLE `upload_jobs` MODIFY COLUMN `message` TEXT NULL");
         try {
             Files.createDirectories(jobFileBasePath);
         } catch (IOException ex) {
@@ -322,7 +323,7 @@ public class UploadJobService {
                 UPDATE `upload_jobs`
                 SET `status` = ?, `progressPercent` = ?, `message` = ?, `resultJson` = ?, `updatedAt` = ?
                 WHERE `id` = ?
-                """, status, Math.max(0, Math.min(100, progressPercent)), message, writeJson(result), Timestamp.valueOf(LocalDateTime.now()), jobId);
+                """, status, Math.max(0, Math.min(100, progressPercent)), compactMessage(message), writeJson(result), Timestamp.valueOf(LocalDateTime.now()), jobId);
     }
 
     @Scheduled(cron = "0 20 2 * * *")
@@ -465,6 +466,14 @@ public class UploadJobService {
         } catch (Exception ex) {
             return "{}";
         }
+    }
+
+    private String compactMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        String normalized = message.replaceAll("\\s+", " ").trim();
+        return normalized.length() <= 2000 ? normalized : normalized.substring(0, 2000);
     }
 
     private Map<String, Object> readJsonMap(String value) {
