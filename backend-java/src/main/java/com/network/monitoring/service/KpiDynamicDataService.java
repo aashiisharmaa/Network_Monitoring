@@ -3,6 +3,8 @@ package com.network.monitoring.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ import java.util.regex.Pattern;
 @Service
 public class KpiDynamicDataService {
 
+    private static final Logger log = LoggerFactory.getLogger(KpiDynamicDataService.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final ObjectWriter JSON_WRITER = MAPPER.writer();
     private static final int INSERT_BATCH_SIZE = 1000;
@@ -238,6 +241,31 @@ public class KpiDynamicDataService {
                     INDEX `idx_kpi_metric_values_file_site` (`fileId`, `site`)
                 )
                 """);
+        addColumnIfMissing("kpidynamicdata", "companyId", "ALTER TABLE `kpidynamicdata` ADD COLUMN `companyId` BIGINT NULL AFTER `fileId`");
+        addColumnIfMissing("kpidynamicdata", "rowKey", "ALTER TABLE `kpidynamicdata` ADD COLUMN `rowKey` VARCHAR(191) NULL AFTER `rowIndex`");
+        addColumnIfMissing("kpidynamicdata", "dateValue", "ALTER TABLE `kpidynamicdata` ADD COLUMN `dateValue` VARCHAR(64) NULL");
+        addColumnIfMissing("kpidynamicdata", "cellName", "ALTER TABLE `kpidynamicdata` ADD COLUMN `cellName` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "site", "ALTER TABLE `kpidynamicdata` ADD COLUMN `site` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "band", "ALTER TABLE `kpidynamicdata` ADD COLUMN `band` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "tech", "ALTER TABLE `kpidynamicdata` ADD COLUMN `tech` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "sectorId", "ALTER TABLE `kpidynamicdata` ADD COLUMN `sectorId` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "sectorName", "ALTER TABLE `kpidynamicdata` ADD COLUMN `sectorName` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "groupsName", "ALTER TABLE `kpidynamicdata` ADD COLUMN `groupsName` VARCHAR(255) NULL");
+        addColumnIfMissing("kpidynamicdata", "dimensionsJson", "ALTER TABLE `kpidynamicdata` ADD COLUMN `dimensionsJson` LONGTEXT NULL");
+        addColumnIfMissing("kpidynamicdata", "metricsJson", "ALTER TABLE `kpidynamicdata` ADD COLUMN `metricsJson` LONGTEXT NULL");
+        addColumnIfMissing("kpidynamicdata", "createdAt", "ALTER TABLE `kpidynamicdata` ADD COLUMN `createdAt` DATETIME NULL");
+
+        addColumnIfMissing("kpi_metric_values", "companyId", "ALTER TABLE `kpi_metric_values` ADD COLUMN `companyId` BIGINT NULL AFTER `fileId`");
+        addColumnIfMissing("kpi_metric_values", "rowKey", "ALTER TABLE `kpi_metric_values` ADD COLUMN `rowKey` VARCHAR(191) NULL AFTER `rowIndex`");
+        addColumnIfMissing("kpi_metric_values", "metricValue", "ALTER TABLE `kpi_metric_values` ADD COLUMN `metricValue` DOUBLE NULL");
+        addColumnIfMissing("kpi_metric_values", "cellName", "ALTER TABLE `kpi_metric_values` ADD COLUMN `cellName` VARCHAR(255) NULL");
+        addColumnIfMissing("kpi_metric_values", "site", "ALTER TABLE `kpi_metric_values` ADD COLUMN `site` VARCHAR(255) NULL");
+        addColumnIfMissing("kpi_metric_values", "band", "ALTER TABLE `kpi_metric_values` ADD COLUMN `band` VARCHAR(255) NULL");
+        addColumnIfMissing("kpi_metric_values", "tech", "ALTER TABLE `kpi_metric_values` ADD COLUMN `tech` VARCHAR(255) NULL");
+        addColumnIfMissing("kpi_metric_values", "sectorId", "ALTER TABLE `kpi_metric_values` ADD COLUMN `sectorId` VARCHAR(255) NULL");
+        addColumnIfMissing("kpi_metric_values", "dateValue", "ALTER TABLE `kpi_metric_values` ADD COLUMN `dateValue` VARCHAR(64) NULL");
+        addColumnIfMissing("kpi_metric_values", "createdAt", "ALTER TABLE `kpi_metric_values` ADD COLUMN `createdAt` DATETIME NULL");
+
         addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_cell", "CREATE INDEX `idx_kpidynamicdata_file_cell` ON `kpidynamicdata` (`fileId`, `cellName`)");
         addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_company_file", "CREATE INDEX `idx_kpidynamicdata_company_file` ON `kpidynamicdata` (`companyId`, `fileId`)");
         addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_site", "CREATE INDEX `idx_kpidynamicdata_file_site` ON `kpidynamicdata` (`fileId`, `site`)");
@@ -454,15 +482,36 @@ public class KpiDynamicDataService {
     }
 
     private void addIndexIfMissing(String tableName, String indexName, String ddl) {
-        Integer count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*)
-                FROM INFORMATION_SCHEMA.STATISTICS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = ?
-                  AND INDEX_NAME = ?
-                """, Integer.class, tableName, indexName);
-        if (count == null || count == 0) {
-            jdbcTemplate.execute(ddl);
+        try {
+            Integer count = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*)
+                    FROM INFORMATION_SCHEMA.STATISTICS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = ?
+                      AND INDEX_NAME = ?
+                    """, Integer.class, tableName, indexName);
+            if (count == null || count == 0) {
+                jdbcTemplate.execute(ddl);
+            }
+        } catch (Exception ex) {
+            log.warn("Skipping dynamic KPI index {} on {}: {}", indexName, tableName, ex.getMessage());
+        }
+    }
+
+    private void addColumnIfMissing(String tableName, String columnName, String ddl) {
+        try {
+            Integer count = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*)
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = ?
+                      AND COLUMN_NAME = ?
+                    """, Integer.class, tableName, columnName);
+            if (count == null || count == 0) {
+                jdbcTemplate.execute(ddl);
+            }
+        } catch (Exception ex) {
+            log.warn("Skipping dynamic KPI column {}.{}: {}", tableName, columnName, ex.getMessage());
         }
     }
 

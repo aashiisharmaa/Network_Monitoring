@@ -19,6 +19,8 @@ PRESETS_FILE = Path(__file__).with_name("rca_presets.json")
 DEFAULT_VENDOR = "nokia"
 BASE_FIELDS = ["Short name", "Date", "Cell I'd", "Site I'd", "Tech"]
 DEFAULT_EXPORT_NAME = "vendor_kpi_anomaly_rca_output.xlsx"
+DEFAULT_RESPONSE_ROW_LIMIT = 2000
+MAX_RESPONSE_ROW_LIMIT = 5000
 DATE_PARSE_FORMATS = (
     "%d-%b-%y",
     "%d-%b-%Y",
@@ -53,6 +55,16 @@ def _to_records(df: pd.DataFrame) -> List[Dict[str, Any]]:
         return []
     clean = df.replace({np.nan: None})
     return clean.to_dict(orient="records")
+
+
+def _positive_int(value: Any, default: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    if parsed <= 0:
+        return default
+    return min(parsed, maximum)
 
 
 def _normalize_name(value: Any) -> str:
@@ -270,6 +282,8 @@ def _filter_df_by_range(
         raise ValueError(f"Invalid {label} start_date: {start_raw}")
     if end_raw and pd.isna(end_ts):
         raise ValueError(f"Invalid {label} end_date: {end_raw}")
+    if end_ts is not None and re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(end_raw or "").strip()):
+        end_ts = end_ts + pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)
     if start_ts is not None and end_ts is not None and start_ts > end_ts:
         raise ValueError(f"{label} start_date cannot be greater than end_date.")
 
@@ -283,7 +297,19 @@ def _filter_df_by_range(
 
     rows_after = int(len(filtered))
     if rows_after == 0 and not allow_empty:
-        raise ValueError(f"No rows available after applying {label} date filter.")
+        selected_start = start_ts.date().isoformat() if start_ts is not None else "first available date"
+        selected_end = end_ts.date().isoformat() if end_ts is not None else "last available date"
+        available_dates = pd.to_datetime(df["Date"], errors="coerce").dropna() if "Date" in df.columns else pd.Series(dtype="datetime64[ns]")
+        available_text = ""
+        if not available_dates.empty:
+            available_text = (
+                f" Available data range is {available_dates.min().date().isoformat()} "
+                f"to {available_dates.max().date().isoformat()}."
+            )
+        raise ValueError(
+            f"No rows available after applying {label} date filter "
+            f"({selected_start} to {selected_end}).{available_text}"
+        )
 
     return filtered, {
         "start_date": start_ts.date().isoformat() if start_ts is not None else None,
@@ -438,7 +464,60 @@ def _run_analyser_on_frame(
     rca_rules: Dict[str, float],
     severity_rules: Dict[str, float],
     anomaly_rules: Dict[str, float],
+    export_excel: bool = False,
 ) -> pd.DataFrame:
+    original_cols = list(analyser.SELECTED_COLS)
+    original_meta = dict(analyser.KPI_META)
+    original_rca_rules = dict(analyser.RCA_RULES)
+    original_severity_rules = dict(analyser.SEVERITY_RULES)
+    original_anomaly_rules = dict(analyser.ANOMALY_RULES)
+
+    try:
+        analyser.SELECTED_COLS = list(analyser.SELECTED_COLS)
+        analyser.KPI_META = final_meta
+        analyser.FRIENDLY_MAP = {k: v["friendly"] for k, v in final_meta.items()}
+        analyser.RCA_RULES = rca_rules
+        analyser.SEVERITY_RULES = severity_rules
+        analyser.ANOMALY_RULES = anomaly_rules
+        frames = analyser.analyze_frame(input_df)
+        if export_excel:
+            _write_fast_excel_export(frames, output_path)
+        return frames["anomaly_details"]
+    finally:
+        analyser.SELECTED_COLS = original_cols
+        analyser.KPI_META = original_meta
+        analyser.FRIENDLY_MAP = {k: v["friendly"] for k, v in original_meta.items()}
+        analyser.RCA_RULES = original_rca_rules
+        analyser.SEVERITY_RULES = original_severity_rules
+        analyser.ANOMALY_RULES = original_anomaly_rules
+
+
+def _write_fast_excel_export(frames: Dict[str, pd.DataFrame], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    sheet_map = [
+        ("Anomaly_Details", "anomaly_details"),
+        ("All_Data_Scored", "all_scored"),
+        ("Root_Cause_Summary", "summary_root"),
+        ("Top_Impacted_Cells", "summary_cells"),
+        ("Date_Trend", "summary_dates"),
+        ("Rules_Thresholds", "rules_df"),
+    ]
+    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+        for sheet_name, frame_key in sheet_map:
+            frame = frames.get(frame_key)
+            if isinstance(frame, pd.DataFrame):
+                frame.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+def _run_analyser_on_frame_legacy_excel(
+    input_df: pd.DataFrame,
+    output_path: Path,
+    final_meta: Dict[str, Dict[str, Any]],
+    rca_rules: Dict[str, float],
+    severity_rules: Dict[str, float],
+    anomaly_rules: Dict[str, float],
+) -> pd.DataFrame:
+
     temp_input = Path(tempfile.gettempdir()) / f"rca_input_{next(tempfile._get_candidate_names())}.xlsx"
     input_df.to_excel(temp_input, index=False)
 
@@ -668,14 +747,10 @@ def _build_pre_post_worsened_rows(
     return _to_records(out)
 
 
-def _build_response(anomaly_df: pd.DataFrame, vendor: str) -> Dict[str, Any]:
+def _build_response(anomaly_df: pd.DataFrame, vendor: str, detail_limit: Optional[int] = DEFAULT_RESPONSE_ROW_LIMIT) -> Dict[str, Any]:
     data = anomaly_df.copy()
     if "Date" in data.columns:
         data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
-
-    rec_df = data.apply(lambda r: pd.Series(_build_vendor_recommendation_row(vendor, r)), axis=1) if not data.empty else pd.DataFrame()
-    if not rec_df.empty:
-        data = pd.concat([data, rec_df], axis=1)
 
     summary = {
         "anomaly_count": int(len(data)),
@@ -717,12 +792,25 @@ def _build_response(anomaly_df: pd.DataFrame, vendor: str) -> Dict[str, Any]:
             trend["Avg_Score"] = trend["Avg_Score"].round(2)
             date_trend = _to_records(trend)
 
+    detail_data = data
+    if detail_limit is not None and detail_limit > 0 and len(detail_data) > detail_limit:
+        detail_data = detail_data.head(detail_limit).copy()
+    else:
+        detail_data = detail_data.copy()
+
+    rec_df = detail_data.apply(lambda r: pd.Series(_build_vendor_recommendation_row(vendor, r)), axis=1) if not detail_data.empty else pd.DataFrame()
+    if not rec_df.empty:
+        detail_data = pd.concat([detail_data, rec_df], axis=1)
+
     return {
         "summary": summary,
         "root_cause_summary": root_cause_summary,
         "top_impacted_cells": top_impacted_cells,
         "date_trend": date_trend,
-        "anomaly_details": _to_records(data),
+        "anomaly_details": _to_records(detail_data),
+        "anomaly_details_total": int(len(data)),
+        "anomaly_details_returned": int(len(detail_data)),
+        "anomaly_details_limited": bool(len(detail_data) < len(data)),
     }
 
 
@@ -841,6 +929,11 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
     vendor = str(config.get("vendor", DEFAULT_VENDOR)).strip().lower()
     if vendor not in {"nokia", "ericsson"}:
         vendor = DEFAULT_VENDOR
+    response_row_limit = _positive_int(
+        config.get("response_row_limit"),
+        DEFAULT_RESPONSE_ROW_LIMIT,
+        MAX_RESPONSE_ROW_LIMIT,
+    )
     date_mode = str(config.get("date_mode", "single")).strip().lower()
     if date_mode not in {"single", "pre_post"}:
         date_mode = "single"
@@ -902,6 +995,7 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             rca_rules=rca_rules,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
+            export_excel=False,
         )
         post_anomaly_df = _run_analyser_on_frame(
             input_df=post_df,
@@ -910,21 +1004,25 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             rca_rules=rca_rules,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
+            export_excel=export_excel,
         )
 
-        pre_payload = _build_response(anomaly_df=pre_anomaly_df, vendor=vendor)
-        post_payload = _build_response(anomaly_df=post_anomaly_df, vendor=vendor)
+        pre_payload = _build_response(anomaly_df=pre_anomaly_df, vendor=vendor, detail_limit=response_row_limit)
+        post_payload = _build_response(anomaly_df=post_anomaly_df, vendor=vendor, detail_limit=response_row_limit)
 
         pre_rows = pre_payload.get("anomaly_details", [])
         post_rows = post_payload.get("anomaly_details", [])
         combined_rows = [{**row, "Period": "Pre"} for row in pre_rows] + [{**row, "Period": "Post"} for row in post_rows]
         combined_df = pd.DataFrame(combined_rows)
-        combined_summary = _build_response(anomaly_df=combined_df, vendor=vendor) if not combined_df.empty else {
+        combined_summary = _build_response(anomaly_df=combined_df, vendor=vendor, detail_limit=response_row_limit) if not combined_df.empty else {
             "summary": {"anomaly_count": 0, "critical_count": 0, "major_count": 0},
             "root_cause_summary": [],
             "top_impacted_cells": [],
             "date_trend": [],
             "anomaly_details": [],
+            "anomaly_details_total": 0,
+            "anomaly_details_returned": 0,
+            "anomaly_details_limited": False,
         }
 
         response = dict(combined_summary)
@@ -952,8 +1050,9 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             rca_rules=rca_rules,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
+            export_excel=export_excel,
         )
-        response = _build_response(anomaly_df=anomaly_df, vendor=vendor)
+        response = _build_response(anomaly_df=anomaly_df, vendor=vendor, detail_limit=response_row_limit)
         response["period_mode"] = "single"
         response["applied_date_filter"] = date_filter_meta
         response["worsened_recommendations"] = []

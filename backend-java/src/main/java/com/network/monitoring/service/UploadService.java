@@ -230,11 +230,14 @@ public class UploadService {
         return Map.of("success", true, "data", data, "pagination", pagination);
     }
 
-    public Map<String, Object> getAlarmData(int page, int limit, String circle, String severity, String search, String startDate, String endDate) {
+    public Map<String, Object> getAlarmData(int page, int limit, Long fileId, String circle, String severity, String search, String startDate, String endDate) {
         PageRequest pageRequest = PageRequest.of(Math.max(page, 1) - 1, Math.max(limit, 1), Sort.by(Sort.Direction.DESC, "id"));
 
         List<AlarmData> filtered = alarmDataRepository.findAll((root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            if (fileId != null && fileId > 0) {
+                predicates.add(cb.equal(root.get("fileId"), fileId));
+            }
             if (circle != null && !circle.isBlank()) {
                 predicates.add(cb.or(
                         cb.like(root.get("subNetworkId"), "%" + circle + "%"),
@@ -274,6 +277,9 @@ public class UploadService {
 
         long totalCount = alarmDataRepository.count((root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            if (fileId != null && fileId > 0) {
+                predicates.add(cb.equal(root.get("fileId"), fileId));
+            }
             if (circle != null && !circle.isBlank()) {
                 predicates.add(cb.or(
                         cb.like(root.get("subNetworkId"), "%" + circle + "%"),
@@ -315,6 +321,7 @@ public class UploadService {
         Map<String, Object> pagination = new LinkedHashMap<>();
         pagination.put("page", page);
         pagination.put("limit", limit);
+        pagination.put("fileId", fileId);
         pagination.put("totalCount", totalCount);
         pagination.put("totalPages", (int) Math.ceil(totalCount / (double) Math.max(limit, 1)));
         pagination.put("hasNextPage", page * limit < totalCount);
@@ -1739,28 +1746,28 @@ public class UploadService {
         AlarmData data = new AlarmData();
         data.setFileId(fileId);
         data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
-        data.setFilename(safeString(pickValue(row, "filename", "file_name")));
-        data.setDatetime(parseDateSafe(pickValue(row, "datetime", "date_time", "date")));
-        data.setConfigDataDnPrefix(safeString(pickValue(row, "configdata_dnprefix", "configdatadnprefix")));
-        data.setSubNetworkId(safeString(pickValue(row, "subnetwork_id", "subnetworkid")));
+        data.setFilename(safeString(pickValue(row, "filename", "file_name", "source_file", "sourcefile")));
+        data.setDatetime(parseDateSafe(pickValue(row, "alarm_time", "alarmtime", "datetime", "date_time", "date", "date2", "time")));
+        data.setConfigDataDnPrefix(safeString(pickValue(row, "configdata_dnprefix", "configdatadnprefix", "dn_prefix", "dnprefix")));
+        data.setSubNetworkId(safeString(pickValue(row, "circle", "subnetwork_id", "subnetworkid")));
         data.setSubNetwork2Id(safeString(pickValue(row, "subnetwork_2_id", "subnetwork2id")));
-        data.setMeContextId(safeString(pickValue(row, "mecontext_id", "mecontextid")));
-        data.setManagedElementId(safeString(pickValue(row, "managedelement_id", "managedelementid")));
+        data.setMeContextId(safeString(pickValue(row, "enodeb_id", "enodebid", "enb_id", "enbid", "mecontext_id", "mecontextid")));
+        data.setManagedElementId(safeString(pickValue(row, "enodeb_id", "enodebid", "enb_id", "enbid", "managedelement_id", "managedelementid")));
         data.setVsEquipmentId(safeString(pickValue(row, "vsequipment_id", "vsequipmentid")));
         data.setVsFieldReplaceableUnitId(safeString(pickValue(row, "vsfieldreplaceableunit_id", "vsfieldreplaceableunitid")));
         data.setVsAlarmPortId(safeString(pickValue(row, "vsalarmport_id", "vsalarmportid")));
-        data.setUserLabel(safeString(pickValue(row, "userlabel", "user_label")));
+        data.setUserLabel(safeString(pickValue(row, "name", "userlabel", "user_label", "ne_name", "nename", "node_name", "nodename")));
         data.setAdministrativeState(safeString(pickValue(row, "administrativestate", "administrative_state")));
-        data.setPerceivedSeverity(safeString(pickValue(row, "perceivedseverity", "perceived_severity")));
-        data.setAlarmPortId(safeString(pickValue(row, "alarmportid", "alarm_port_id")));
-        data.setAlarmSlogan(safeString(pickValue(row, "alarmslogan", "alarm_slogan")));
+        data.setPerceivedSeverity(safeString(pickValue(row, "severity", "perceivedseverity", "perceived_severity")));
+        data.setAlarmPortId(safeString(pickValue(row, "alarm_number", "alarmnumber", "alarmportid", "alarm_port_id")));
+        data.setAlarmSlogan(safeString(pickValue(row, "alarm_text", "alarmtext", "alarm_name", "alarmname", "alarmslogan", "alarm_slogan")));
         data.setFilterDelay(safeString(pickValue(row, "filterdelay", "filter_delay")));
         data.setOperationalState(safeString(pickValue(row, "operationalstate", "operational_state")));
-        data.setFilterTime(safeString(pickValue(row, "filtertime", "filter_time")));
-        data.setAvailabilityStatus(safeString(pickValue(row, "availabilitystatus", "availability_status")));
-        data.setFilterAlgorithm(safeString(pickValue(row, "filteralgorithm", "filter_algorithm")));
+        data.setFilterTime(safeString(pickValue(row, "standard_aging", "standardaging", "filtertime", "filter_time")));
+        data.setAvailabilityStatus(safeString(pickValue(row, "supplementry_information", "supplementryinformation", "supplementary_information", "supplementaryinformation", "supplemental_information", "supplementalinformation", "availabilitystatus", "availability_status")));
+        data.setFilterAlgorithm(safeString(pickValue(row, "ageingformula", "agingformula", "filteralgorithm", "filter_algorithm")));
         data.setNormallyOpen(safeString(pickValue(row, "normallyopen", "normally_open")));
-        data.setAlarmInExternalMe(safeString(pickValue(row, "alarminexternalme", "alarm_in_external_me")));
+        data.setAlarmInExternalMe(safeString(pickValue(row, "gpvs", "alarminexternalme", "alarm_in_external_me")));
         data.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
         return data;
     }

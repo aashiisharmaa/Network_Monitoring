@@ -35,6 +35,8 @@ public class LicenseGuardFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/v1/local-license")
                 || path.startsWith("/companies")
                 || path.startsWith("/api/v1/companies")
+                || path.startsWith("/users")
+                || path.startsWith("/api/v1/users")
                 || path.startsWith("/licenses")
                 || path.startsWith("/api/v1/licenses")
                 || path.startsWith("/swagger-ui")

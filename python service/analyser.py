@@ -146,6 +146,283 @@ def severity_from_row(row):
         return 'Moderate'
     return 'Watch'
 
+def analyze_frame(input_df):
+    df = input_df[[c for c in SELECTED_COLS if c in input_df.columns]].copy()
+    for col in SELECTED_COLS:
+        if col not in df.columns:
+            df[col] = np.nan
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values(['Short name','Date']).reset_index(drop=True)
+
+    extra_medians = {
+        'MV_NW Avg Connected User': df.groupby('Short name')['MV_NW Avg Connected User'].transform('median'),
+        'MV_4G Data Volume_GB': df.groupby('Short name')['MV_4G Data Volume_GB'].transform('median'),
+    }
+
+    score_dict, flag_dict, median_dict = {}, {}, {}
+    for kpi, meta in KPI_META.items():
+        grp = df.groupby('Short name')[kpi]
+        med = grp.transform(median_skipna)
+        mad = grp.transform(mad_skipna)
+        scale = (mad * 1.4826).fillna(0).clip(lower=meta['min_scale'])
+        values = df[kpi]
+        if meta['direction'] == 'high_good':
+            z = ((med - values) / scale).clip(lower=0, upper=5)
+            threshold_breach = values < meta['threshold']
+        else:
+            z = ((values - med) / scale).clip(lower=0, upper=5)
+            threshold_breach = values > meta['threshold']
+        score_dict[kpi] = (z + threshold_breach.astype(float) * 1.5) * meta['weight']
+        flag_dict[kpi] = (z >= 2) | threshold_breach
+        median_dict[kpi] = med
+
+    score_df = pd.DataFrame(score_dict)
+    flag_df = pd.DataFrame(flag_dict)
+    df['Anomaly Score'] = score_df.sum(axis=1).round(2)
+    df['Flag Count'] = flag_df.sum(axis=1)
+
+    def get_root_causes(row):
+        coverage_rsrp_poor = _rule_value(RCA_RULES, 'coverage_rsrp_poor', RCA_RULE_DEFAULTS['coverage_rsrp_poor'])
+        coverage_ue_distance = _rule_value(RCA_RULES, 'coverage_ue_distance', RCA_RULE_DEFAULTS['coverage_ue_distance'])
+        coverage_pusch_sinr_low = _rule_value(RCA_RULES, 'coverage_pusch_sinr_low', RCA_RULE_DEFAULTS['coverage_pusch_sinr_low'])
+        coverage_dl_tp_low = _rule_value(RCA_RULES, 'coverage_dl_tp_low', RCA_RULE_DEFAULTS['coverage_dl_tp_low'])
+        ul_interference_pusch_sinr_low = _rule_value(RCA_RULES, 'ul_interference_pusch_sinr_low', RCA_RULE_DEFAULTS['ul_interference_pusch_sinr_low'])
+        ul_interference_rssi_pusch_high = _rule_value(RCA_RULES, 'ul_interference_rssi_pusch_high', RCA_RULE_DEFAULTS['ul_interference_rssi_pusch_high'])
+        ul_interference_ul_ni_high = _rule_value(RCA_RULES, 'ul_interference_ul_ni_high', RCA_RULE_DEFAULTS['ul_interference_ul_ni_high'])
+        ul_interference_packet_loss_ul_high = _rule_value(RCA_RULES, 'ul_interference_packet_loss_ul_high', RCA_RULE_DEFAULTS['ul_interference_packet_loss_ul_high'])
+        congestion_dl_prb_high = _rule_value(RCA_RULES, 'congestion_dl_prb_high', RCA_RULE_DEFAULTS['congestion_dl_prb_high'])
+        congestion_dl_tp_low = _rule_value(RCA_RULES, 'congestion_dl_tp_low', RCA_RULE_DEFAULTS['congestion_dl_tp_low'])
+        congestion_pusch_sinr_low = _rule_value(RCA_RULES, 'congestion_pusch_sinr_low', RCA_RULE_DEFAULTS['congestion_pusch_sinr_low'])
+        congestion_connected_users_high = _rule_value(RCA_RULES, 'congestion_connected_users_high', RCA_RULE_DEFAULTS['congestion_connected_users_high'])
+        mobility_drop_rate_high = _rule_value(RCA_RULES, 'mobility_drop_rate_high', RCA_RULE_DEFAULTS['mobility_drop_rate_high'])
+        mobility_volte_dcr_high = _rule_value(RCA_RULES, 'mobility_volte_dcr_high', RCA_RULE_DEFAULTS['mobility_volte_dcr_high'])
+        mobility_hosr_low = _rule_value(RCA_RULES, 'mobility_hosr_low', RCA_RULE_DEFAULTS['mobility_hosr_low'])
+        accessibility_rrc_setup_low = _rule_value(RCA_RULES, 'accessibility_rrc_setup_low', RCA_RULE_DEFAULTS['accessibility_rrc_setup_low'])
+        accessibility_erab_setup_low = _rule_value(RCA_RULES, 'accessibility_erab_setup_low', RCA_RULE_DEFAULTS['accessibility_erab_setup_low'])
+        accessibility_volte_erab_setup_low = _rule_value(RCA_RULES, 'accessibility_volte_erab_setup_low', RCA_RULE_DEFAULTS['accessibility_volte_erab_setup_low'])
+        accessibility_volte_cssr_low = _rule_value(RCA_RULES, 'accessibility_volte_cssr_low', RCA_RULE_DEFAULTS['accessibility_volte_cssr_low'])
+        availability_radio_low = _rule_value(RCA_RULES, 'availability_radio_low', RCA_RULE_DEFAULTS['availability_radio_low'])
+        transport_packet_loss_dl_high = _rule_value(RCA_RULES, 'transport_packet_loss_dl_high', RCA_RULE_DEFAULTS['transport_packet_loss_dl_high'])
+        transport_packet_loss_ul_high = _rule_value(RCA_RULES, 'transport_packet_loss_ul_high', RCA_RULE_DEFAULTS['transport_packet_loss_ul_high'])
+        transport_volte_packet_loss_dl_high = _rule_value(RCA_RULES, 'transport_volte_packet_loss_dl_high', RCA_RULE_DEFAULTS['transport_volte_packet_loss_dl_high'])
+        transport_volte_packet_loss_ul_high = _rule_value(RCA_RULES, 'transport_volte_packet_loss_ul_high', RCA_RULE_DEFAULTS['transport_volte_packet_loss_ul_high'])
+        transport_dl_tp_low = _rule_value(RCA_RULES, 'transport_dl_tp_low', RCA_RULE_DEFAULTS['transport_dl_tp_low'])
+        transport_volte_dcr_high = _rule_value(RCA_RULES, 'transport_volte_dcr_high', RCA_RULE_DEFAULTS['transport_volte_dcr_high'])
+        transport_drop_rate_high = _rule_value(RCA_RULES, 'transport_drop_rate_high', RCA_RULE_DEFAULTS['transport_drop_rate_high'])
+        transport_volte_cssr_low = _rule_value(RCA_RULES, 'transport_volte_cssr_low', RCA_RULE_DEFAULTS['transport_volte_cssr_low'])
+        radio_quality_pusch_sinr_low = _rule_value(RCA_RULES, 'radio_quality_pusch_sinr_low', RCA_RULE_DEFAULTS['radio_quality_pusch_sinr_low'])
+        radio_quality_cqi_low = _rule_value(RCA_RULES, 'radio_quality_cqi_low', RCA_RULE_DEFAULTS['radio_quality_cqi_low'])
+        throughput_dl_tp_low = _rule_value(RCA_RULES, 'throughput_dl_tp_low', RCA_RULE_DEFAULTS['throughput_dl_tp_low'])
+        fallback_general_score_threshold = _rule_value(ANOMALY_RULES, 'fallback_general_score_threshold', ANOMALY_DEFAULTS['fallback_general_score_threshold'])
+
+        coverage = (
+            pd.notna(row['MV_% RSRP Sample <-110 dBm']) and row['MV_% RSRP Sample <-110 dBm'] > coverage_rsrp_poor and
+            ((pd.notna(row['Average UE Distance_KM']) and row['Average UE Distance_KM'] > coverage_ue_distance) or
+             (pd.notna(row['MV_PUSCH SINR']) and row['MV_PUSCH SINR'] < coverage_pusch_sinr_low) or
+             (pd.notna(row['MV_DL User Throughput_Mbps']) and row['MV_DL User Throughput_Mbps'] < coverage_dl_tp_low))
+        )
+        ul_interference = (
+            pd.notna(row['MV_PUSCH SINR']) and row['MV_PUSCH SINR'] < ul_interference_pusch_sinr_low and
+            (((pd.notna(row['Avg RSSI PUSCH']) and row['Avg RSSI PUSCH'] > ul_interference_rssi_pusch_high)) or
+             ((pd.notna(row['UL NI [RSSI-SINR]']) and row['UL NI [RSSI-SINR]'] > ul_interference_ul_ni_high)) or
+             ((pd.notna(row['MV_Packet Loss UL']) and row['MV_Packet Loss UL'] > ul_interference_packet_loss_ul_high)))
+        )
+        congestion = (
+            pd.notna(row['DL PRB Utilisation']) and row['DL PRB Utilisation'] > congestion_dl_prb_high and
+            (((pd.notna(row['MV_DL User Throughput_Mbps']) and row['MV_DL User Throughput_Mbps'] < congestion_dl_tp_low)) or
+             ((pd.notna(row['MV_PUSCH SINR']) and row['MV_PUSCH SINR'] < congestion_pusch_sinr_low)) or
+             ((pd.notna(row['MV_NW Avg Connected User']) and row['MV_NW Avg Connected User'] > congestion_connected_users_high)))
+        )
+        mobility = (
+            (((pd.notna(row['MV_PS Drop Call Rate %']) and row['MV_PS Drop Call Rate %'] > mobility_drop_rate_high)) or
+             ((pd.notna(row['MV_VoLTE DCR']) and row['MV_VoLTE DCR'] > mobility_volte_dcr_high))) and
+            (((pd.notna(row['PS IntraF HOSR [CDBH]']) and row['PS IntraF HOSR [CDBH]'] < mobility_hosr_low)) or
+             ((pd.notna(row['PS InterF HOSR']) and row['PS InterF HOSR'] < mobility_hosr_low)) or
+             ((pd.notna(row['VoLTE IntraF HOSR [CBBH]']) and row['VoLTE IntraF HOSR [CBBH]'] < mobility_hosr_low)) or
+             ((pd.notna(row['VoLTE InterF HOSR']) and row['VoLTE InterF HOSR'] < mobility_hosr_low)))
+        )
+        accessibility = (
+            ((pd.notna(row['RRC Setup Success Rate']) and row['RRC Setup Success Rate'] < accessibility_rrc_setup_low)) or
+            ((pd.notna(row['MV_ERAB Setup Success Rate']) and row['MV_ERAB Setup Success Rate'] < accessibility_erab_setup_low)) or
+            ((pd.notna(row['VoLTE ERAB Setup Success Rate']) and row['VoLTE ERAB Setup Success Rate'] < accessibility_volte_erab_setup_low)) or
+            ((pd.notna(row['MV_VoLTE CSSR%']) and row['MV_VoLTE CSSR%'] < accessibility_volte_cssr_low))
+        )
+        availability = pd.notna(row['MV_Radio NW Availability']) and row['MV_Radio NW Availability'] < availability_radio_low
+        transport = (
+            ((((pd.notna(row['MV_Packet Loss DL']) and row['MV_Packet Loss DL'] > transport_packet_loss_dl_high)) or
+              ((pd.notna(row['MV_Packet Loss UL']) and row['MV_Packet Loss UL'] > transport_packet_loss_ul_high)) or
+              ((pd.notna(row['MV_VoLTE Packet Loss DL']) and row['MV_VoLTE Packet Loss DL'] > transport_volte_packet_loss_dl_high)) or
+              ((pd.notna(row['MV_VoLTE Packet Loss UL']) and row['MV_VoLTE Packet Loss UL'] > transport_volte_packet_loss_ul_high))) and
+             (((pd.notna(row['MV_DL User Throughput_Mbps']) and row['MV_DL User Throughput_Mbps'] < transport_dl_tp_low)) or
+              ((pd.notna(row['MV_VoLTE DCR']) and row['MV_VoLTE DCR'] > transport_volte_dcr_high)) or
+              ((pd.notna(row['MV_PS Drop Call Rate %']) and row['MV_PS Drop Call Rate %'] > transport_drop_rate_high)) or
+              ((pd.notna(row['MV_VoLTE CSSR%']) and row['MV_VoLTE CSSR%'] < transport_volte_cssr_low)))) and
+            not availability
+        )
+
+        causes = []
+        if availability: causes.append('Availability / outage')
+        if congestion: causes.append('Congestion / capacity')
+        if coverage: causes.append('Coverage gap / overshooting')
+        if ul_interference: causes.append('UL interference / noise rise')
+        if mobility: causes.append('Mobility / handover issue')
+        if accessibility: causes.append('Accessibility / setup failure')
+        if transport: causes.append('Transport / packet loss')
+        if not causes and row['Anomaly Score'] >= fallback_general_score_threshold:
+            if pd.notna(row['MV_PUSCH SINR']) and pd.notna(row['MV_E-UTRAN Average CQI']) and row['MV_PUSCH SINR'] < radio_quality_pusch_sinr_low and row['MV_E-UTRAN Average CQI'] < radio_quality_cqi_low:
+                causes.append('Radio quality degradation')
+            elif pd.notna(row['MV_DL User Throughput_Mbps']) and row['MV_DL User Throughput_Mbps'] < throughput_dl_tp_low:
+                causes.append('Throughput degradation')
+            else:
+                causes.append('General degradation')
+        return causes
+
+    def top_drivers_for_row(idx, n=4):
+        top = score_df.loc[idx].sort_values(ascending=False)
+        top = top[top > 0].head(n)
+        return ', '.join([f"{FRIENDLY_MAP[k]} ({v:.1f})" for k, v in top.items()])
+
+    def value_fmt(v):
+        if pd.isna(v):
+            return 'NA'
+        v = float(v)
+        if abs(v) >= 100:
+            return f"{v:.0f}"
+        return f"{v:.2f}"
+
+    def evidence_for_row(row):
+        parts = []
+        def add(kpi, baseline_source='median'):
+            actual = row[kpi]
+            if pd.isna(actual):
+                return
+            if baseline_source == 'median':
+                baseline = median_dict[kpi].iloc[row.name]
+                limit = KPI_META[kpi]['threshold']
+                label = FRIENDLY_MAP.get(kpi, kpi)
+                parts.append(f"{label}: {value_fmt(actual)} vs median {value_fmt(baseline)} (limit {value_fmt(limit)})")
+            elif baseline_source == 'extra':
+                baseline = extra_medians[kpi].iloc[row.name]
+                parts.append(f"{kpi}: {value_fmt(actual)} vs median {value_fmt(baseline)}")
+
+        cause = row['Primary Cause']
+        if cause == 'Availability / outage':
+            for k in ['MV_Radio NW Availability','RRC Setup Success Rate','MV_ERAB Setup Success Rate']:
+                add(k)
+        elif cause == 'Accessibility / setup failure':
+            for k in ['RRC Setup Success Rate','MV_ERAB Setup Success Rate','VoLTE ERAB Setup Success Rate','MV_VoLTE CSSR%']:
+                add(k)
+        elif cause == 'Congestion / capacity':
+            for k in ['DL PRB Utilisation','MV_DL User Throughput_Mbps','MV_PUSCH SINR']:
+                add(k)
+            add('MV_NW Avg Connected User', baseline_source='extra')
+        elif cause == 'UL interference / noise rise':
+            for k in ['MV_PUSCH SINR','Avg RSSI PUSCH','UL NI [RSSI-SINR]','MV_Packet Loss UL']:
+                add(k)
+        elif cause == 'Coverage gap / overshooting':
+            for k in ['MV_% RSRP Sample <-110 dBm','Average UE Distance_KM','MV_DL User Throughput_Mbps','MV_PUSCH SINR']:
+                add(k)
+        elif cause == 'Mobility / handover issue':
+            for k in ['MV_PS Drop Call Rate %','MV_VoLTE DCR','PS IntraF HOSR [CDBH]','VoLTE IntraF HOSR [CBBH]']:
+                add(k)
+        elif cause == 'Transport / packet loss':
+            for k in ['MV_Packet Loss DL','MV_Packet Loss UL','MV_VoLTE Packet Loss DL','MV_DL User Throughput_Mbps']:
+                add(k)
+        else:
+            for k in score_df.loc[row.name].sort_values(ascending=False).index[:4]:
+                if score_df.loc[row.name, k] > 0:
+                    add(k)
+        return '; '.join(parts[:4])
+
+    reco_map = {
+        'Availability / outage': "Nokia RF action: check eNB/BTS alarms, locked cells, RF module/RET status, feeder/VSWR and backhaul health. Restore availability first, then verify RRC/ERAB recovery.",
+        'Accessibility / setup failure': "Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.",
+        'Congestion / capacity': "Nokia RF action: optimize SON/MLB and CIO offsets for load balancing, verify scheduler/QCI prioritization, and check MIMO rank utilization. If persistent, offload traffic to adjacent layers/bands or plan capacity expansion.",
+        'UL interference / noise rise': "Nokia RF action: run UL interference/noise-rise analysis, check PIM/external interferers, and verify uplink power control (P0/alpha/closed loop). Review overshooting neighbors and PCI environment.",
+        'Coverage gap / overshooting': "Nokia RF action: audit antenna tilt/azimuth and overshooting behavior, verify RET execution, feeder health and missing neighbors. For coverage holes, consider reducing electrical down-tilt by 1-2 deg; for overshooting, increase tilt and correct neighbor dominance.",
+        'Mobility / handover issue': "Nokia RF action: optimize A3 offset, hysteresis, TTT and CIO, validate ANR neighbor list, and inspect X2/S1 HO failure counters. Focus on late HO, missing neighbors and ping-pong.",
+        'Transport / packet loss': "Nokia RF action: check IP backhaul latency/jitter, QoS mapping, microwave/TX errors and packet discard. Validate whether packet loss is transport-driven or secondary to poor radio quality.",
+        'Radio quality degradation': "Nokia RF action: review SINR/CQI deterioration, neighbor interference, PCI planning and UL noise indicators. Apply interference mitigation before throughput optimization.",
+        'Throughput degradation': "Nokia RF action: review scheduler behavior, MIMO utilization, bearer/QCI mix and radio quality. Correlate throughput with PRB, SINR and coverage before changing load-balancing thresholds.",
+        'General degradation': "Nokia RF action: inspect the top KPI drivers first, verify alarms and recent changes, then tune the relevant RF domain (coverage, interference, mobility or accessibility).",
+        'No major anomaly': ''
+    }
+
+    df['Root Causes'] = df.apply(get_root_causes, axis=1)
+    df['Primary Cause'] = df['Root Causes'].apply(primary_cause)
+    df['Secondary Causes'] = df['Root Causes'].apply(lambda x: ', '.join([c for c in x if c != primary_cause(x)]))
+    df['Severity'] = df.apply(severity_from_row, axis=1)
+    is_anomaly_score_threshold = _rule_value(ANOMALY_RULES, 'is_anomaly_score_threshold', ANOMALY_DEFAULTS['is_anomaly_score_threshold'])
+    df['Is Anomaly'] = ((df['Anomaly Score'] >= is_anomaly_score_threshold) | (df['Root Causes'].str.len() > 0))
+    df['Top KPI Drivers'] = [top_drivers_for_row(i) for i in df.index]
+    df['Evidence'] = df.apply(evidence_for_row, axis=1)
+    df['Nokia Recommendation'] = df['Primary Cause'].map(reco_map)
+
+    anomaly_details = df[df['Is Anomaly']].copy().sort_values(['Anomaly Score','Date'], ascending=[False, True]).reset_index(drop=True)
+
+    summary_root = anomaly_details.groupby('Primary Cause').agg(
+        Anomaly_Count=('Short name','size'),
+        Avg_Score=('Anomaly Score','mean'),
+        Critical_Count=('Severity', lambda s: int((s=='Critical').sum())),
+        Major_Count=('Severity', lambda s: int((s=='Major').sum())),
+    ).reset_index().sort_values('Anomaly_Count', ascending=False)
+    summary_root['Avg_Score'] = summary_root['Avg_Score'].round(2)
+
+    summary_cells = anomaly_details.groupby(['Short name',"Site I'd",'Tech']).agg(
+        Anomaly_Count=('Short name','size'),
+        Max_Score=('Anomaly Score','max'),
+        Top_Cause=('Primary Cause', lambda s: s.value_counts().index[0]),
+    ).reset_index().sort_values(['Anomaly_Count','Max_Score'], ascending=[False,False]).head(20)
+    summary_cells['Max_Score'] = summary_cells['Max_Score'].round(2)
+
+    summary_dates = anomaly_details.groupby('Date').agg(
+        Anomaly_Count=('Short name','size'),
+        Critical_Count=('Severity', lambda s: int((s=='Critical').sum())),
+        Avg_Score=('Anomaly Score','mean'),
+    ).reset_index().sort_values('Date')
+    summary_dates['Avg_Score'] = summary_dates['Avg_Score'].round(2)
+
+    all_scored = df[[
+        'Short name','Date',"Cell I'd","Site I'd",'Tech',
+        'Severity','Is Anomaly','Anomaly Score','Flag Count','Primary Cause','Secondary Causes',
+        'Top KPI Drivers','Evidence','Nokia Recommendation',
+        'MV_DL User Throughput_Mbps','UL User Throughput_Kbps','DL PRB Utilisation',
+        'MV_PUSCH SINR','MV_E-UTRAN Average CQI','MV_% RSRP Sample <-110 dBm',
+        'Average UE Distance_KM','MV_PS Drop Call Rate %','MV_VoLTE DCR',
+        'RRC Setup Success Rate','MV_ERAB Setup Success Rate','VoLTE ERAB Setup Success Rate',
+        'PS IntraF HOSR [CDBH]','PS InterF HOSR','VoLTE IntraF HOSR [CBBH]','VoLTE InterF HOSR',
+        'MV_Packet Loss DL','MV_Packet Loss UL','MV_Radio NW Availability',
+        'Avg RSSI PUSCH','Avg RSSI PUCCH','UL NI [RSSI-SINR]','MV_NW Avg Connected User','MV_4G Data Volume_GB','VoLTE Traffic'
+    ]].copy().sort_values(['Is Anomaly','Anomaly Score'], ascending=[False,False])
+
+    details_cols = [
+        'Short name','Date',"Cell I'd","Site I'd",'Tech','Severity','Anomaly Score','Flag Count',
+        'Primary Cause','Secondary Causes','Top KPI Drivers','Evidence','Nokia Recommendation',
+        'MV_DL User Throughput_Mbps','UL User Throughput_Kbps','DL PRB Utilisation',
+        'MV_PUSCH SINR','MV_E-UTRAN Average CQI','MV_% RSRP Sample <-110 dBm',
+        'Average UE Distance_KM','MV_PS Drop Call Rate %','MV_VoLTE DCR',
+        'RRC Setup Success Rate','MV_ERAB Setup Success Rate','VoLTE ERAB Setup Success Rate',
+        'PS IntraF HOSR [CDBH]','PS InterF HOSR','VoLTE IntraF HOSR [CBBH]','VoLTE InterF HOSR',
+        'MV_Packet Loss DL','MV_Packet Loss UL','MV_Radio NW Availability',
+        'Avg RSSI PUSCH','Avg RSSI PUCCH','UL NI [RSSI-SINR]','MV_NW Avg Connected User'
+    ]
+    anomaly_details = anomaly_details[details_cols]
+
+    rules_df = pd.DataFrame([
+        {'KPI':k,'Friendly Name':m['friendly'],'Direction':'Higher is better' if m['direction']=='high_good' else 'Lower is better',
+         'Rule Threshold':m['threshold'],'Weight in Score':m['weight'],'Min Daily Scale Used':m['min_scale'],'RCA Hint':m['rule']}
+        for k,m in KPI_META.items()
+    ])
+
+    return {
+        'anomaly_details': anomaly_details,
+        'all_scored': all_scored,
+        'summary_root': summary_root,
+        'summary_cells': summary_cells,
+        'summary_dates': summary_dates,
+        'rules_df': rules_df,
+    }
+
 def build_output(input_path=INPUT_PATH, output_xlsx=OUTPUT_XLSX):
     df = pd.read_excel(input_path, usecols=lambda c: c in SELECTED_COLS)
     df['Date'] = pd.to_datetime(df['Date'])

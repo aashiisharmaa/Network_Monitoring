@@ -22,9 +22,13 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RecommendationJobService {
+
+    private static final int ABANDONED_JOB_MINUTES = 3;
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .findAndRegisterModules()
@@ -34,6 +38,7 @@ public class RecommendationJobService {
     private final JdbcTemplate jdbcTemplate;
     private final RecommendationService recommendationService;
     private final ObjectProvider<RecommendationJobService> selfProvider;
+    private final Set<Long> activeJobIds = ConcurrentHashMap.newKeySet();
 
     public RecommendationJobService(JdbcTemplate jdbcTemplate,
                                     RecommendationService recommendationService,
@@ -63,6 +68,7 @@ public class RecommendationJobService {
                   INDEX `idx_recommendation_jobs_updated` (`updatedAt`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
+        markStaleProcessingJobs("Backend restarted before recommendation finished.");
     }
 
     public Map<String, Object> startJob(Long fileId, Map<String, Object> request) {
@@ -83,26 +89,34 @@ public class RecommendationJobService {
     }
 
     public Map<String, Object> getJob(Long jobId) {
+        expireJobIfAbandoned(jobId);
         return Map.of("success", true, "message", "Recommendation job loaded.", "data", getJobData(jobId));
     }
 
     @Async
     public void processJob(Long jobId, Long fileId, Map<String, Object> request) {
+        activeJobIds.add(jobId);
         updateJob(jobId, "PROCESSING", 20, "Running RCA recommendation...", null);
         RecommendationService.RecommendationResult result = null;
         try {
-            result = recommendationService.runRecommendation(fileId, request, false);
+            result = recommendationService.runRecommendation(
+                    fileId,
+                    request,
+                    false,
+                    (progressPercent, message) -> updateJob(jobId, "PROCESSING", progressPercent, message, null)
+            );
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("success", true);
             payload.put("fileId", fileId);
             payload.putAll(result.payload);
             updateJob(jobId, "COMPLETED", 100, "Recommendation complete.", payload);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("success", false);
-            payload.put("message", ex.getMessage() == null ? ex.toString() : ex.getMessage());
+            payload.put("message", failureMessage(ex));
             updateJob(jobId, "FAILED", 100, String.valueOf(payload.get("message")), payload);
         } finally {
+            activeJobIds.remove(jobId);
             if (result != null) {
                 recommendationService.cleanup(result.workDir);
             }
@@ -181,6 +195,49 @@ public class RecommendationJobService {
         return jobs.get(0);
     }
 
+    private void expireJobIfAbandoned(Long jobId) {
+        if (jobId == null || activeJobIds.contains(jobId)) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        String message = "Recommendation job stopped before completion. Please run recommendation again.";
+        jdbcTemplate.update("""
+                UPDATE `recommendation_jobs`
+                SET `status` = 'FAILED',
+                    `progressPercent` = 100,
+                    `message` = ?,
+                    `resultJson` = ?,
+                    `updatedAt` = ?
+                WHERE `id` = ?
+                  AND `status` IN ('QUEUED', 'PROCESSING')
+                  AND `updatedAt` < ?
+                """,
+                message,
+                writeJson(Map.of("success", false, "message", message)),
+                Timestamp.valueOf(now),
+                jobId,
+                Timestamp.valueOf(now.minusMinutes(ABANDONED_JOB_MINUTES)));
+    }
+
+    private void markStaleProcessingJobs(String reason) {
+        LocalDateTime now = LocalDateTime.now();
+        String message = reason == null || reason.isBlank()
+                ? "Recommendation job stopped before completion. Please run recommendation again."
+                : reason;
+        jdbcTemplate.update("""
+                UPDATE `recommendation_jobs`
+                SET `status` = 'FAILED',
+                    `progressPercent` = 100,
+                    `message` = ?,
+                    `resultJson` = ?,
+                    `updatedAt` = ?
+                WHERE `status` IN ('QUEUED', 'PROCESSING')
+                """,
+                message,
+                writeJson(Map.of("success", false, "message", message)),
+                Timestamp.valueOf(now));
+    }
+
     private Map<String, Object> jobPayload(Long id,
                                            Long fileId,
                                            String configHash,
@@ -230,6 +287,17 @@ public class RecommendationJobService {
         } catch (Exception ex) {
             return "{}";
         }
+    }
+
+    private String failureMessage(Throwable ex) {
+        if (ex == null) {
+            return "Recommendation failed.";
+        }
+        if (ex instanceof OutOfMemoryError) {
+            return "Recommendation result was too large to finalize. Please select a smaller date range or fewer KPIs.";
+        }
+        String message = ex.getMessage();
+        return message == null || message.isBlank() ? ex.toString() : message;
     }
 
     private Map<String, Object> readJsonMap(String json) {

@@ -155,12 +155,13 @@ public class UploadController {
     @GetMapping("/alarm-data")
     public ResponseEntity<Map<String, Object>> getAlarmData(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
                                                             @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
+                                                            @RequestParam(value = "fileId", required = false) Long fileId,
                                                             @RequestParam(value = "circle", required = false) String circle,
                                                             @RequestParam(value = "severity", required = false) String severity,
                                                             @RequestParam(value = "search", required = false) String search,
                                                             @RequestParam(value = "startDate", required = false) String startDate,
                                                             @RequestParam(value = "endDate", required = false) String endDate) {
-        return ResponseEntity.ok(uploadService.getAlarmData(page, limit, circle, severity, search, startDate, endDate));
+        return ResponseEntity.ok(uploadService.getAlarmData(page, limit, fileId, circle, severity, search, startDate, endDate));
     }
 
     private ResponseEntity<Map<String, Object>> wrapUpload(Map<String, Object> payload) {

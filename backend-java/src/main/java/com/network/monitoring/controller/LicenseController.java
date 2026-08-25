@@ -32,7 +32,7 @@ public class LicenseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getLicense(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getLicense(@PathVariable("id") Long id) {
         return ok("License retrieved successfully.", licenseService.getLicense(id));
     }
 
@@ -42,17 +42,17 @@ public class LicenseController {
     }
 
     @PatchMapping("/{id}/renew")
-    public ResponseEntity<Map<String, Object>> renewLicense(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<Map<String, Object>> renewLicense(@PathVariable("id") Long id, @RequestBody Map<String, Object> body) {
         return ok("License renewed successfully.", licenseService.renewLicense(id, body));
     }
 
     @PatchMapping("/{id}/block")
-    public ResponseEntity<Map<String, Object>> blockLicense(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> blockLicense(@PathVariable("id") Long id) {
         return ok("License blocked successfully.", licenseService.blockLicense(id));
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadLicense(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadLicense(@PathVariable("id") Long id) {
         byte[] file = licenseService.downloadLicenseFile(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)

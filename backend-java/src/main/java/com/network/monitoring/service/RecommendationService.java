@@ -28,12 +28,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 
 @Service
 public class RecommendationService {
 
     private static final int DEFAULT_INPUT_ROW_LIMIT = 10000;
     private static final int MAX_INPUT_ROW_LIMIT = 50000;
+    private static final int DEFAULT_RESPONSE_ROW_LIMIT = 2000;
+    private static final int MAX_RESPONSE_ROW_LIMIT = 5000;
 
     private final KpiCacheService kpiCacheService;
     private final KpiDynamicDataService kpiDynamicDataService;
@@ -61,8 +64,16 @@ public class RecommendationService {
     }
 
     public RecommendationResult runRecommendation(long fileId, Map<String, Object> body, boolean exportExcel) throws IOException {
+        return runRecommendation(fileId, body, exportExcel, null);
+    }
+
+    public RecommendationResult runRecommendation(long fileId,
+                                                  Map<String, Object> body,
+                                                  boolean exportExcel,
+                                                  BiConsumer<Integer, String> progressReporter) throws IOException {
         long startedAt = System.currentTimeMillis();
         ensurePythonEntry();
+        reportProgress(progressReporter, 25, "Loading KPI data...");
 
         Map<String, Object> cache = kpiCacheService.readKpiCache(fileId);
         List<Map<String, Object>> rows = cache == null ? List.of() : toCanonicalRows(cache);
@@ -78,6 +89,7 @@ public class RecommendationService {
 
         int inputRowLimit = normalizeRowLimit(body == null ? null : body.get("inputRowLimit"));
         List<Map<String, Object>> preparedRows = prepareRowsForPython(rows, body == null ? Map.of() : body, inputRowLimit);
+        reportProgress(progressReporter, 40, "Preparing RCA input...");
 
         Path workDir = Files.createTempDirectory("rca-run-");
         Path inputPath = workDir.resolve("input.xlsx");
@@ -91,6 +103,7 @@ public class RecommendationService {
         config.put("input_rows_sent", preparedRows.size());
         config.put("source_rows_available", rows.size());
         Files.writeString(configPath, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), StandardCharsets.UTF_8);
+        reportProgress(progressReporter, 60, exportExcel ? "Building RCA export..." : "Running RCA engine...");
 
         List<String> args = new ArrayList<>(resolvePythonCommand());
         args.add(getPythonMainPath().toString());
@@ -108,6 +121,7 @@ public class RecommendationService {
         }
 
         ProcessResult result = executeProcess(args, getWorkspaceRoot());
+        reportProgress(progressReporter, 90, "Finalizing RCA result...");
         if (result.exitCode != 0) {
             cleanup(workDir);
             throw new IllegalStateException(result.stderr.isBlank() ? result.stdout : result.stderr);
@@ -118,12 +132,18 @@ public class RecommendationService {
             throw new IllegalStateException("Python RCA did not produce JSON output.");
         }
 
-        Map<String, Object> payload = mapper.readValue(Files.readString(jsonOutPath, StandardCharsets.UTF_8), new TypeReference<>() {});
+        Map<String, Object> payload = mapper.readValue(jsonOutPath.toFile(), new TypeReference<>() {});
         if (isTruthy(perfLogsEnabledRaw)) {
             logPerf("runRecommendation", fileId, preparedRows.size(), System.currentTimeMillis() - startedAt);
         }
 
         return new RecommendationResult(payload, exportExcel ? excelOutPath : null, workDir);
+    }
+
+    private void reportProgress(BiConsumer<Integer, String> progressReporter, int progressPercent, String message) {
+        if (progressReporter != null) {
+            progressReporter.accept(progressPercent, message);
+        }
     }
 
     public List<String> listPresets() throws IOException {
@@ -272,6 +292,23 @@ public class RecommendationService {
         return Math.min(parsed, MAX_INPUT_ROW_LIMIT);
     }
 
+    private int normalizeResponseRowLimit(Object value) {
+        int parsed = DEFAULT_RESPONSE_ROW_LIMIT;
+        if (value instanceof Number number) {
+            parsed = number.intValue();
+        } else if (value != null) {
+            try {
+                parsed = Integer.parseInt(String.valueOf(value));
+            } catch (Exception ignored) {
+                parsed = DEFAULT_RESPONSE_ROW_LIMIT;
+            }
+        }
+        if (parsed <= 0) {
+            return DEFAULT_RESPONSE_ROW_LIMIT;
+        }
+        return Math.min(parsed, MAX_RESPONSE_ROW_LIMIT);
+    }
+
     private Map<String, Object> buildPythonConfig(Map<String, Object> body) {
         Map<String, Object> config = new HashMap<>();
         config.put("vendor", body.getOrDefault("vendor", "nokia"));
@@ -291,6 +328,7 @@ public class RecommendationService {
         config.put("rca_thresholds", body.getOrDefault("rcaThresholds", Map.of()));
         config.put("severity_thresholds", body.getOrDefault("severityThresholds", Map.of()));
         config.put("anomaly_thresholds", body.getOrDefault("anomalyThresholds", Map.of()));
+        config.put("response_row_limit", normalizeResponseRowLimit(body.get("responseRowLimit")));
         config.put("date_mode", "pre_post".equals(body.get("dateMode")) ? "pre_post" : "single");
 
         Map<String, Object> dateFilter = new HashMap<>();
@@ -451,9 +489,9 @@ public class RecommendationService {
     private ProcessResult executeProcess(List<String> args, Path cwd) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(args);
         builder.directory(cwd.toFile());
+        builder.redirectErrorStream(true);
         Process process = builder.start();
         String stdout = readStream(process.getInputStream());
-        String stderr = readStream(process.getErrorStream());
         int exitCode;
         try {
             exitCode = process.waitFor();
@@ -461,7 +499,7 @@ public class RecommendationService {
             Thread.currentThread().interrupt();
             throw new IOException("Python process interrupted", ex);
         }
-        return new ProcessResult(exitCode, stdout, stderr);
+        return new ProcessResult(exitCode, stdout, "");
     }
 
     private String readStream(java.io.InputStream inputStream) throws IOException {
