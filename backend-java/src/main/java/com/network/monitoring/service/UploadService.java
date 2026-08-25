@@ -235,6 +235,7 @@ public class UploadService {
 
         List<AlarmData> filtered = alarmDataRepository.findAll((root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            predicates.add(hasAlarmDetailPredicate(root, cb));
             if (fileId != null && fileId > 0) {
                 predicates.add(cb.equal(root.get("fileId"), fileId));
             }
@@ -277,6 +278,7 @@ public class UploadService {
 
         long totalCount = alarmDataRepository.count((root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            predicates.add(hasAlarmDetailPredicate(root, cb));
             if (fileId != null && fileId > 0) {
                 predicates.add(cb.equal(root.get("fileId"), fileId));
             }
@@ -521,6 +523,7 @@ public class UploadService {
 
             List<AlarmData> alarmRows = normalizedRows.stream()
                     .map(row -> mapAlarmRow(row, uploadRecord.getId()))
+                    .filter(this::hasAlarmRowContent)
                     .toList();
             insertedRows = insertInChunks(alarmRows, AlarmData.class);
             return Map.of(
@@ -531,7 +534,7 @@ public class UploadService {
                             "datasetType", "alarm",
                             "totalRows", parsedRows.size(),
                             "insertedRows", insertedRows,
-                            "skippedRows", parsedRows.size() - insertedRows,
+                            "skippedRows", parsedRows.size() - alarmRows.size() + (alarmRows.size() - insertedRows),
                             "detectedHeaders", detectedHeaders
                     )
             );
@@ -686,6 +689,36 @@ public class UploadService {
             }
         }
         return "";
+    }
+
+    private jakarta.persistence.criteria.Predicate hasAlarmDetailPredicate(
+            jakarta.persistence.criteria.Root<AlarmData> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb
+    ) {
+        return cb.or(
+                cb.isNotNull(root.get("perceivedSeverity")),
+                cb.isNotNull(root.get("alarmPortId")),
+                cb.isNotNull(root.get("alarmSlogan")),
+                cb.isNotNull(root.get("datetime")),
+                cb.isNotNull(root.get("userLabel")),
+                cb.isNotNull(root.get("managedElementId")),
+                cb.isNotNull(root.get("meContextId"))
+        );
+    }
+
+    private boolean hasAlarmRowContent(AlarmData row) {
+        if (row == null) {
+            return false;
+        }
+        return !firstNonBlank(
+                row.getPerceivedSeverity(),
+                row.getAlarmPortId(),
+                row.getAlarmSlogan(),
+                row.getUserLabel(),
+                row.getManagedElementId(),
+                row.getMeContextId(),
+                row.getSubNetworkId()
+        ).isBlank() || row.getDatetime() != null;
     }
 
     private String normalizeSeverity(String value) {
