@@ -24,7 +24,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping({"/auth", "/api/v1/auth"})
 public class AuthController {
 
     private final AuthService authService;
@@ -80,10 +80,13 @@ public class AuthController {
         Map<String, Object> data = new LinkedHashMap<>();
         User user = result.user();
         data.put("token", result.token());
-        data.put("user", Map.of(
-                "id", user.getId(),
-                "email", user.getEmail()
-        ));
+        Map<String, Object> userPayload = new LinkedHashMap<>();
+        userPayload.put("id", user.getId());
+        userPayload.put("email", user.getEmail());
+        userPayload.put("companyId", user.getCompanyId());
+        userPayload.put("role", user.getRole() == null || user.getRole().isBlank() ? "SUPER_ADMIN" : user.getRole());
+        userPayload.put("status", user.getStatus() == null || user.getStatus().isBlank() ? "ACTIVE" : user.getStatus());
+        data.put("user", userPayload);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("message", message);

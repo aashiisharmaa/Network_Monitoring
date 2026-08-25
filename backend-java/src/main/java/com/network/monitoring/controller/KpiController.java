@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/kpi")
+@RequestMapping({"/kpi", "/api/v1/kpi"})
 public class KpiController {
 
     private static final int DEFAULT_EXPORT_LONG_ROW_LIMIT = 10000;

@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/site-prediction")
+@RequestMapping({"/site-prediction", "/api/v1/site-prediction"})
 public class SitePredictionController {
 
     private final SitePredictionService sitePredictionService;

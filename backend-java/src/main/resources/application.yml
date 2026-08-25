@@ -48,3 +48,5 @@ app:
   kpi-debug-logs-enabled: ${KPI_DEBUG_LOGS:false}
   jwt-secret: ${JWT_SECRET:change-me-in-env}
   jwt-expiry-seconds: 604800
+  license-file-path: ${LICENSE_FILE_PATH:license.dat}
+  license-signing-secret: ${LICENSE_SIGNING_SECRET:local-license-signing-secret-change-me}

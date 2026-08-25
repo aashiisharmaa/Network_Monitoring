@@ -18,6 +18,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
+    @Column(name = "role")
+    private String role = "USER";
+
+    @Column(name = "status")
+    private String status = "ACTIVE";
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions;
 
@@ -43,6 +52,30 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public List<Session> getSessions() {

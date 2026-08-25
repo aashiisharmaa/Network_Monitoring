@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/sites")
+@RequestMapping({"/sites", "/api/v1/sites"})
 public class SiteAnalyticsController {
 
     private final SiteAnalyticsService siteAnalyticsService;

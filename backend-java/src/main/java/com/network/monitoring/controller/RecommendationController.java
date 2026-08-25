@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/kpi/recommendation")
+@RequestMapping({"/kpi/recommendation", "/api/v1/kpi/recommendation"})
 public class RecommendationController {
 
     private final RecommendationService recommendationService;

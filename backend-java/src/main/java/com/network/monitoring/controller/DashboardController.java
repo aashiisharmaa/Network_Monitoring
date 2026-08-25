@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/dashboard")
+@RequestMapping({"/dashboard", "/api/v1/dashboard"})
 public class DashboardController {
 
     private final DashboardService dashboardService;
@@ -24,10 +24,11 @@ public class DashboardController {
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getDashboardStats(
-            @RequestParam(value = "fileId", required = false) Long fileId) {
+            @RequestParam(value = "fileId", required = false) Long fileId,
+            @RequestParam(value = "companyId", required = false) Long companyId) {
         long startedAt = System.currentTimeMillis();
         try {
-            Map<String, Object> data = dashboardService.getDashboardSummary(fileId);
+            Map<String, Object> data = dashboardService.getDashboardSummary(fileId, companyId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -157,11 +158,12 @@ public class DashboardController {
 
     @GetMapping("/stats/performance")
     public ResponseEntity<Map<String, Object>> getPerformanceMetrics(
-            @RequestParam(value = "fileId", required = false) Long fileId) {
+            @RequestParam(value = "fileId", required = false) Long fileId,
+            @RequestParam(value = "companyId", required = false) Long companyId) {
         try {
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "data", dashboardService.getPerformanceMetrics(fileId)
+                    "data", dashboardService.getPerformanceMetrics(fileId, companyId)
             ));
         } catch (Exception ex) {
             return internalServerError(ex);

@@ -16,7 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/alarms")
+@RequestMapping({"/alarms", "/api/v1/alarms"})
 public class KpiAlarmController {
 
     private final KpiAlarmService alarmService;

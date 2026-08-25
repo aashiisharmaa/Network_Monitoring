@@ -37,14 +37,20 @@ public class KpiDynamicDataService {
 
     @Transactional
     public void replaceRecords(long fileId, List<Map<String, Object>> records) {
+        replaceRecords(fileId, null, records);
+    }
+
+    @Transactional
+    public void replaceRecords(long fileId, Long companyId, List<Map<String, Object>> records) {
         ensureTable();
         deleteByFileId(fileId);
-        insertRecords(fileId, records);
+        insertRecords(fileId, companyId, records);
     }
 
     @Transactional
     public void deleteByFileId(long fileId) {
         ensureTable();
+        jdbcTemplate.update("DELETE FROM `kpi_metric_values` WHERE `fileId` = ?", fileId);
         jdbcTemplate.update("DELETE FROM `kpidynamicdata` WHERE `fileId` = ?", fileId);
     }
 
@@ -78,6 +84,10 @@ public class KpiDynamicDataService {
     }
 
     public List<String> listDistinctDimensionValues(String dimension, Long fileId) {
+        return listDistinctDimensionValues(dimension, fileId, null);
+    }
+
+    public List<String> listDistinctDimensionValues(String dimension, Long fileId, Long companyId) {
         LinkedHashSet<String> values = new LinkedHashSet<>();
         String column = dimensionColumn(dimension);
         if (column == null) {
@@ -94,6 +104,10 @@ public class KpiDynamicDataService {
             sql.append(" AND `fileId` = ?");
             args.add(fileId);
         }
+        if (companyId != null) {
+            sql.append(" AND `companyId` = ?");
+            args.add(companyId);
+        }
         sql.append(" ORDER BY `").append(column).append("` ASC");
 
         for (String value : jdbcTemplate.queryForList(sql.toString(), String.class, args.toArray())) {
@@ -103,6 +117,10 @@ public class KpiDynamicDataService {
     }
 
     public List<Map<String, Object>> listDistinctSectorSummaries(Long fileId) {
+        return listDistinctSectorSummaries(fileId, null);
+    }
+
+    public List<Map<String, Object>> listDistinctSectorSummaries(Long fileId, Long companyId) {
         Map<String, Map<String, Object>> sectors = new LinkedHashMap<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT `sectorId` AS id, MIN(`sectorName`) AS name
@@ -113,6 +131,10 @@ public class KpiDynamicDataService {
         if (fileId != null) {
             sql.append(" AND `fileId` = ?");
             args.add(fileId);
+        }
+        if (companyId != null) {
+            sql.append(" AND `companyId` = ?");
+            args.add(companyId);
         }
         sql.append(" GROUP BY `sectorId` ORDER BY `sectorId` ASC");
 
@@ -175,6 +197,7 @@ public class KpiDynamicDataService {
                 CREATE TABLE IF NOT EXISTS `kpidynamicdata` (
                     `id` BIGINT NOT NULL AUTO_INCREMENT,
                     `fileId` BIGINT NOT NULL,
+                    `companyId` BIGINT NULL,
                     `rowIndex` INT NOT NULL,
                     `rowKey` VARCHAR(191) NULL,
                     `dateValue` VARCHAR(64) NULL,
@@ -193,18 +216,47 @@ public class KpiDynamicDataService {
                     INDEX `idx_kpidynamicdata_fileId_rowKey` (`fileId`, `rowKey`)
                 )
                 """);
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS `kpi_metric_values` (
+                    `id` BIGINT NOT NULL AUTO_INCREMENT,
+                    `fileId` BIGINT NOT NULL,
+                    `companyId` BIGINT NULL,
+                    `rowIndex` INT NOT NULL,
+                    `rowKey` VARCHAR(191) NULL,
+                    `metricKey` VARCHAR(191) NOT NULL,
+                    `metricValue` DOUBLE NULL,
+                    `cellName` VARCHAR(255) NULL,
+                    `site` VARCHAR(255) NULL,
+                    `band` VARCHAR(255) NULL,
+                    `tech` VARCHAR(255) NULL,
+                    `sectorId` VARCHAR(255) NULL,
+                    `dateValue` VARCHAR(64) NULL,
+                    `createdAt` DATETIME NULL,
+                    PRIMARY KEY (`id`),
+                    INDEX `idx_kpi_metric_values_file_metric` (`fileId`, `metricKey`),
+                    INDEX `idx_kpi_metric_values_file_cell` (`fileId`, `cellName`),
+                    INDEX `idx_kpi_metric_values_file_site` (`fileId`, `site`)
+                )
+                """);
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_cell", "CREATE INDEX `idx_kpidynamicdata_file_cell` ON `kpidynamicdata` (`fileId`, `cellName`)");
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_company_file", "CREATE INDEX `idx_kpidynamicdata_company_file` ON `kpidynamicdata` (`companyId`, `fileId`)");
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_site", "CREATE INDEX `idx_kpidynamicdata_file_site` ON `kpidynamicdata` (`fileId`, `site`)");
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_band", "CREATE INDEX `idx_kpidynamicdata_file_band` ON `kpidynamicdata` (`fileId`, `band`)");
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_sector", "CREATE INDEX `idx_kpidynamicdata_file_sector` ON `kpidynamicdata` (`fileId`, `sectorId`)");
+        addIndexIfMissing("kpidynamicdata", "idx_kpidynamicdata_file_tech", "CREATE INDEX `idx_kpidynamicdata_file_tech` ON `kpidynamicdata` (`fileId`, `tech`)");
     }
 
-    private void insertRecords(long fileId, List<Map<String, Object>> records) {
+    private void insertRecords(long fileId, Long companyId, List<Map<String, Object>> records) {
         if (records == null || records.isEmpty()) {
             return;
         }
 
         String sql = "INSERT INTO `kpidynamicdata` " +
-                "(`fileId`, `rowIndex`, `rowKey`, `dateValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `sectorName`, `groupsName`, `dimensionsJson`, `metricsJson`, `createdAt`) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "(`fileId`, `companyId`, `rowIndex`, `rowKey`, `dateValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `sectorName`, `groupsName`, `dimensionsJson`, `metricsJson`, `createdAt`) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("UTC"));
         List<Object[]> args = new ArrayList<>();
+        List<Object[]> metricArgs = new ArrayList<>();
         Set<String> seenKeys = new LinkedHashSet<>();
 
         for (int index = 0; index < records.size(); index++) {
@@ -215,6 +267,7 @@ public class KpiDynamicDataService {
             }
             args.add(new Object[]{
                     fileId,
+                    companyId,
                     index,
                     rowKey,
                     safeString(record.get("date")),
@@ -229,15 +282,23 @@ public class KpiDynamicDataService {
                     writeJson(getObjectMap(record.get("metrics"))),
                     Timestamp.valueOf(createdAt)
             });
+            appendMetricValues(metricArgs, fileId, companyId, index, rowKey, record, createdAt);
 
             if (args.size() >= INSERT_BATCH_SIZE) {
                 jdbcTemplate.batchUpdate(sql, args);
                 args.clear();
             }
+            if (metricArgs.size() >= INSERT_BATCH_SIZE) {
+                insertMetricValues(metricArgs);
+                metricArgs.clear();
+            }
         }
 
         if (!args.isEmpty()) {
             jdbcTemplate.batchUpdate(sql, args);
+        }
+        if (!metricArgs.isEmpty()) {
+            insertMetricValues(metricArgs);
         }
     }
 
@@ -278,7 +339,7 @@ public class KpiDynamicDataService {
                 keyPart(record.get("date")),
                 keyPart(record.get("cellName")),
                 keyPart(record.get("site")),
-                keyPart(firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "layer", "carrier"), record.get("tech"))),
+                keyPart(firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "frequency_band", "carrier"))),
                 keyPart(record.get("tech")),
                 keyPart(firstNonBlank(record.get("sectorid"), dimension(record, "sectorid", "sector_id", "secid", "sec_id", "sec"), deriveSectorFromCell(record))),
                 keyPart(record.get("sectorname")),
@@ -322,11 +383,87 @@ public class KpiDynamicDataService {
         return switch (dimension) {
             case "cellName" -> firstNonBlank(record.get("cellName"), dimension(record, "cellname", "cellid", "cell", "shortname", "short_name"));
             case "site" -> firstNonBlank(record.get("site"), dimension(record, "site", "siteid", "site_id", "sitename", "site_name"));
-            case "band" -> firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "frequency_band", "layer", "carrier"), record.get("tech"));
+            case "band" -> firstNonBlank(record.get("band"), dimension(record, "band", "frequencyband", "frequency_band", "carrier"));
             case "tech" -> firstNonBlank(record.get("tech"), dimension(record, "tech", "technology"));
             case "groups" -> firstNonBlank(record.get("groups"), dimension(record, "groups", "group", "region", "cluster"));
             default -> throw new IllegalArgumentException("Unsupported dynamic KPI dimension: " + dimension);
         };
+    }
+
+    private void appendMetricValues(List<Object[]> metricArgs,
+                                    long fileId,
+                                    Long companyId,
+                                    int rowIndex,
+                                    String rowKey,
+                                    Map<String, Object> record,
+                                    LocalDateTime createdAt) {
+        Map<String, Object> metrics = getObjectMap(record.get("metrics"));
+        if (metrics.isEmpty()) {
+            return;
+        }
+        String cellName = safeString(record.get("cellName"));
+        String site = safeString(record.get("site"));
+        String band = safeString(record.get("band"));
+        String tech = safeString(record.get("tech"));
+        String sectorId = safeString(record.get("sectorid"));
+        String date = safeString(record.get("date"));
+        for (Map.Entry<String, Object> entry : metrics.entrySet()) {
+            Double value = toDouble(entry.getValue());
+            if (entry.getKey() == null || entry.getKey().isBlank() || value == null) {
+                continue;
+            }
+            metricArgs.add(new Object[]{
+                    fileId,
+                    companyId,
+                    rowIndex,
+                    rowKey,
+                    entry.getKey(),
+                    value,
+                    cellName,
+                    site,
+                    band,
+                    tech,
+                    sectorId,
+                    date,
+                    Timestamp.valueOf(createdAt)
+            });
+        }
+    }
+
+    private void insertMetricValues(List<Object[]> metricArgs) {
+        jdbcTemplate.batchUpdate("""
+                INSERT INTO `kpi_metric_values`
+                (`fileId`, `companyId`, `rowIndex`, `rowKey`, `metricKey`, `metricValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `dateValue`, `createdAt`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, metricArgs);
+    }
+
+    private Double toDouble(Object value) {
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        String parsed = safeString(value);
+        if (parsed == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(parsed.replace(",", ""));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private void addIndexIfMissing(String tableName, String indexName, String ddl) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = ?
+                  AND INDEX_NAME = ?
+                """, Integer.class, tableName, indexName);
+        if (count == null || count == 0) {
+            jdbcTemplate.execute(ddl);
+        }
     }
 
     private String dimension(Map<String, Object> record, String... keys) {

@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/pci")
+@RequestMapping({"/pci", "/api/v1/pci"})
 public class PciAnalysisController {
 
     private final PciAnalysisService pciAnalysisService;

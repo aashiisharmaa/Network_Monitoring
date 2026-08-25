@@ -16,12 +16,15 @@ import java.util.UUID;
 public class JwtService {
 
     private final Algorithm algorithm;
+    private final long expirySeconds;
 
-    public JwtService(@Value("${app.jwt-secret}") String secret) {
+    public JwtService(@Value("${app.jwt-secret}") String secret,
+                      @Value("${app.jwt-expiry-seconds:604800}") long expirySeconds) {
         if (secret == null || secret.isBlank() || "change-me-in-env".equals(secret)) {
             throw new IllegalStateException("JWT secret must be configured through JWT_SECRET.");
         }
         this.algorithm = Algorithm.HMAC256(secret);
+        this.expirySeconds = expirySeconds <= 0 ? 604800 : expirySeconds;
     }
 
     public String generateToken(Long userId) {
@@ -30,7 +33,7 @@ public class JwtService {
                 .withClaim("userId", userId)
                 .withJWTId(UUID.randomUUID().toString())
                 .withIssuedAt(Date.from(now))
-                .withExpiresAt(Date.from(now.plus(7, ChronoUnit.DAYS)))
+                .withExpiresAt(Date.from(now.plus(expirySeconds, ChronoUnit.SECONDS)))
                 .sign(algorithm);
     }
 

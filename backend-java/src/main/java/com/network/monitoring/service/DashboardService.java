@@ -33,6 +33,7 @@ public class DashboardService {
     private final UploadHistoryRepository uploadHistoryRepository;
     private final AlarmDataRepository alarmDataRepository;
     private final KpiDynamicDataService kpiDynamicDataService;
+    private final RoleAuthorizationService roleAuthorizationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -40,11 +41,13 @@ public class DashboardService {
     public DashboardService(UploadDataRepository uploadDataRepository,
                             UploadHistoryRepository uploadHistoryRepository,
                             AlarmDataRepository alarmDataRepository,
-                            KpiDynamicDataService kpiDynamicDataService) {
+                            KpiDynamicDataService kpiDynamicDataService,
+                            RoleAuthorizationService roleAuthorizationService) {
         this.uploadDataRepository = uploadDataRepository;
         this.uploadHistoryRepository = uploadHistoryRepository;
         this.alarmDataRepository = alarmDataRepository;
         this.kpiDynamicDataService = kpiDynamicDataService;
+        this.roleAuthorizationService = roleAuthorizationService;
     }
 
     public List<String> listDistinctCells() {
@@ -132,15 +135,22 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getDashboardSummary(Long fileId) {
+        return getDashboardSummary(fileId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDashboardSummary(Long fileId, Long requestedCompanyId) {
+        Long companyId = roleAuthorizationService.effectiveCompanyId(requestedCompanyId);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("fileId", fileId);
-        data.put("totalCells", countMergedDistinct("Cell_Name", "cellName", fileId));
-        data.put("totalSites", countMergedDistinct("Site", "site", fileId));
-        data.put("totalBands", countMergedDistinct("Band", "band", fileId));
-        data.put("totalTech", countMergedDistinct("Tech", "tech", fileId));
-        data.put("totalSectors", countMergedDistinct("Sector_ID", "sectorId", fileId));
-        data.put("totalGroups", countMergedDistinct("`Groups`", "groupsName", fileId));
-        data.put("totalRecords", countUploadRecords(fileId));
+        data.put("companyId", companyId);
+        data.put("totalCells", countMergedDistinct("Cell_Name", "cellName", fileId, companyId));
+        data.put("totalSites", countMergedDistinct("Site", "site", fileId, companyId));
+        data.put("totalBands", countMergedDistinct("Band", "band", fileId, companyId));
+        data.put("totalTech", countMergedDistinct("Tech", "tech", fileId, companyId));
+        data.put("totalSectors", countMergedDistinct("Sector_ID", "sectorId", fileId, companyId));
+        data.put("totalGroups", countMergedDistinct("`Groups`", "groupsName", fileId, companyId));
+        data.put("totalRecords", countUploadRecords(fileId, companyId));
         data.put("latestUpload", getLatestUploadPayload(fileId));
         return data;
     }
@@ -157,6 +167,12 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getPerformanceMetrics(Long fileId) {
+        return getPerformanceMetrics(fileId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getPerformanceMetrics(Long fileId, Long requestedCompanyId) {
+        Long companyId = roleAuthorizationService.effectiveCompanyId(requestedCompanyId);
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
         Root<UploadData> root = query.from(UploadData.class);
@@ -181,8 +197,15 @@ public class DashboardService {
                 cb.min(root.get("rrcDropRate")).alias("minRrcDropRate")
         );
 
+        List<jakarta.persistence.criteria.Predicate> filters = new ArrayList<>();
         if (fileId != null) {
-            query.where(cb.equal(root.get("fileId"), fileId));
+            filters.add(cb.equal(root.get("fileId"), fileId));
+        }
+        if (companyId != null) {
+            filters.add(cb.equal(root.get("companyId"), companyId));
+        }
+        if (!filters.isEmpty()) {
+            query.where(filters.toArray(new jakarta.persistence.criteria.Predicate[0]));
         }
 
         Tuple tuple = entityManager.createQuery(query).getSingleResult();
@@ -209,6 +232,7 @@ public class DashboardService {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("fileId", fileId);
+        response.put("companyId", companyId);
         response.put("averages", averages);
         response.put("peaks", peaks);
         return response;
@@ -297,7 +321,30 @@ public class DashboardService {
                 .toList();
     }
 
+    public long countUploadRecords(Long fileId, Long companyId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM `uploaddata` WHERE 1=1");
+        List<Object> args = new ArrayList<>();
+        if (fileId != null) {
+            sql.append(" AND `fileId` = ?");
+            args.add(fileId);
+        }
+        if (companyId != null) {
+            sql.append(" AND `companyId` = ?");
+            args.add(companyId);
+        }
+        Query query = entityManager.createNativeQuery(sql.toString());
+        for (int index = 0; index < args.size(); index++) {
+            query.setParameter(index + 1, args.get(index));
+        }
+        Number count = (Number) query.getSingleResult();
+        return count == null ? 0L : count.longValue();
+    }
+
     private long countMergedDistinct(String uploadColumn, String dynamicColumn, Long fileId) {
+        return countMergedDistinct(uploadColumn, dynamicColumn, fileId, null);
+    }
+
+    private long countMergedDistinct(String uploadColumn, String dynamicColumn, Long fileId, Long companyId) {
         String uploadValue = "TRIM(CONVERT(" + uploadColumn + " USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
         String dynamicValue = "TRIM(CONVERT(`" + dynamicColumn + "` USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
         String uploadWhere = uploadColumn + " IS NOT NULL AND " + uploadValue + " <> ''";
@@ -311,11 +358,19 @@ public class DashboardService {
             sql.append(" AND `fileId` = ?");
             args.add(fileId);
         }
+        if (companyId != null) {
+            sql.append(" AND `companyId` = ?");
+            args.add(companyId);
+        }
         sql.append(" UNION ");
         sql.append("SELECT ").append(dynamicValue).append(" AS value FROM `kpidynamicdata` WHERE ").append(dynamicWhere);
         if (fileId != null) {
             sql.append(" AND `fileId` = ?");
             args.add(fileId);
+        }
+        if (companyId != null) {
+            sql.append(" AND `companyId` = ?");
+            args.add(companyId);
         }
         sql.append(") merged");
 

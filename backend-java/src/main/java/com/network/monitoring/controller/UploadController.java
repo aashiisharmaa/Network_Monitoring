@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/upload")
+@RequestMapping({"/upload", "/api/v1/upload"})
 public class UploadController {
     private static final Logger log = LoggerFactory.getLogger(UploadController.class);
 

@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/kpi")
+@RequestMapping({"/kpi", "/api/v1/kpi"})
 public class WorstPerformanceController {
 
     private final WorstPerformanceService worstPerformanceService;

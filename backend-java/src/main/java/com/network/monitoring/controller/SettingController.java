@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/setting")
+@RequestMapping({"/setting", "/api/v1/setting"})
 public class SettingController {
 
     private final SettingService settingService;

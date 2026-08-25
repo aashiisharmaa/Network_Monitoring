@@ -26,6 +26,9 @@ public class UploadHistory {
     @Column(name = "uploadedBy")
     private String uploadedBy;
 
+    @Column(name = "companyId")
+    private Long companyId;
+
     @Column(columnDefinition = "text")
     private String remarks;
 
@@ -62,6 +65,14 @@ public class UploadHistory {
 
     public void setUploadedBy(String uploadedBy) {
         this.uploadedBy = uploadedBy;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 
     public String getRemarks() {

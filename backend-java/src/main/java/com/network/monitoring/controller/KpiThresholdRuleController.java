@@ -17,7 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/threshold-rules")
+@RequestMapping({"/threshold-rules", "/api/v1/threshold-rules"})
 public class KpiThresholdRuleController {
 
     private final KpiThresholdRuleService thresholdRuleService;

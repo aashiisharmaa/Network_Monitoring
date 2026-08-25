@@ -71,6 +71,7 @@ public class UploadService {
     private final KpiThresholdRuleService kpiThresholdRuleService;
     private final KpiAlarmService kpiAlarmService;
     private final SitePredictionService sitePredictionService;
+    private final RoleAuthorizationService roleAuthorizationService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
@@ -96,6 +97,7 @@ public class UploadService {
                          KpiThresholdRuleService kpiThresholdRuleService,
                          KpiAlarmService kpiAlarmService,
                          SitePredictionService sitePredictionService,
+                         RoleAuthorizationService roleAuthorizationService,
                          JdbcTemplate jdbcTemplate,
                          ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
         this.parserService = parserService;
@@ -110,6 +112,7 @@ public class UploadService {
         this.kpiThresholdRuleService = kpiThresholdRuleService;
         this.kpiAlarmService = kpiAlarmService;
         this.sitePredictionService = sitePredictionService;
+        this.roleAuthorizationService = roleAuthorizationService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
     }
@@ -117,6 +120,7 @@ public class UploadService {
     @PostConstruct
     public void ensureSiteDataSchema() {
         addSiteDataColumnIfMissing("fileId", "ALTER TABLE `sitedata` ADD COLUMN `fileId` BIGINT NULL");
+        addSiteDataColumnIfMissing("companyId", "ALTER TABLE `sitedata` ADD COLUMN `companyId` BIGINT NULL");
         addSiteDataColumnIfMissing("Sector", "ALTER TABLE `sitedata` ADD COLUMN `Sector` VARCHAR(50) NULL");
         addSiteDataColumnIfMissing("Band", "ALTER TABLE `sitedata` ADD COLUMN `Band` VARCHAR(50) NULL");
         addSiteDataColumnIfMissing("Technology", "ALTER TABLE `sitedata` ADD COLUMN `Technology` VARCHAR(50) NULL");
@@ -324,6 +328,7 @@ public class UploadService {
         uploadHistory.setFileName(fileName);
         uploadHistory.setFileType(fileType);
         uploadHistory.setUploadedBy(uploadedBy == null || uploadedBy.isBlank() ? "anonymous" : uploadedBy);
+        uploadHistory.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
         uploadHistory.setRemarks(remarks);
         uploadHistory.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
         return uploadHistoryRepository.save(uploadHistory);
@@ -427,7 +432,7 @@ public class UploadService {
                 kpiCachePayload.put("cleaningStats", cleanResult.stats());
                 List<Map<String, Object>> dynamicRecords = cleanResult.records();
                 kpiCacheService.writeKpiCache(uploadRecord.getId(), kpiCachePayload);
-                kpiDynamicDataService.replaceRecords(uploadRecord.getId(), dynamicRecords);
+                kpiDynamicDataService.replaceRecords(uploadRecord.getId(), uploadRecord.getCompanyId(), dynamicRecords);
                 sitePredictionService.invalidateFile(uploadRecord.getId());
                 sitePredictionService.warmFileAsync(uploadRecord.getId());
                 Map<String, Object> thresholdSummary = Map.of(
@@ -966,8 +971,13 @@ public class UploadService {
             canonicalRow.put("site", safeString(pickValue(normalized, "site", "siteid", "site_name", "sitename")));
             canonicalRow.put("band", safeString(pickValue(normalized, "band", "frequency_band", "layer", "carrier")));
             canonicalRow.put("tech", safeString(pickValue(normalized, "tech", "technology")));
-            canonicalRow.put("sectorid", safeString(pickValue(normalized, "sectorid", "sector_id", "secid", "sec_id", "sec")));
-            canonicalRow.put("sectorname", safeString(pickValue(normalized, "sectorname", "sector_name", "sector")));
+            String sector = firstNonBlank(
+                    safeString(pickValue(normalized, "sectorid", "sector_id", "secid", "sec_id", "sec")),
+                    safeString(pickValue(normalized, "sectorname", "sector_name", "sector")),
+                    deriveSectorFromKpiRow(normalized)
+            );
+            canonicalRow.put("sectorid", sector);
+            canonicalRow.put("sectorname", firstNonBlank(safeString(pickValue(normalized, "sectorname", "sector_name", "sector")), sector));
             canonicalRow.put("groups", safeString(pickValue(normalized, "groups", "group", "region", "cluster")));
             canonicalRow.put("dimensions", dimensions);
             canonicalRow.put("metrics", metrics);
@@ -1547,6 +1557,7 @@ public class UploadService {
     private UploadData mapKpiRow(Map<String, Object> row, Long fileId) {
         UploadData data = new UploadData();
         data.setFileId(fileId);
+        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
         data.setDate(parseDateSafe(pickValue(row, "date", "datetime")));
         data.setCellName(safeString(pickValue(row, "cell_name", "cellname", "cell", "short_name", "shortname", "4g_cell_name", "4gcellname")));
         data.setSite(safeString(pickValue(row, "site")));
@@ -1594,6 +1605,7 @@ public class UploadService {
         SiteData data = new SiteData();
         data.setId(generatedId);
         data.setFileId(fileId);
+        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
         data.setCellName(cellName);
         data.setSiCi(safeString(pickValue(row, "si_ci", "sici")));
         data.setEgci(safeString(pickValue(row, "egci")));
@@ -1633,6 +1645,28 @@ public class UploadService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private String deriveSectorFromKpiRow(Map<String, Object> row) {
+        String shortName = safeString(pickValue(row, "shortname", "short_name"));
+        if (!isBlank(shortName)) {
+            String[] parts = shortName.trim().split("_");
+            if (parts.length > 0) {
+                String last = parts[parts.length - 1].trim();
+                if (last.matches("[A-Za-z0-9]{1,3}")) {
+                    return last.toUpperCase(Locale.ROOT);
+                }
+            }
+        }
+
+        String cell = safeString(pickValue(row, "cellname", "cellid", "cell", "cell_id", "cell_name"));
+        if (isBlank(cell)) {
+            return "";
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("([A-Za-z])$")
+                .matcher(cell.trim());
+        return matcher.find() ? matcher.group(1).toUpperCase(Locale.ROOT) : "";
     }
 
     private CellNameParts parseCellNameParts(String cellName) {
@@ -1704,6 +1738,7 @@ public class UploadService {
     private AlarmData mapAlarmRow(Map<String, Object> row, Long fileId) {
         AlarmData data = new AlarmData();
         data.setFileId(fileId);
+        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
         data.setFilename(safeString(pickValue(row, "filename", "file_name")));
         data.setDatetime(parseDateSafe(pickValue(row, "datetime", "date_time", "date")));
         data.setConfigDataDnPrefix(safeString(pickValue(row, "configdata_dnprefix", "configdatadnprefix")));
@@ -1764,6 +1799,7 @@ public class UploadService {
         thresholdRepository.findByFileId(fileId).orElseGet(() -> {
             Threshold threshold = new Threshold();
             threshold.setFileId(fileId);
+            threshold.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
             threshold.setCreatedAt(LocalDateTime.now());
             threshold.setUpdatedAt(LocalDateTime.now());
             return thresholdRepository.save(threshold);

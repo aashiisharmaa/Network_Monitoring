@@ -16,6 +16,9 @@ public class Threshold {
     @Column(name = "fileId", unique = true)
     private Long fileId;
 
+    @Column(name = "companyId")
+    private Long companyId;
+
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
@@ -83,6 +86,14 @@ public class Threshold {
 
     public void setFileId(Long fileId) {
         this.fileId = fileId;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 
     public LocalDateTime getCreatedAt() {

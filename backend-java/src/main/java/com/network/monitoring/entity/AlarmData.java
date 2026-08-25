@@ -20,6 +20,9 @@ public class AlarmData {
     @Column(name = "fileId")
     private Long fileId;
 
+    @Column(name = "companyId")
+    private Long companyId;
+
     @Column(name = "FILENAME")
     private String filename;
 
@@ -103,6 +106,14 @@ public class AlarmData {
 
     public void setFileId(Long fileId) {
         this.fileId = fileId;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 
     public String getFilename() {
