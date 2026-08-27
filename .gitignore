@@ -3,6 +3,8 @@ backend/uploads/
 frontend/release/
 backend/uploads/
 uploads/
+.env
+.backend-java-dev.pid
 
 # Java backend generated/runtime files
 backend-java/target/
