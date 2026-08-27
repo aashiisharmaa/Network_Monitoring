@@ -38,6 +38,10 @@ else
   exit 1
 fi
 
+if [[ -n "${JAVA_HOME:-}" ]]; then
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 FRONTEND_DIR="${FRONTEND_DIR:-../Frontend}"
 if [[ "$FRONTEND_DIR" != /* ]]; then
   FRONTEND_DIR="$(cd -- "$PROJECT_ROOT/$FRONTEND_DIR" && pwd)"
@@ -111,6 +115,10 @@ fi
 echo "Building Java backend..."
 if command -v mvn >/dev/null 2>&1; then
   (cd "$BACKEND_DIR" && mvn -DskipTests package)
+elif [[ -x "$BACKEND_DIR/tools/apache-maven-3.9.15/bin/mvn" ]]; then
+  (cd "$BACKEND_DIR" && "$BACKEND_DIR/tools/apache-maven-3.9.15/bin/mvn" -DskipTests package)
+elif [[ -f "$BACKEND_DIR/tools/apache-maven-3.9.15/bin/mvn.cmd" ]]; then
+  (cd "$BACKEND_DIR" && "$BACKEND_DIR/tools/apache-maven-3.9.15/bin/mvn.cmd" -DskipTests package)
 else
   echo "Maven was not found. Install Maven, then rerun this script."
   exit 1
