@@ -22,7 +22,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    @GetMapping("/stats")
+    @GetMapping({"/stats", "/summary"})
     public ResponseEntity<Map<String, Object>> getDashboardStats(
             @RequestParam(value = "fileId", required = false) Long fileId,
             @RequestParam(value = "companyId", required = false) Long companyId) {
@@ -156,7 +156,7 @@ public class DashboardController {
         }
     }
 
-    @GetMapping("/stats/performance")
+    @GetMapping({"/stats/performance", "/performance"})
     public ResponseEntity<Map<String, Object>> getPerformanceMetrics(
             @RequestParam(value = "fileId", required = false) Long fileId,
             @RequestParam(value = "companyId", required = false) Long companyId) {

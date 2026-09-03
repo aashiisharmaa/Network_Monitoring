@@ -29,11 +29,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         return HttpMethod.OPTIONS.matches(request.getMethod())
+                || isPublicReadOnlyGet(request, path)
                 || path.startsWith("/auth")
                 || path.startsWith("/api/v1/auth")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
                 || path.equals("/error");
+    }
+
+    private boolean isPublicReadOnlyGet(HttpServletRequest request, String path) {
+        if (!HttpMethod.GET.matches(request.getMethod())) {
+            return false;
+        }
+
+        return path.startsWith("/dashboard")
+                || path.startsWith("/api/v1/dashboard")
+                || path.startsWith("/kpi")
+                || path.startsWith("/api/v1/kpi")
+                || path.startsWith("/sites")
+                || path.startsWith("/api/v1/sites")
+                || path.startsWith("/upload")
+                || path.startsWith("/api/v1/upload")
+                || path.equals("/setting/getsettings")
+                || path.equals("/api/v1/setting/getsettings")
+                || path.equals("/companies")
+                || path.equals("/api/v1/companies");
     }
 
     @Override

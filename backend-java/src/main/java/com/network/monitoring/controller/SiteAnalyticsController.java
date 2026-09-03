@@ -37,6 +37,13 @@ public class SiteAnalyticsController {
         return ResponseEntity.ok(response("Site details retrieved successfully.", siteAnalyticsService.siteDetails(fileId, site)));
     }
 
+    @GetMapping({"/intelligence", "/site-intelligence"})
+    public ResponseEntity<Map<String, Object>> intelligence(@RequestParam("fileId") Long fileId,
+                                                            @RequestParam(value = "siteFileId", required = false) Long siteFileId,
+                                                            @RequestParam(value = "limit", required = false) Integer limit) {
+        return ResponseEntity.ok(response("Site intelligence retrieved successfully.", siteAnalyticsService.siteIntelligence(fileId, siteFileId, limit)));
+    }
+
     private Map<String, Object> response(String message, Object data) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);

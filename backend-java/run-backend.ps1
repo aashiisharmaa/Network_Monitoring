@@ -3,6 +3,61 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $null = Push-Location $root
 
+function Import-EnvFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path $Path)) {
+        return
+    }
+
+    $loadableKeys = @(
+        'JWT_SECRET',
+        'LICENSE_DEVICE_ID',
+        'LICENSE_FILE_PATH',
+        'LICENSE_SIGNING_SECRET',
+        'PORT',
+        'SPRING_DATASOURCE_URL',
+        'SPRING_DATASOURCE_USERNAME',
+        'SPRING_DATASOURCE_PASSWORD',
+        'SPRING_JPA_HIBERNATE_DDL_AUTO',
+        'CORS_ORIGINS'
+    )
+
+    Get-Content $Path | ForEach-Object {
+        $line = $_.Trim()
+        if ([string]::IsNullOrWhiteSpace($line) -or $line.StartsWith('#')) {
+            return
+        }
+
+        if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$') {
+            return
+        }
+
+        $name = $matches[1]
+        if ($name -notin $loadableKeys) {
+            return
+        }
+
+        $value = $matches[2].Trim()
+        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
+            ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            if ($value.Length -ge 2) {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$name" -ErrorAction SilentlyContinue).Value)) {
+            Set-Item -Path "Env:$name" -Value $value
+        }
+    }
+}
+
+$projectRoot = Split-Path $root -Parent
+Import-EnvFile -Path (Join-Path $projectRoot '.env')
+
 $javaHomeCandidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME)) {
     $javaHomeCandidates += $env:JAVA_HOME
