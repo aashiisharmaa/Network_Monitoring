@@ -827,6 +827,14 @@ public class SiteAnalyticsService {
         payload.put("status", riskStatus(impactScore));
         payload.put("generatedAt", LocalDateTime.now().toString());
         payload.put("latestObservedAt", signals.latestObservedAt());
+        payload.put("calculationInputs", new LinkedHashMap<>(Map.of(
+                "siteRows", site.rowCount,
+                "cellCount", site.cellCount(),
+                "neighbourCount", neighbours.size(),
+                "kpiRows", kpiSite == null ? 0 : kpiSite.rowCount,
+                "kpiEnriched", kpiSite != null
+        )));
+        payload.put("dataQuality", dataQuality(site, kpiSite, signals, neighbours));
         payload.put("recommendations", recommendations);
         payload.put("neighbours", neighbours);
         if (kpiSite != null) {
@@ -835,6 +843,20 @@ public class SiteAnalyticsService {
         payload.put("mapOverlay", buildMapOverlay(site, neighbours, impactScore, samePciNeighbourCount, facingNeighbourCount, clusterNeighbourCount,
                 pciCollisionScore, pciConfusionScore, overshootingScore, handoverRisk, missingNeighborScore));
         return payload;
+    }
+
+    private Map<String, Object> dataQuality(SiteMasterAggregate site,
+                                             SiteAggregate kpiSite,
+                                             SiteSignalSummary signals,
+                                             List<Map<String, Object>> neighbours) {
+        Map<String, Object> quality = new LinkedHashMap<>();
+        quality.put("coordinatesAvailable", site.lat() != null && site.lon() != null);
+        quality.put("topologyAvailable", !neighbours.isEmpty());
+        quality.put("kpiAvailable", kpiSite != null && kpiSite.rowCount > 0);
+        quality.put("handoverMetricsAvailable", !signals.handoverAttempts.isEmpty() || !signals.handoverSuccess.isEmpty());
+        quality.put("timingAdvanceAvailable", !signals.timingAdvance.isEmpty());
+        quality.put("observedAt", signals.latestObservedAt());
+        return quality;
     }
 
     private Map<String, Object> buildMapOverlay(SiteMasterAggregate site,
@@ -1246,6 +1268,7 @@ public class SiteAnalyticsService {
         private Double latSum;
         private Double lonSum;
         private int coordinateCount;
+        private int rowCount;
         private final Set<String> cells = new LinkedHashSet<>();
         private final Set<String> sectors = new LinkedHashSet<>();
         private final Set<String> bands = new LinkedHashSet<>();
@@ -1257,6 +1280,7 @@ public class SiteAnalyticsService {
             this.siteName = this.siteKey;        }
 
         private void merge(SiteData row) {
+            rowCount++;
             siteId = firstNonBlank(siteId, row.getSiteId());
             siteName = firstNonBlank(siteName, row.getSiteName(), row.getSiteId(), siteKey);
             cluster = firstNonBlank(cluster, row.getCluster(), deriveClusterFromSite(siteName));

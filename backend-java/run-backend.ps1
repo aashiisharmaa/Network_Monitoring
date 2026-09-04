@@ -63,7 +63,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME)) {
     $javaHomeCandidates += $env:JAVA_HOME
 }
 $javaHomeCandidates += Get-ChildItem 'C:\Program Files\Eclipse Adoptium', 'C:\Program Files\Java' -Directory -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like 'jdk-17*' } |
+    Where-Object { $_.Name -match '^jdk-(17|21)' } |
     Sort-Object LastWriteTime -Descending |
     ForEach-Object { $_.FullName }
 
@@ -72,7 +72,7 @@ $javaHome = $javaHomeCandidates | Where-Object {
 } | Select-Object -First 1
 
 if ([string]::IsNullOrWhiteSpace($javaHome)) {
-    throw "JDK 17 was not found. Install JDK 17 or set JAVA_HOME to a JDK 17 directory."
+    throw "JDK 17 or 21 was not found. Install a supported JDK or set JAVA_HOME."
 }
 
 $env:JAVA_HOME = $javaHome

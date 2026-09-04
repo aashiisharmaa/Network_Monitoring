@@ -32,6 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || isPublicReadOnlyGet(request, path)
                 || path.startsWith("/auth")
                 || path.startsWith("/api/v1/auth")
+                || path.startsWith("/health")
+                || path.startsWith("/api/v1/health")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
                 || path.equals("/error");

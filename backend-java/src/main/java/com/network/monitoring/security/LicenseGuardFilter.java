@@ -31,6 +31,8 @@ public class LicenseGuardFilter extends OncePerRequestFilter {
         return HttpMethod.OPTIONS.matches(request.getMethod())
                 || path.startsWith("/auth")
                 || path.startsWith("/api/v1/auth")
+                || path.startsWith("/health")
+                || path.startsWith("/api/v1/health")
                 || path.startsWith("/local-license")
                 || path.startsWith("/api/v1/local-license")
                 || path.startsWith("/companies")

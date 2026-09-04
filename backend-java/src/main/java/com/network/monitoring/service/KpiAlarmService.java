@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -221,6 +222,7 @@ public class KpiAlarmService {
         response.put("total", jdbcTemplate.queryForObject("SELECT COUNT(*) FROM `kpi_alarms` WHERE `fileId` = ?", Long.class, fileId));
         response.put("severityCounts", groupedCounts("severity", fileId));
         response.put("statusCounts", groupedCounts("status", fileId));
+        response.put("generatedAt", Instant.now().toString());
         return response;
     }
 

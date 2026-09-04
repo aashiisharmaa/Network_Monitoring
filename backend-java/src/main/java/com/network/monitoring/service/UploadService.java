@@ -485,12 +485,31 @@ public class UploadService {
             if (datasetType == DatasetType.SITE) {
                 long nextGeneratedSiteId = nextSiteDataId();
                 List<SiteData> rows = new ArrayList<>();
-                for (Map<String, Object> row : normalizedRows) {
+                Set<String> seenSiteRows = new LinkedHashSet<>();
+                List<Map<String, Object>> validationErrors = new ArrayList<>();
+                int duplicateRows = 0;
+                for (int rowIndex = 0; rowIndex < normalizedRows.size(); rowIndex++) {
+                    Map<String, Object> row = normalizedRows.get(rowIndex);
                     SiteData mapped = mapSiteRow(row, nextGeneratedSiteId, uploadRecord.getId());
-                    if (mapped != null && mapped.getId() != null) {
-                        rows.add(mapped);
-                        nextGeneratedSiteId = Math.max(nextGeneratedSiteId + 1, mapped.getId() + 1);
+                    if (mapped == null || (isBlank(mapped.getSiteId()) && isBlank(mapped.getSiteName())
+                            && isBlank(mapped.getCellName()) && isBlank(mapped.getCellId()))) {
+                        validationErrors.add(validationRow(rowIndex + 2, "Missing site or cell identity"));
+                        continue;
                     }
+                    if (mapped.getLat() == null || mapped.getLon() == null
+                            || mapped.getLat() < -90 || mapped.getLat() > 90
+                            || mapped.getLon() < -180 || mapped.getLon() > 180) {
+                        validationErrors.add(validationRow(rowIndex + 2, "Missing or invalid latitude/longitude"));
+                        continue;
+                    }
+                    String duplicateKey = String.join("|", safeString(mapped.getSiteId()),
+                            safeString(mapped.getCellId()), safeString(mapped.getCellName())).toLowerCase(Locale.ROOT);
+                    if (!seenSiteRows.add(duplicateKey)) {
+                        duplicateRows++;
+                        continue;
+                    }
+                    rows.add(mapped);
+                    nextGeneratedSiteId = Math.max(nextGeneratedSiteId + 1, mapped.getId() + 1);
                 }
                 if (rows.isEmpty()) {
                     return Map.of(
@@ -502,6 +521,9 @@ public class UploadService {
                                     "totalRows", parsedRows.size(),
                                     "insertedRows", 0,
                                     "skippedRows", parsedRows.size(),
+                                    "invalidRows", validationErrors.size(),
+                                    "duplicateRows", duplicateRows,
+                                    "validationErrors", validationErrors,
                                     "detectedHeaders", detectedHeaders
                             )
                     );
@@ -515,16 +537,51 @@ public class UploadService {
                                 "datasetType", "site",
                                 "totalRows", parsedRows.size(),
                                 "insertedRows", insertedRows,
-                                "skippedRows", rows.size() - insertedRows + (parsedRows.size() - rows.size()),
+                                "skippedRows", parsedRows.size() - insertedRows,
+                                "invalidRows", validationErrors.size(),
+                                "duplicateRows", duplicateRows,
+                                "validationErrors", validationErrors,
                                 "detectedHeaders", detectedHeaders
                         )
                 );
             }
 
-            List<AlarmData> alarmRows = normalizedRows.stream()
-                    .map(row -> mapAlarmRow(row, uploadRecord.getId()))
-                    .filter(this::hasAlarmRowContent)
-                    .toList();
+            List<AlarmData> alarmRows = new ArrayList<>();
+            Set<String> seenAlarmRows = new LinkedHashSet<>();
+            List<Map<String, Object>> validationErrors = new ArrayList<>();
+            int duplicateRows = 0;
+            for (int rowIndex = 0; rowIndex < normalizedRows.size(); rowIndex++) {
+                AlarmData mapped = mapAlarmRow(normalizedRows.get(rowIndex), uploadRecord.getId());
+                if (!hasAlarmRowContent(mapped)) {
+                    validationErrors.add(validationRow(rowIndex + 2, "No alarm identity, text, or timestamp"));
+                    continue;
+                }
+                String duplicateKey = String.join("|", safeString(mapped.getAlarmPortId()),
+                        safeString(mapped.getAlarmSlogan()), safeString(mapped.getUserLabel()),
+                        safeString(mapped.getDatetime())).toLowerCase(Locale.ROOT);
+                if (!seenAlarmRows.add(duplicateKey)) {
+                    duplicateRows++;
+                    continue;
+                }
+                alarmRows.add(mapped);
+            }
+            if (alarmRows.isEmpty()) {
+                return Map.of(
+                        "success", false,
+                        "message", "No valid alarm rows found. Ensure the file contains alarm number, alarm text, name, or alarm time columns.",
+                        "data", Map.of(
+                                "uploadId", uploadRecord.getId(),
+                                "datasetType", "alarm",
+                                "totalRows", parsedRows.size(),
+                                "insertedRows", 0,
+                                "skippedRows", parsedRows.size(),
+                                "invalidRows", validationErrors.size(),
+                                "duplicateRows", duplicateRows,
+                                "validationErrors", validationErrors,
+                                "detectedHeaders", detectedHeaders
+                        )
+                );
+            }
             insertedRows = insertInChunks(alarmRows, AlarmData.class);
             return Map.of(
                     "success", true,
@@ -534,7 +591,10 @@ public class UploadService {
                             "datasetType", "alarm",
                             "totalRows", parsedRows.size(),
                             "insertedRows", insertedRows,
-                            "skippedRows", parsedRows.size() - alarmRows.size() + (alarmRows.size() - insertedRows),
+                            "skippedRows", parsedRows.size() - insertedRows,
+                            "invalidRows", validationErrors.size(),
+                            "duplicateRows", duplicateRows,
+                            "validationErrors", validationErrors,
                             "detectedHeaders", detectedHeaders
                     )
             );
@@ -1685,6 +1745,13 @@ public class UploadService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private Map<String, Object> validationRow(int rowNumber, String reason) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("row", rowNumber);
+        result.put("reason", reason);
+        return result;
     }
 
     private String deriveSectorFromKpiRow(Map<String, Object> row) {
