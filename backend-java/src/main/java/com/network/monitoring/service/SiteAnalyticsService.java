@@ -169,12 +169,14 @@ public class SiteAnalyticsService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> siteIntelligence(Long fileId, Long siteFileId, Integer limit) {
-        List<Map<String, Object>> records = records(fileId);
+        // Site intelligence must work with a site upload alone. KPI rows enrich the
+        // result when available, but are not required for topology analysis.
+        List<Map<String, Object>> records = fileId == null ? List.of() : records(fileId);
         List<KpiThresholdRule> rules = thresholdRuleRepository.findAllByEnabledTrue();
-        List<SiteData> siteRows = siteFileId == null
-                ? siteDataRepository.findByFileId(fileId)
-                : siteDataRepository.findByFileId(siteFileId);
-        if (siteRows.isEmpty() && siteFileId != null && !siteFileId.equals(fileId)) {
+        List<SiteData> siteRows = siteFileId != null
+                ? siteDataRepository.findByFileId(siteFileId)
+                : fileId == null ? List.of() : siteDataRepository.findByFileId(fileId);
+        if (siteRows.isEmpty() && siteFileId != null && fileId != null && !siteFileId.equals(fileId)) {
             siteRows = siteDataRepository.findByFileId(fileId);
         }
         int safeLimit = limit == null ? 20 : Math.max(1, Math.min(limit, 1000));
@@ -208,6 +210,14 @@ public class SiteAnalyticsService {
         Map<String, Object> clusterSummary = clusterSummary(items);
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("fileId", fileId);
+        response.put("siteFileId", siteFileId != null ? siteFileId : fileId);
+        response.put("analysisMode", "SITE_CONFIGURATION");
+        response.put("analysisSource", "site_csv");
+        response.put("kpiEnrichmentAvailable", fileId != null && !records.isEmpty());
+        response.put("calculatedMetrics", List.of(
+                "clusterization", "nearby_neighbours", "pci_collision", "pci_confusion",
+                "band_relations", "technology_relations", "overshooting_risk", "missing_neighbours"
+        ));
         response.put("generatedAt", LocalDateTime.now().toString());
         response.put("siteCount", items.size());
         response.put("clusterCount", ((List<?>) clusterSummary.getOrDefault("data", List.of())).size());
@@ -784,6 +794,8 @@ public class SiteAnalyticsService {
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("site", site.displayName());
+        payload.put("analysisMode", "SITE_CONFIGURATION");
+        payload.put("analysisSource", "site_csv");
         payload.put("siteId", site.siteId);
         payload.put("siteName", site.siteName);
         payload.put("cluster", site.cluster);

@@ -38,7 +38,7 @@ public class SiteAnalyticsController {
     }
 
     @GetMapping({"/intelligence", "/site-intelligence"})
-    public ResponseEntity<Map<String, Object>> intelligence(@RequestParam("fileId") Long fileId,
+    public ResponseEntity<Map<String, Object>> intelligence(@RequestParam(value = "fileId", required = false) Long fileId,
                                                             @RequestParam(value = "siteFileId", required = false) Long siteFileId,
                                                             @RequestParam(value = "limit", required = false) Integer limit) {
         return ResponseEntity.ok(response("Site intelligence retrieved successfully.", siteAnalyticsService.siteIntelligence(fileId, siteFileId, limit)));
