@@ -1,0 +1,215 @@
+Threshold Rules
+
+Configure KPI severity rules for alarms, rankings, and dashboard health.
+
+Refresh
+Add Rule
+
+Set severity values for a KPI metric.
+
+Metric Name
+Technology
+Direction
+Lower is bad
+Higher is bad
+
+Lower is bad: value below threshold is unhealthy, like RNA or success rate. Higher is bad: value above threshold is unhealthy, like DCR, failures, PRB usage, or distance.
+
+Critical
+Major
+Minor
+Warning
+Enabled
+Create Rule
+Evaluate Severity
+
+Test one KPI value against saved rules.
+
+Evaluate
+Saved Rules
+
+Rules are matched by metric name and optional technology.
+
+METRIC	TECH	DIRECTION	CRITICAL	MAJOR	MINOR	WARNING	STATUS	ACTIONS
+Availability	All	LOWER_IS_BAD	90	95	98	99	
+Enabled	
+
+averageuedistancekm	All	HIGHER_IS_BAD	1.98	1.93	1.78	1.61	
+Enabled	
+
+avgnumberofrrcusers	All	LOWER_IS_BAD	18.43	19.86	21.92	23.92	
+Enabled	
+
+avgrssipusch	All	HIGHER_IS_BAD	-100.92	-102.83	-104.22	-105.39	
+Enabled	
+
+azimuth	All	LOWER_IS_BAD	0	0	40	90	
+Enabled	
+
+csfbredirectionsuccessrate	All	LOWER_IS_BAD	87.5	96.67	99.64	100	
+Enabled	
+
+dlprbutilisation	All	HIGHER_IS_BAD	48.76	44.04	38.03	31.8	
+Enabled	
+
+earfcn	All	LOWER_IS_BAD	1622	1622	1622	1622	
+Enabled	
+
+mv4gdatavolumegb	All	LOWER_IS_BAD	2.08	3.52	9.04	13.63	
+Enabled	
+
+mveutranaveragecqi	All	LOWER_IS_BAD	7.65	8.02	8.48	8.91	
+Enabled	
+
+mvnwavgconnecteduser	All	LOWER_IS_BAD	1.54	2.36	4.39	6.87	
+Enabled	
+
+mvpacketlossdl	All	HIGHER_IS_BAD	0.05	0.03	0.02	0.01	
+Enabled	
+
+mvpuschsinr	All	LOWER_IS_BAD	2.76	3.73	5.23	6.38	
+Enabled	
+
+mvrsrpsample110dbm	All	LOWER_IS_BAD	9.21	11.12	14.26	16.96	
+Enabled	
+
+mvvoltedcr	All	HIGHER_IS_BAD	2.18	1.14	0.42	0.18	
+Enabled	
+
+mvvoltesrvccpercallratecbbh	All	LOWER_IS_BAD	0	0	0	0	
+Enabled	
+
+pci	All	LOWER_IS_BAD	2	4	11	26	
+Enabled	
+
+rrcsr	All	LOWER_IS_BAD	96.8	97.1	97.6	98.5	
+Enabled	
+
+uluserthroughputkbps	All	LOWER_IS_BAD	200.47	236.56	292.66	354.62	
+Enabled	
+
+userdlavergthpmbps	All	LOWER_IS_BAD	14.64	16.78	19.89	22.52	
+Enabled	
+
+volteerabsetupsuccessrate	All	LOWER_IS_BAD	99.15	99.52	99.77	99.88	
+Enabled	
+
+volteinterfhosr	All	LOWER_IS_BAD	92.86	97.65	99.24	99.58	
+Enabled	
+File Threshold Results
+
+Stored results from KPI uploads and file rechecks.
+
+Refresh Results
+FILE	STATUS	CRITICAL	MAJOR	MINOR	WARNING	NORMAL	MATCHED	EVALUATED	CHECKED AT	ACTION
+
+kpi-upload-template.csv
+ID: 92
+	Breaches	197	29	31	17	50	324	324	29/10/2026, 10:30:22 am	
+Create Rules
+Recheck
+
+
+physical_sitedb_generated_kpi.csv
+ID: 89
+	Breaches	12912	3726	6230	3011	35345	61224	61224	10/7/2026, 12:46:53 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 72
+	Breaches	56103	12489	19827	23454	93825	205698	205698	6/7/2026, 1:36:20 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 68
+	Breaches	56103	12489	19827	23454	93825	205698	205698	2/7/2026, 2:50:58 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 67
+	Breaches	56103	12489	19827	23454	93825	205698	205698	2/7/2026, 12:05:30 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 65
+	Breaches	57206	12492	19827	23454	93825	206804	206804	2/7/2026, 11:46:06 am	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 64
+	Breaches	1162	38	36	184	11374	12794	206804	2/7/2026, 11:28:29 am	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 63
+	Breaches	1162	38	36	184	11374	12794	206804	1/7/2026, 2:32:51 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 62
+	Breaches	1162	38	36	184	11374	12794	206804	1/7/2026, 2:20:45 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 61
+	Breaches	1162	38	36	184	11374	12794	206804	1/7/2026, 1:41:13 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 60
+	Breaches	1162	38	36	184	11374	12794	206804	1/7/2026, 1:14:02 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 59
+	Breaches	1162	38	36	184	11374	12794	206804	1/7/2026, 1:04:21 pm	
+Create Rules
+Recheck
+
+
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+ID: 58
+	Breaches	1550	346	1142	2062	190517	195617	2298715	1/7/2026, 12:02:41 pm	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 55
+	Breaches	60	38	36	184	11374	11692	205698	1/7/2026, 11:36:03 am	
+Create Rules
+Recheck
+
+
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+ID: 56
+	Breaches	1550	346	1142	2062	190517	195617	2300915	1/7/2026, 10:59:15 am	
+Create Rules
+Recheck
+
+
+rv_KPI_SHEET_top10cells_test.csv
+ID: 57
+	Breaches	60	38	36	184	11374	11692	205698	30/6/2026, 11:51:38 am	
+Create Rules
+Recheck

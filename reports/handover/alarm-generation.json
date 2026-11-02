@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Alarms generated.",
+  "data": {
+    "fileId": 92,
+    "total": 274,
+    "severityCounts": {
+      "CRITICAL": 197,
+      "MAJOR": 29,
+      "MINOR": 31,
+      "WARNING": 17
+    },
+    "statusCounts": {
+      "OPEN": 274
+    },
+    "generatedAt": "2026-10-29T05:02:42.007863400Z",
+    "generated": 274
+  }
+}

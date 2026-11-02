@@ -1,0 +1,271 @@
+RCA Recommendation
+
+STEP 1: CONFIGURE MAPPING & SCOPE
+
+Source File
+Select file...
+kpi-upload-template.csv
+rv_KPI_SHEET_top10cells_test.csv
+physical_sitedb_generated_kpi.csv
+physical_sitedb_generated_kpi.csv
+physical_sitedb_generated_kpi.csv
+physical_sitedb_generated_kpi.csv
+Physical_sitedb_Rw.csv
+kpi_for_site_map_sample_multiband.csv
+kpi_for_site_map_sample_multiband.csv
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_top10cells_test.csv
+rv_KPI_SHEET_ALLcells.csv
+rv_KPI_SHEET_top10cells_test (1).csv
+Vendor Hardware
+Nokia
+Ericsson
+Configuration Preset
+Default settings
+preset 1
+Load
+CORE COLUMN MAPPING
+Short name
+Select column
+Short name (shortname)
+Date (date)
+Cell Id (cellid)
+Site Id (siteid)
+Tech (tech)
+MV 4G Data Volume GB (mv4gdatavolumegb)
+MV PUSCH SINR (mvpuschsinr)
+MV NW Avg Connected User (mvnwavgconnecteduser)
+MV E UTRAN Average CQI (mveutranaveragecqi)
+DL PRB Utilisation (dlprbutilisation)
+Average UE Distance KM (averageuedistancekm)
+MV Packet Loss DL (mvpacketlossdl)
+MV Packet Loss UL (mvpacketlossul)
+MV Radio NW Availability (mvradionwavailability)
+MV VoLTE DCR (mvvoltedcr)
+VoLTE ERAB Setup Success Rate (volteerabsetupsuccessrate)
+VoLTE InterF HOSR (volteinterfhosr)
+VoLTE IntraF HOSR CBBH (volteintrafhosrcbbh)
+UL User Throughput Kbps (uluserthroughputkbps)
+PS IntraF HOSR CDBH (psintrafhosrcdbh)
+PS InterF HOSR (psinterfhosr)
+RRC Setup Success Rate (rrcsetupsuccessrate)
+MV ERAB Setup Success Rate (mverabsetupsuccessrate)
+MV DL User Throughput Mbps (mvdluserthroughputmbps)
+MV RSRP Sample 110 dBm (mvrsrpsample110dbm)
+MV PS Drop Call Rate (mvpsdropcallrate)
+MV VoLTE CSSR (mvvoltecssr)
+Avg RSSI PUSCH (avgrssipusch)
+Avg RSSI PUCCH (avgrssipucch)
+UL NI RSSI SINR (ulnirssisinr)
+MV VoLTE Packet Loss DL (mvvoltepacketlossdl)
+MV VoLTE Packet Loss UL (mvvoltepacketlossul)
+sheetName (sheetname)
+Date
+Select column
+Short name (shortname)
+Date (date)
+Cell Id (cellid)
+Site Id (siteid)
+Tech (tech)
+MV 4G Data Volume GB (mv4gdatavolumegb)
+MV PUSCH SINR (mvpuschsinr)
+MV NW Avg Connected User (mvnwavgconnecteduser)
+MV E UTRAN Average CQI (mveutranaveragecqi)
+DL PRB Utilisation (dlprbutilisation)
+Average UE Distance KM (averageuedistancekm)
+MV Packet Loss DL (mvpacketlossdl)
+MV Packet Loss UL (mvpacketlossul)
+MV Radio NW Availability (mvradionwavailability)
+MV VoLTE DCR (mvvoltedcr)
+VoLTE ERAB Setup Success Rate (volteerabsetupsuccessrate)
+VoLTE InterF HOSR (volteinterfhosr)
+VoLTE IntraF HOSR CBBH (volteintrafhosrcbbh)
+UL User Throughput Kbps (uluserthroughputkbps)
+PS IntraF HOSR CDBH (psintrafhosrcdbh)
+PS InterF HOSR (psinterfhosr)
+RRC Setup Success Rate (rrcsetupsuccessrate)
+MV ERAB Setup Success Rate (mverabsetupsuccessrate)
+MV DL User Throughput Mbps (mvdluserthroughputmbps)
+MV RSRP Sample 110 dBm (mvrsrpsample110dbm)
+MV PS Drop Call Rate (mvpsdropcallrate)
+MV VoLTE CSSR (mvvoltecssr)
+Avg RSSI PUSCH (avgrssipusch)
+Avg RSSI PUCCH (avgrssipucch)
+UL NI RSSI SINR (ulnirssisinr)
+MV VoLTE Packet Loss DL (mvvoltepacketlossdl)
+MV VoLTE Packet Loss UL (mvvoltepacketlossul)
+sheetName (sheetname)
+Cell I'd
+Select column
+Short name (shortname)
+Date (date)
+Cell Id (cellid)
+Site Id (siteid)
+Tech (tech)
+MV 4G Data Volume GB (mv4gdatavolumegb)
+MV PUSCH SINR (mvpuschsinr)
+MV NW Avg Connected User (mvnwavgconnecteduser)
+MV E UTRAN Average CQI (mveutranaveragecqi)
+DL PRB Utilisation (dlprbutilisation)
+Average UE Distance KM (averageuedistancekm)
+MV Packet Loss DL (mvpacketlossdl)
+MV Packet Loss UL (mvpacketlossul)
+MV Radio NW Availability (mvradionwavailability)
+MV VoLTE DCR (mvvoltedcr)
+VoLTE ERAB Setup Success Rate (volteerabsetupsuccessrate)
+VoLTE InterF HOSR (volteinterfhosr)
+VoLTE IntraF HOSR CBBH (volteintrafhosrcbbh)
+UL User Throughput Kbps (uluserthroughputkbps)
+PS IntraF HOSR CDBH (psintrafhosrcdbh)
+PS InterF HOSR (psinterfhosr)
+RRC Setup Success Rate (rrcsetupsuccessrate)
+MV ERAB Setup Success Rate (mverabsetupsuccessrate)
+MV DL User Throughput Mbps (mvdluserthroughputmbps)
+MV RSRP Sample 110 dBm (mvrsrpsample110dbm)
+MV PS Drop Call Rate (mvpsdropcallrate)
+MV VoLTE CSSR (mvvoltecssr)
+Avg RSSI PUSCH (avgrssipusch)
+Avg RSSI PUCCH (avgrssipucch)
+UL NI RSSI SINR (ulnirssisinr)
+MV VoLTE Packet Loss DL (mvvoltepacketlossdl)
+MV VoLTE Packet Loss UL (mvvoltepacketlossul)
+sheetName (sheetname)
+Site I'd
+Select column
+Short name (shortname)
+Date (date)
+Cell Id (cellid)
+Site Id (siteid)
+Tech (tech)
+MV 4G Data Volume GB (mv4gdatavolumegb)
+MV PUSCH SINR (mvpuschsinr)
+MV NW Avg Connected User (mvnwavgconnecteduser)
+MV E UTRAN Average CQI (mveutranaveragecqi)
+DL PRB Utilisation (dlprbutilisation)
+Average UE Distance KM (averageuedistancekm)
+MV Packet Loss DL (mvpacketlossdl)
+MV Packet Loss UL (mvpacketlossul)
+MV Radio NW Availability (mvradionwavailability)
+MV VoLTE DCR (mvvoltedcr)
+VoLTE ERAB Setup Success Rate (volteerabsetupsuccessrate)
+VoLTE InterF HOSR (volteinterfhosr)
+VoLTE IntraF HOSR CBBH (volteintrafhosrcbbh)
+UL User Throughput Kbps (uluserthroughputkbps)
+PS IntraF HOSR CDBH (psintrafhosrcdbh)
+PS InterF HOSR (psinterfhosr)
+RRC Setup Success Rate (rrcsetupsuccessrate)
+MV ERAB Setup Success Rate (mverabsetupsuccessrate)
+MV DL User Throughput Mbps (mvdluserthroughputmbps)
+MV RSRP Sample 110 dBm (mvrsrpsample110dbm)
+MV PS Drop Call Rate (mvpsdropcallrate)
+MV VoLTE CSSR (mvvoltecssr)
+Avg RSSI PUSCH (avgrssipusch)
+Avg RSSI PUCCH (avgrssipucch)
+UL NI RSSI SINR (ulnirssisinr)
+MV VoLTE Packet Loss DL (mvvoltepacketlossdl)
+MV VoLTE Packet Loss UL (mvvoltepacketlossul)
+sheetName (sheetname)
+Tech
+Select column
+Short name (shortname)
+Date (date)
+Cell Id (cellid)
+Site Id (siteid)
+Tech (tech)
+MV 4G Data Volume GB (mv4gdatavolumegb)
+MV PUSCH SINR (mvpuschsinr)
+MV NW Avg Connected User (mvnwavgconnecteduser)
+MV E UTRAN Average CQI (mveutranaveragecqi)
+DL PRB Utilisation (dlprbutilisation)
+Average UE Distance KM (averageuedistancekm)
+MV Packet Loss DL (mvpacketlossdl)
+MV Packet Loss UL (mvpacketlossul)
+MV Radio NW Availability (mvradionwavailability)
+MV VoLTE DCR (mvvoltedcr)
+VoLTE ERAB Setup Success Rate (volteerabsetupsuccessrate)
+VoLTE InterF HOSR (volteinterfhosr)
+VoLTE IntraF HOSR CBBH (volteintrafhosrcbbh)
+UL User Throughput Kbps (uluserthroughputkbps)
+PS IntraF HOSR CDBH (psintrafhosrcdbh)
+PS InterF HOSR (psinterfhosr)
+RRC Setup Success Rate (rrcsetupsuccessrate)
+MV ERAB Setup Success Rate (mverabsetupsuccessrate)
+MV DL User Throughput Mbps (mvdluserthroughputmbps)
+MV RSRP Sample 110 dBm (mvrsrpsample110dbm)
+MV PS Drop Call Rate (mvpsdropcallrate)
+MV VoLTE CSSR (mvvoltecssr)
+Avg RSSI PUSCH (avgrssipusch)
+Avg RSSI PUCCH (avgrssipucch)
+UL NI RSSI SINR (ulnirssisinr)
+MV VoLTE Packet Loss DL (mvvoltepacketlossdl)
+MV VoLTE Packet Loss UL (mvvoltepacketlossul)
+sheetName (sheetname)
+Single Range
+Pre vs Post
+Analysis Start Date (Optional)
+Analysis End Date (Optional)
+KPI Mapping and Thresholds
+Auto Suggest Mapping
+Advanced RCA Rule Thresholds
+
+Fine-tune rule cutoffs used by RCA scoring and severity bucketing.
+
+CONFIGURATION SETTINGS
+Run Recommendation
+Export
+Recommendation complete.
+Result Summary
+Table
+Visualization
+Top 10
+Top 20
+All
+Anomalies: 11
+Critical: 4
+Major: 3
+Date filter: Start to End | Rows: 12 / 12
+Short name	Date	Severity	Score	Primary Cause	Recommendation
+NOI_B_L18_4	2026-08-28	Critical	29.25	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+DEL_C_L18_4	2026-08-28	Critical	26.55	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+NOI_B_L18_3	2026-08-28	Critical	26.55	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+GZB_A_L18_4	2026-08-28	Critical	25.35	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+DEL_C_L18_3	2026-08-28	Major	24.15	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+GZB_A_L18_3	2026-08-28	Major	24.15	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+NOI_B_L18_2	2026-08-28	Major	23.1	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+DEL_C_L18_2	2026-08-28	Moderate	21.3	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+GZB_A_L18_2	2026-08-28	Moderate	18	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.
+NOI_B_L18_1	2026-08-28	Moderate	15	Accessibility / setup failure	Nokia RF action: audit RRC/ERAB admission failures, S1/MME transport and license/capacity counters. Tune admission control and setup timers only after checking congestion and transport.

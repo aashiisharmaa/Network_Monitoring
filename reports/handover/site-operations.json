@@ -1,0 +1,359 @@
+[
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:38:04.056050+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:38:39.114258+05:30"
+  },
+  {
+    "operation": "Inspect site 1001",
+    "status": "PASS",
+    "detail": {
+      "name": "GZB_A",
+      "cells": 4
+    },
+    "image": "reports/handover/images/map-site-1001.png",
+    "time": "2026-10-29T10:38:43.199299+05:30"
+  },
+  {
+    "operation": "Inspect site 2001",
+    "status": "PASS",
+    "detail": {
+      "name": "NOI_B",
+      "cells": 4
+    },
+    "image": "reports/handover/images/map-site-2001.png",
+    "time": "2026-10-29T10:38:47.411977+05:30"
+  },
+  {
+    "operation": "Inspect site 3001",
+    "status": "PASS",
+    "detail": {
+      "name": "DEL_C",
+      "cells": 4
+    },
+    "image": "reports/handover/images/map-site-3001.png",
+    "time": "2026-10-29T10:38:51.674168+05:30"
+  },
+  {
+    "operation": "Worst Sites activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-worst-sites.png",
+    "time": "2026-10-29T10:38:59.573427+05:30"
+  },
+  {
+    "operation": "Alarms activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-site-alarms.png",
+    "time": "2026-10-29T10:39:02.097209+05:30"
+  },
+  {
+    "operation": "PCI Collision activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-pci-collision.png",
+    "time": "2026-10-29T10:39:04.911023+05:30"
+  },
+  {
+    "operation": "PCI Confusion activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-pci-confusion.png",
+    "time": "2026-10-29T10:39:07.593095+05:30"
+  },
+  {
+    "operation": "Overshooting activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-overshooting.png",
+    "time": "2026-10-29T10:39:10.266415+05:30"
+  },
+  {
+    "operation": "Missing Neighbours activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-missing-neighbours.png",
+    "time": "2026-10-29T10:39:12.869038+05:30"
+  },
+  {
+    "operation": "Combined issue overlay",
+    "status": "PASS",
+    "detail": "Coverage stays enabled with collision, confusion and overshooting overlays.",
+    "image": "reports/handover/images/map-analysis-layers.png",
+    "time": "2026-10-29T10:39:15.876662+05:30"
+  },
+  {
+    "operation": "Handover display",
+    "status": "PASS",
+    "detail": "Technology, band and PCI handover controls activated.",
+    "image": "reports/handover/images/map-handovers.png",
+    "time": "2026-10-29T10:39:19.665722+05:30"
+  },
+  {
+    "operation": "Predictions activation and removal",
+    "status": "PASS",
+    "detail": "ON state captured; OFF state confirmed afterwards.",
+    "image": "reports/handover/images/map-predictions.png",
+    "time": "2026-10-29T10:39:22.667159+05:30"
+  },
+  {
+    "operation": "Analytics Overview",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-analytics-overview.png",
+    "time": "2026-10-29T10:39:25.666419+05:30"
+  },
+  {
+    "operation": "Analytics Clusterization",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-clusters.png",
+    "time": "2026-10-29T10:39:27.744608+05:30"
+  },
+  {
+    "operation": "Analytics Handover",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-handover-analysis.png",
+    "time": "2026-10-29T10:39:29.933268+05:30"
+  },
+  {
+    "operation": "Analytics Prediction",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-prediction-analysis.png",
+    "time": "2026-10-29T10:39:32.100356+05:30"
+  },
+  {
+    "operation": "Analytics Worst Cells",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-worst-cell-analysis.png",
+    "time": "2026-10-29T10:39:34.199228+05:30"
+  },
+  {
+    "operation": "Analytics Alarm Cells",
+    "status": "PASS",
+    "detail": "Selected analytics view rendered for the scoped source data.",
+    "image": "reports/handover/images/map-alarm-analysis.png",
+    "time": "2026-10-29T10:39:36.282585+05:30"
+  },
+  {
+    "operation": "Coverage PDF export",
+    "status": "PASS",
+    "detail": {
+      "bytes": 124484,
+      "file": "reports\\handover\\exports\\map-report.pdf"
+    },
+    "image": null,
+    "time": "2026-10-29T10:39:37.667336+05:30"
+  },
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:39:48.781840+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:40:27.374039+05:30"
+  },
+  {
+    "operation": "Coverage PDF export",
+    "status": "PASS",
+    "detail": {
+      "bytes": 124484,
+      "file": "reports\\handover\\exports\\map-report.pdf"
+    },
+    "image": null,
+    "time": "2026-10-29T10:40:30.271416+05:30"
+  },
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:41:58.149216+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:42:35.420516+05:30"
+  },
+  {
+    "operation": "Analytics Clusterization",
+    "status": "PASS",
+    "detail": "Populated Impact-based site clusters content verified after map rendering correction.",
+    "image": "reports/handover/images/map-clusters.png",
+    "time": "2026-10-29T10:42:38.994615+05:30"
+  },
+  {
+    "operation": "Analytics Handover",
+    "status": "PASS",
+    "detail": "Populated Handover Intelligence content verified after map rendering correction.",
+    "image": "reports/handover/images/map-handover-analysis.png",
+    "time": "2026-10-29T10:42:41.624621+05:30"
+  },
+  {
+    "operation": "Analytics Worst Cells",
+    "status": "PASS",
+    "detail": "Populated Worst Cells Rankings content verified after map rendering correction.",
+    "image": "reports/handover/images/map-worst-cell-analysis.png",
+    "time": "2026-10-29T10:42:44.785721+05:30"
+  },
+  {
+    "operation": "Analytics Alarm Cells",
+    "status": "PASS",
+    "detail": "Populated Active Alarms content verified after map rendering correction.",
+    "image": "reports/handover/images/map-alarm-analysis.png",
+    "time": "2026-10-29T10:42:47.304429+05:30"
+  },
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:42:53.359946+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:43:30.843427+05:30"
+  },
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:44:23.464353+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:45:00.588869+05:30"
+  },
+  {
+    "operation": "LB/WCF prediction execution",
+    "status": "PASS",
+    "detail": {
+      "httpStatus": 200,
+      "message": "LB worst-cell prediction completed successfully.",
+      "summary": {
+        "rows": 12,
+        "unbalanced_count": 0,
+        "balanced_count": 12,
+        "method": "both",
+        "ta_input_used": false,
+        "warnings": [
+          "No TA file was provided, so LB/WCF ran with KPI data only. Coverage features were skipped."
+        ]
+      }
+    },
+    "image": "reports/handover/images/map-prediction-analysis.png",
+    "time": "2026-10-29T10:45:14.338076+05:30"
+  },
+  {
+    "operation": "Site-source validation",
+    "status": "PASS",
+    "detail": {
+      "siteFileId": 91,
+      "kpiFileId": 92,
+      "sites": {
+        "1001": "GZB_A",
+        "2001": "NOI_B",
+        "3001": "DEL_C"
+      },
+      "cells": 12,
+      "missingCoordinates": 0
+    },
+    "image": null,
+    "time": "2026-10-29T10:45:37.605962+05:30"
+  },
+  {
+    "operation": "Coverage overview",
+    "status": "PASS",
+    "detail": "Cells enabled; Site Size 250%, Cell Radius 220%; all 3 sites and 12 cells visible.",
+    "image": "reports/handover/images/map.png",
+    "time": "2026-10-29T10:46:15.515622+05:30"
+  },
+  {
+    "operation": "Coverage PDF export",
+    "status": "PASS",
+    "detail": {
+      "bytes": 124484,
+      "file": "reports\\handover\\exports\\map-report.pdf"
+    },
+    "image": null,
+    "time": "2026-10-29T10:46:16.117824+05:30"
+  }
+]

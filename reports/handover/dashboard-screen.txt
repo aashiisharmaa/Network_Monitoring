@@ -1,0 +1,300 @@
+Network Dashboard
+
+Real-time performance monitoring & analytics
+
+Backend Online
+Company Scope
+All companies
+KPI File Scope
+All KPI uploads
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Refresh
+Data scope: All companies / File #92 - kpi-upload-template.csv
+
+TOTAL CELLS
+
+12
+
+TOTAL SITES
+
+3
+
+TOTAL BANDS
+
+0
+
+TECHNOLOGIES
+
+1
+
+SECTORS
+
+4
+Performance Metrics
+
+Key performance indicators with threshold monitoring
+
+Export
+Import
+Set Thresholds
+Average UE Distance KM
+
+3.42
+
+Samples: 12
+
+Target: < 1.61
+
+Avg RSSI PUCCH
+
+-102.92
+
+Samples: 12
+
+Target: >= -103
+
+Avg RSSI PUSCH
+
+-97.75
+
+Samples: 12
+
+Target: < -105.39
+
+DL PRB Utilisation
+
+86.17
+
+Samples: 12
+
+Target: < 31.8
+
+MV 4G Data Volume GB
+
+7.16
+
+Samples: 12
+
+Target: > 13.63
+
+MV DL User Throughput Mbps
+
+12.36
+
+Samples: 12
+
+Target: >= 5
+
+MV E UTRAN Average CQI
+
+8.70
+
+Samples: 12
+
+Target: > 8.91
+
+MV ERAB Setup Success Rate
+
+94.53
+
+Samples: 12
+
+Target: >= 98.5
+
+MV NW Avg Connected User
+
+61.92
+
+Samples: 12
+
+Target: > 6.87
+
+MV PS Drop Call Rate
+
+2.13
+
+Samples: 12
+
+Target: >= 1
+
+MV PUSCH SINR
+
+5.68
+
+Samples: 12
+
+Target: > 6.38
+
+MV Packet Loss DL
+
+1.47
+
+Samples: 12
+
+Target: < 0.01
+
+MV Packet Loss UL
+
+1.08
+
+Samples: 12
+
+Target: >= 2
+
+MV RSRP Sample 110 dBm
+
+11.65
+
+Samples: 12
+
+Target: > 16.96
+
+MV Radio NW Availability
+
+98.69
+
+Samples: 12
+
+Target: > 99
+
+MV VoLTE CSSR
+
+93.95
+
+Samples: 12
+
+Target: >= 98.5
+
+MV VoLTE DCR
+
+1.66
+
+Samples: 12
+
+Target: < 0.18
+
+MV VoLTE Packet Loss DL
+
+0.22
+
+Samples: 12
+
+Target: >= 0.3
+
+MV VoLTE Packet Loss UL
+
+0.20
+
+Samples: 12
+
+Target: >= 0.3
+
+PS InterF HOSR
+
+84.98
+
+Samples: 12
+
+Target: >= 98.5
+
+PS IntraF HOSR CDBH
+
+86.38
+
+Samples: 12
+
+Target: >= 98.5
+
+RRC Setup Success Rate
+
+96.91
+
+Samples: 12
+
+Target: >= 98
+
+UL NI RSSI SINR
+
+4.82
+
+Samples: 12
+
+Target: >= -113
+
+UL User Throughput Kbps
+
+5566.67
+
+Samples: 12
+
+Target: > 354.62
+
+VoLTE ERAB Setup Success Rate
+
+94.58
+
+Samples: 12
+
+Target: > 99.88
+
+VoLTE InterF HOSR
+
+88.83
+
+Samples: 12
+
+Target: > 99.58
+
+VoLTE IntraF HOSR CBBH
+
+87.42
+
+Samples: 12
+
+Target: >= 95

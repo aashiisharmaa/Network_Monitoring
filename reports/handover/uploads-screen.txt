@@ -1,0 +1,231 @@
+Upload Data Files
+
+Upload Key Performance Indicators
+
+Company Scope
+
+Upload history and KPI targets follow this selection.
+
+All companies
+KPI Data
+Site Data
+Alarm Data
+Counter Data
+Dump Data
+Group Data
+KPI Template
+Site Template
+Alarm Template
+
+Drop your kpi data file here
+
+or
+
+Browse Files
+Excel
+CSV
+
+KPI import options
+
+Multiple Excel sheets are handled automatically. Use `append` to create a new KPI upload, or pick an existing KPI upload for `merge` or `overwrite`.
+
+Import mode
+Append
+Merge
+Overwrite
+Target KPI upload
+Create a new KPI upload
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Clean KPI data before storing
+Removes duplicate rows, rows with no numeric KPI metrics, and rows missing date, cell, site, or technology.
+Remarks
+Upload Jobs
+Refresh
+
+Job #22
+
+kpi-upload-template.csv
+
+COMPLETED
+
+KPI upload complete. Stored 12 dynamic row(s). Analysis can be run from Threshold Rules or Alarms.
+
+100%
+Aug 31, 10:18 PM
+
+Job #21
+
+rv_KPI_SHEET_top10cells_test.csv
+
+COMPLETED
+
+KPI upload complete. Stored 6405 dynamic row(s). Analysis can be run from Threshold Rules or Alarms.
+
+100%
+Aug 25, 10:53 AM
+
+Job #7
+
+rv_KPI_SHEET_top10cells_test.csv
+
+PROCESSING
+
+Processing KPI file...
+
+15%
+Jul 2, 11:45 AM
+Recent Uploads
+Refresh
+ID #93
+Delete
+
+alarm-upload-template.csv
+
+Alarm Data
+completed
+codex
+Aug 31, 10:18 PM
+[alarm] Demo alarm data
+ID #92
+Delete
+
+kpi-upload-template.csv
+
+KPI Data
+completed
+codex
+Aug 31, 10:18 PM
+[kpi] Demo KPI data
+ID #91
+Delete
+
+site-upload-template.csv
+
+Site Data
+completed
+codex
+Aug 31, 10:18 PM
+[site] Demo site data
+ID #90
+Delete
+
+rv_KPI_SHEET_top10cells_test.csv
+
+KPI Data
+completed
+vinfocomm@gmail.com
+Aug 25, 10:53 AM
+[kpi] KPI Data upload
+ID #89
+Delete
+
+physical_sitedb_generated_kpi.csv
+
+KPI Data
+completed
+vinfocomm@gmail.com
+Jul 10, 11:24 AM
+[kpi] KPI Data upload
+ID #88
+Delete
+
+physical_sitedb_generated_kpi.csv
+
+KPI Data
+completed
+vinfocomm@gmail.com
+Jul 10, 11:13 AM
+[kpi] KPI Data upload
+ID #87
+Delete
+
+physical_sitedb_generated_kpi.csv
+
+KPI Data
+completed
+vinfocomm@gmail.com
+Jul 10, 09:21 AM
+[kpi] KPI Data upload
+ID #86
+Delete
+
+physical_sitedb_generated_kpi.csv
+
+KPI Data
+completed
+vinfocomm@gmail.com
+Jul 10, 09:19 AM
+[kpi] KPI Data upload
+ID #85
+Delete
+
+Physical_sitedb_Rw.csv
+
+Site Data
+completed
+vinfocomm@gmail.com
+Jul 10, 09:00 AM
+[site] Site Data upload
+ID #84
+Delete
+
+Physical_sitedb_Rw.csv
+
+Site Data
+completed
+vinfocomm@gmail.com
+Jul 10, 08:52 AM
+[site] Site Data upload
+💡 KPI Data Upload Tips
+•
+Maximum file size: 50MB
+•
+Supported formats: Excel and CSV
+•
+Ensure kpi data is properly formatted

@@ -1,0 +1,276 @@
+Coverage Map
+LIVE
+Network Telemetry & Analytics
+Filter
+Analytics
+Multi Map
+Download PDF
+Utility
+A
+Admin
+Network Control & Filter
+
+Data layer configuration & spatial filters
+
+SITES
+
+3
+
+CELLS
+
+12
+
+PLOTTED
+
+12
+
+NO LAT/LON
+
+0
+
+DATA SOURCES
+SITE UPLOAD FILE
+Select Site Data file
+#91 - site-upload-template.csv
+#85 - Physical_sitedb_Rw.csv
+#84 - Physical_sitedb_Rw.csv
+#83 - Physical_sitedb_Rw.csv
+#82 - Physical_sitedb_Rw.csv
+#80 - Physical_sitedb_Rw.csv
+#77 - site_map_sample_multiband.csv
+#76 - site_map_sample_multiband.csv
+#75 - site_map_sample_multiband.csv
+#74 - site_map_sample_multiband.csv
+#73 - site_map_sample_multiband.csv
+#17 - pysicaldbairtel193_all.csv
+KPI UPLOAD FILE
+Select KPI file
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Worst Cells are ranked using the selected single KPI metric only.
+SITE DATA FILTERS
+Clear
+TECHNOLOGY
+All technologies
+LTE
+BAND
+All bands
+L03
+PCI
+MAP LAYER CONTROLS
+
+Cells OFF
+
+Coverage Layer
+
+Worst Sites OFF
+
+Turn on to show orange poor-site markers
+
+Predictions ON
+
+Recommendations
+
+RUN LB/WCF ON MAP
+TA file is optional for coverage features.
+Run LB
+Rule + ML
+Rule only
+ML only
+DL throughput
+PRB DL util
+Both
+Optional TA File
+No TA file selected. Run will use KPI-only mode.
+
+Alarms OFF
+
+Alarm Markers
+
+PCI Collision OFF
+
+Same PCI in nearby cells
+
+PCI Confusion OFF
+
+PCI reuse and overlap risk
+
+Overshooting ON
+
+Overshooting risk markers
+
+Missing Neighbours OFF
+
+Missing neighbor markers
+
+Mobility
+0
+
+Tech Handovers
+
+Technology change points
+
+Band Handovers
+
+Frequency band changes
+
+PCI Handovers
+
+PCI changes and conflicts
+
+Analytics
+
+KPI, prediction, alarm, and site insights
+
+Overview
+Clusterization
+Handover
+Prediction
+Worst Cells
+Alarm Cells
+KPI UPLOAD FILE
+Select KPI file
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+LOAD BALANCE
+0
+QUALITY
+0
+CAPACITY
+0
+COVERAGE
+0
+
+No prediction recommendations found for the selected KPI file.
+
+Site Legend
+3
+Click a site to highlight it on the map
+GZB_A
+1001
+A
+B
+C
+D
+NOI_B
+2001
+A
+B
+C
+D
+DEL_C
+3001
+A
+B
+C
+D
+MAP LAYER LEGEND
+Live marker counts & color schema
+ISSUE HOTSPOTS
+3
+PCI Collision
+0
+PCI Confusion
+0
+Overshooting
+3
+Handover
+0
+PREDICTION CELLS
+No prediction markers
+Map
+Satellite
+Keyboard shortcuts
+Map Data ©2026 Google
+Terms
+Report a map error

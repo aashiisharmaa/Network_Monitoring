@@ -1,0 +1,946 @@
+Site Analytics
+
+Track site health, threshold breaches, bands, technologies, sectors, and worst sites.
+
+Refresh Sites
+KPI Upload File
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Search Sites
+
+SITES
+
+3
+
+CELLS
+
+12
+
+SECTORS
+
+12
+
+BANDS
+
+1
+
+TECH
+
+1
+
+CRITICAL SITES
+
+0
+
+GOOD
+
+0
+
+WATCH
+
+0
+
+BAD
+
+3
+
+CRITICAL
+
+0
+
+All Sites
+
+Click a site to view cell-level details and top breaches.
+
+SITE	HEALTH	STATUS	CELLS	SECTORS	BANDS	TECH	BREACHES
+
+1001
+4 KPI rows
+	
+Health
+48%
+	BAD	4	4	L18	LTE	41
+
+2001
+4 KPI rows
+	
+Health
+41%
+	BAD	4	4	L18	LTE	43
+
+3001
+4 KPI rows
+	
+Health
+45%
+	BAD	4	4	L18	LTE	41
+Worst Sites
+
+Ranked by health score and threshold breach severity.
+
+Rank #1
+
+2001
+
+BAD
+Health
+41%
+C 26
+M 5
+m 9
+W 3
+
+Rank #2
+
+3001
+
+BAD
+Health
+45%
+C 25
+M 4
+m 8
+W 4
+
+Rank #3
+
+1001
+
+BAD
+Health
+48%
+C 23
+M 4
+m 8
+W 6
+Site Intelligence
+
+PCI collision, confusion, overshooting, missing neighbors, and handover risk scored from the uploaded site master and KPI data.
+
+SITES
+
+3
+
+CLUSTERS
+
+1
+
+CRITICAL
+
+0
+
+WATCH
+
+0
+
+GOOD
+
+3
+
+SITE	IMPACT	PCI COLLISION	PCI CONFUSION	HO	TA	STATUS
+
+2001
+Unclustered • 2026-08-28
+	34%	0%	0%	12%	38%	GOOD
+
+3001
+Unclustered • 2026-08-28
+	32%	0%	0%	10%	38%	GOOD
+
+1001
+Unclustered • 2026-08-28
+	31%	0%	0%	9%	38%	GOOD
+2001
+
+Latest observed 2026-08-28 - Analyzed 2026-10-29T10:32:43.693347
+
+GOOD
+
+IMPACT
+
+34%
+
+PCI COLLISION
+
+0%
+
+PCI CONFUSION
+
+0%
+
+HANDOVER RISK
+
+12%
+
+OVERSHOOTING
+
+38%
+
+CALCULATION MODE
+
+SITE_CONFIGURATION
+
+KPI ENRICHMENT
+
+Available
+
+COORDINATES
+
+Missing
+
+HO / TA SIGNALS
+
+HO / TA
+
+RECOMMENDATIONS
+Add or verify missing neighbor relations.
+Investigate interference, SINR, CQI, and overshooting overlap.
+Site Details
+
+Selected site cells, KPI averages, and highest threshold breaches.
+
+SITE
+
+2001
+
+CELLS
+
+4
+
+BREACHES
+
+43
+
+HEALTH
+
+41%
+
+STATUS
+
+BAD
+
+CELL	BAND	TECH	SECTOR	SEVERITY	BREACHES
+201	L18	LTE	1	CRITICAL	9
+202	L18	LTE	2	CRITICAL	12
+203	L18	LTE	3	CRITICAL	11
+204	L18	LTE	4	CRITICAL	11
+Top Breaches
+
+dlprbutilisation
+
+201
+
+CRITICAL
+Value: 77
+Rule: 48.76
+Band: L18
+Tech: LTE
+
+mvpacketlossdl
+
+201
+
+CRITICAL
+Value: 0.4
+Rule: 0.05
+Band: L18
+Tech: LTE
+
+volteerabsetupsuccessrate
+
+201
+
+CRITICAL
+Value: 97.8
+Rule: 99.15
+Band: L18
+Tech: LTE
+
+mvrsrpsample110dbm
+
+201
+
+CRITICAL
+Value: 5.2
+Rule: 9.21
+Band: L18
+Tech: LTE
+
+dlprbutilisation
+
+202
+
+CRITICAL
+Value: 88
+Rule: 48.76
+Band: L18
+Tech: LTE
+
+averageuedistancekm
+
+202
+
+CRITICAL
+Value: 3.3
+Rule: 1.98
+Band: L18
+Tech: LTE
+
+mvpacketlossdl
+
+202
+
+CRITICAL
+Value: 1.1
+Rule: 0.05
+Band: L18
+Tech: LTE
+
+volteerabsetupsuccessrate
+
+202
+
+CRITICAL
+Value: 95.1
+Rule: 99.15
+Band: L18
+Tech: LTE
+
+volteinterfhosr
+
+202
+
+CRITICAL
+Value: 89.8
+Rule: 92.86
+Band: L18
+Tech: LTE
+
+avgrssipusch
+
+202
+
+CRITICAL
+Value: -99
+Rule: -100.92
+Band: L18
+Tech: LTE
+
+mveutranaveragecqi
+
+203
+
+CRITICAL
+Value: 7.1
+Rule: 7.65
+Band: L18
+Tech: LTE
+
+dlprbutilisation
+
+203
+
+CRITICAL
+Value: 95
+Rule: 48.76
+Band: L18
+Tech: LTE
+
+averageuedistancekm
+
+203
+
+CRITICAL
+Value: 5.1
+Rule: 1.98
+Band: L18
+Tech: LTE
+
+mvpacketlossdl
+
+203
+
+CRITICAL
+Value: 2.6
+Rule: 0.05
+Band: L18
+Tech: LTE
+
+mvvoltedcr
+
+203
+
+CRITICAL
+Value: 2.8
+Rule: 2.18
+Band: L18
+Tech: LTE
+
+volteerabsetupsuccessrate
+
+203
+
+CRITICAL
+Value: 91.6
+Rule: 99.15
+Band: L18
+Tech: LTE
+
+volteinterfhosr
+
+203
+
+CRITICAL
+Value: 83.5
+Rule: 92.86
+Band: L18
+Tech: LTE
+
+avgrssipusch
+
+203
+
+CRITICAL
+Value: -92
+Rule: -100.92
+Band: L18
+Tech: LTE
+
+mveutranaveragecqi
+
+204
+
+CRITICAL
+Value: 6.5
+Rule: 7.65
+Band: L18
+Tech: LTE
+
+dlprbutilisation
+
+204
+
+CRITICAL
+Value: 97
+Rule: 48.76
+Band: L18
+Tech: LTE
+
+averageuedistancekm
+
+204
+
+CRITICAL
+Value: 5.8
+Rule: 1.98
+Band: L18
+Tech: LTE
+
+mvpacketlossdl
+
+204
+
+CRITICAL
+Value: 3.2
+Rule: 0.05
+Band: L18
+Tech: LTE
+
+mvvoltedcr
+
+204
+
+CRITICAL
+Value: 3.5
+Rule: 2.18
+Band: L18
+Tech: LTE
+
+volteerabsetupsuccessrate
+
+204
+
+CRITICAL
+Value: 89.8
+Rule: 99.15
+Band: L18
+Tech: LTE
+
+volteinterfhosr
+
+204
+
+CRITICAL
+Value: 81.4
+Rule: 92.86
+Band: L18
+Tech: LTE
+
+avgrssipusch
+
+204
+
+CRITICAL
+Value: -89
+Rule: -100.92
+Band: L18
+Tech: LTE
+
+volteinterfhosr
+
+201
+
+MAJOR
+Value: 94.1
+Rule: 97.65
+Band: L18
+Tech: LTE
+
+mvvoltedcr
+
+202
+
+MAJOR
+Value: 1.3
+Rule: 1.14
+Band: L18
+Tech: LTE
+
+mvrsrpsample110dbm
+
+202
+
+MAJOR
+Value: 10.9
+Rule: 11.12
+Band: L18
+Tech: LTE
+
+mvpuschsinr
+
+203
+
+MAJOR
+Value: 3.5
+Rule: 3.73
+Band: L18
+Tech: LTE
+
+mvpuschsinr
+
+204
+
+MAJOR
+Value: 2.9
+Rule: 3.73
+Band: L18
+Tech: LTE
+
+averageuedistancekm
+
+201
+
+MINOR
+Value: 1.8
+Rule: 1.78
+Band: L18
+Tech: LTE
+
+mvvoltedcr
+
+201
+
+MINOR
+Value: 0.5
+Rule: 0.42
+Band: L18
+Tech: LTE
+
+avgrssipusch
+
+201
+
+MINOR
+Value: -103
+Rule: -104.22
+Band: L18
+Tech: LTE
+
+mv4gdatavolumegb
+
+202
+
+MINOR
+Value: 6.6
+Rule: 9.04
+Band: L18
+Tech: LTE
+
+mvpuschsinr
+
+202
+
+MINOR
+Value: 5.1
+Rule: 5.23
+Band: L18
+Tech: LTE
+
+mv4gdatavolumegb
+
+203
+
+MINOR
+Value: 4.9
+Rule: 9.04
+Band: L18
+Tech: LTE
+
+mvradionwavailability
+
+203
+
+MINOR
+Value: 97.9
+Rule: 98
+Band: L18
+Tech: LTE
+
+mv4gdatavolumegb
+
+204
+
+MINOR
+Value: 3.8
+Rule: 9.04
+Band: L18
+Tech: LTE
+
+mvradionwavailability
+
+204
+
+MINOR
+Value: 97.1
+Rule: 98
+Band: L18
+Tech: LTE
+
+mv4gdatavolumegb
+
+201
+
+WARNING
+Value: 10.8
+Rule: 13.63
+Band: L18
+Tech: LTE
+
+mveutranaveragecqi
+
+202
+
+WARNING
+Value: 8.6
+Rule: 8.91
+Band: L18
+Tech: LTE
+
+mvradionwavailability
+
+202
+
+WARNING
+Value: 98.8
+Rule: 99
+Band: L18
+Tech: LTE
+Site Prediction Recommendations
+
+Combines KPI performance, uploaded site master data, and uploaded alarm context.
+
+All actions
+Load balance
+Capacity review
+Coverage check
+Quality check
+Observe
+All severity
+Critical
+Major
+Minor
+Normal
+Refresh
+
+RECOMMENDATIONS
+
+12
+
+LOAD BALANCE
+
+0
+
+CAPACITY
+
+12
+
+COVERAGE
+
+0
+
+QUALITY
+
+0
+
+CRITICAL
+
+9
+
+RANK	SITE / CELL	LAYER	ACTION	SEVERITY	SCORE	TARGET	ALARM	REASON
+#1	
+1001
+101
+Delhi NCR / Cluster_GZB
+	
+L18
+LTE
+	CAPACITY REVIEW	MAJOR	71	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+PRB utilization is nearing busy-hour risk. Coverage indicators show weak or far-user dominance.
+PRB avg 72.0
+UE distance avg 1.5
+volteintrafhosrcbbh avg 95.9
+
+#2	
+2001
+201
+Delhi NCR / Cluster_NOIDA
+	
+L18
+LTE
+	CAPACITY REVIEW	MAJOR	71	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+PRB utilization is nearing busy-hour risk. Coverage indicators show weak or far-user dominance.
+PRB avg 77.0
+UE distance avg 1.8
+volteintrafhosrcbbh avg 93.2
+
+#3	
+3001
+301
+Delhi NCR / Cluster_DELHI
+	
+L18
+LTE
+	CAPACITY REVIEW	MAJOR	55	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+PRB utilization is nearing busy-hour risk. Dynamic KPI classification found load/congestion pressure.
+PRB avg 74.0
+volteintrafhosrcbbh avg 94.6
+
+#4	
+1001
+102
+Delhi NCR / Cluster_GZB
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Coverage indicators show weak or far-user dominance.
+PRB avg 81.0
+UE distance avg 2.4
+Packet loss avg 0.43
+
+#5	
+1001
+103
+Delhi NCR / Cluster_GZB
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 89.0
+SINR avg 4.5
+UE distance avg 3.8
+
+#6	
+1001
+104
+Delhi NCR / Cluster_GZB
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 93.0
+SINR avg 3.75
+UE distance avg 4.5
+
+#7	
+2001
+202
+Delhi NCR / Cluster_NOIDA
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 88.0
+SINR avg 4.95
+UE distance avg 3.3
+
+#8	
+2001
+203
+Delhi NCR / Cluster_NOIDA
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 95.0
+SINR avg 3.3
+UE distance avg 5.1
+
+#9	
+2001
+204
+Delhi NCR / Cluster_NOIDA
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 97.0
+SINR avg 2.8
+UE distance avg 5.8
+
+#10	
+3001
+302
+Delhi NCR / Cluster_DELHI
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 83.0
+SINR avg 5.65
+UE distance avg 2.9
+
+#11	
+3001
+303
+Delhi NCR / Cluster_DELHI
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 91.0
+SINR avg 4.05
+UE distance avg 4.0
+
+#12	
+3001
+304
+Delhi NCR / Cluster_DELHI
+	
+L18
+LTE
+	CAPACITY REVIEW	CRITICAL	100	-	
+0
+No alarm
+	
+Review capacity expansion, parameter tuning, or carrier/layer balancing for this cell.
+High DL/UL PRB utilization indicates congestion. Low SINR points to interference or radio quality issues.
+PRB avg 94.0
+SINR avg 3.15
+UE distance avg 4.8

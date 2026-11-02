@@ -1,0 +1,700 @@
+KPI Analytics Dashboard
+
+Real-time network performance metrics
+
+Performance: On
+
+Active Filters
+
+1
+
+Filters
+Export Excel (Format 1)
+Export Excel (Format 2)
+Download PDF
+Clear All (1)
+KPI Upload Source
+Select Uploaded KPI File
+All KPI uploads
+#92 - kpi-upload-template.csv | codex | Aug 31, 2026, 04:48 PM
+#90 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Aug 25, 2026, 05:23 AM
+#89 - physical_sitedb_generated_kpi.csv | vinfocomm@gmail.com | Jul 10, 2026, 05:54 AM
+#88 - physical_sitedb_generated_kpi.csv | vinfocomm@gmail.com | Jul 10, 2026, 05:43 AM
+#87 - physical_sitedb_generated_kpi.csv | vinfocomm@gmail.com | Jul 10, 2026, 03:51 AM
+#86 - physical_sitedb_generated_kpi.csv | vinfocomm@gmail.com | Jul 10, 2026, 03:49 AM
+#81 - Physical_sitedb_Rw.csv | vinfocomm@gmail.com | Jul 10, 2026, 02:17 AM
+#79 - kpi_for_site_map_sample_multiband.csv | vinfocomm@gmail.com | Jul 8, 2026, 05:22 AM
+#78 - kpi_for_site_map_sample_multiband.csv | vinfocomm@gmail.com | Jul 8, 2026, 05:18 AM
+#72 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 6, 2026, 07:14 AM
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jul 3, 2026, 08:26 AM
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jul 3, 2026, 08:21 AM
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jul 3, 2026, 08:16 AM
+#68 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 2, 2026, 09:20 AM
+#67 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 2, 2026, 06:21 AM
+#65 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 2, 2026, 06:15 AM
+#64 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 2, 2026, 05:58 AM
+#63 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 1, 2026, 09:02 AM
+#62 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 1, 2026, 08:50 AM
+#61 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 1, 2026, 08:10 AM
+#60 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 1, 2026, 07:43 AM
+#59 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jul 1, 2026, 07:34 AM
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jul 1, 2026, 06:30 AM
+#57 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 06:14 AM
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 30, 2026, 06:05 AM
+#55 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 06:03 AM
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 30, 2026, 05:58 AM
+#53 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:55 AM
+#52 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:52 AM
+#51 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:48 AM
+#50 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:46 AM
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 30, 2026, 05:38 AM
+#48 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:38 AM
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 30, 2026, 05:33 AM
+#46 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:32 AM
+#45 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 30, 2026, 05:24 AM
+#44 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 26, 2026, 10:09 AM
+#43 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 26, 2026, 09:53 AM
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 25, 2026, 07:31 AM
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls | vinfocomm@gmail.com | Jun 25, 2026, 07:20 AM
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx | vinfocomm@gmail.com | Jun 25, 2026, 07:16 AM
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx | vinfocomm@gmail.com | Jun 25, 2026, 07:14 AM
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx | vinfocomm@gmail.com | Jun 25, 2026, 07:11 AM
+#37 - rv_KPI_SHEET_top10cells_test.csv | vinfocomm@gmail.com | Jun 25, 2026, 06:59 AM
+#36 - rv_KPI_SHEET_top10cells_test.csv | kpi@gmail.com | Apr 22, 2026, 06:54 AM
+#16 - rv_KPI_SHEET_ALLcells.csv | vinfocom@gmail.com | Apr 16, 2026, 01:59 PM
+#15 - rv_KPI_SHEET_top10cells_test (1).csv | vinfocom@gmail.com | Apr 16, 2026, 11:12 AM
+
+Selecting a file reloads KPI cards for only that upload.
+
+Configure KPI Metrics
+Configure Filter Headers
+Pre vs Post Date Ranges
+
+Pre Range
+
+Start Date
+End Date
+
+Post Range
+
+Start Date
+End Date
+Apply Date Ranges
+Cellid
+Select All (12)
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+Shortname
+Select All (12)
+DEL_C_L18_1
+DEL_C_L18_2
+DEL_C_L18_3
+DEL_C_L18_4
+GZB_A_L18_1
+GZB_A_L18_2
+GZB_A_L18_3
+GZB_A_L18_4
+NOI_B_L18_1
+NOI_B_L18_2
+NOI_B_L18_3
+NOI_B_L18_4
+Siteid
+Select All (3)
+1001
+2001
+3001
+File: kpi-upload-template.csv (codex, Aug 31, 2026, 04:48 PM)
+
+Global X-Axis (Apply to All Charts)
+
+Bulk-set the X-axis once. Individual chart dropdowns will still work for overrides.
+
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+Apply to All
+
+Performance mode is active. Showing 12 of 27 KPI cards.
+
+Average UE Distance KM
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 3.43
+Min: 1.20
+Max: 5.80
+Median: 3.55
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+2
+4
+6
+8
+Avg RSSI PUCCH
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: -102.92
+Min: -109.00
+Max: -95.00
+Median: -103.00
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+-115
+-110
+-105
+-100
+-95
+Avg RSSI PUSCH
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: -97.75
+Min: -105.00
+Max: -89.00
+Median: -98.00
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+-105
+-100
+-95
+-90
+-85
+DL PRB Utilisation
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 86.17
+Min: 72.00
+Max: 97.00
+Median: 88.50
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+25
+50
+75
+100
+MV 4G Data Volume GB
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 7.16
+Min: 3.80
+Max: 12.50
+Median: 6.25
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+4
+8
+12
+16
+MV DL User Throughput Mbps
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 12.36
+Min: 6.90
+Max: 18.40
+Median: 12.00
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+5
+10
+15
+20
+MV E UTRAN Average CQI
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 8.70
+Min: 6.50
+Max: 11.10
+Median: 8.50
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+3
+6
+9
+12
+MV ERAB Setup Success Rate
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 94.53
+Min: 89.60
+Max: 98.80
+Median: 94.80
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+25
+50
+75
+100
+MV NW Avg Connected User
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 61.92
+Min: 42.00
+Max: 79.00
+Median: 63.50
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+20
+40
+60
+80
+MV PS Drop Call Rate
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 2.13
+Min: 0.40
+Max: 4.50
+Median: 1.95
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+2
+4
+6
+8
+MV PUSCH SINR
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 5.68
+Min: 2.90
+Max: 9.80
+Median: 4.95
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+3
+6
+9
+12
+MV Packet Loss DL
+
+12 unique cell name values
+
+Optimization
+Fast
+Chart Type
+Bar Chart
+Line Chart
+Area Chart
+X-Axis
+Cell Name
+Date
+Technology
+Site
+Sector
+Cellid
+Sector ID
+Sheetname
+Shortname
+Siteid
+KPI Rule
+Post > Pre
+Post >= Pre
+Post < Pre
+Post <= Pre
+Avg: 1.47
+Min: 0.20
+Max: 3.20
+Median: 1.35
+101
+102
+103
+104
+201
+202
+203
+204
+301
+302
+303
+304
+0
+0.8
+1.6
+2.4
+3.2
+0.8

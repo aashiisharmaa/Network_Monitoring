@@ -1,0 +1,194 @@
+Validation & Worst Performance
+
+Review KPI upload quality, threshold health, worst cells, and worst sites.
+
+Refresh Analysis
+KPI Upload File
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Worst Cell KPI
+Average UE Distance KM
+Avg RSSI PUCCH
+Avg RSSI PUSCH
+DL PRB Utilisation
+MV 4G Data Volume GB
+MV DL User Throughput Mbps
+MV E UTRAN Average CQI
+MV ERAB Setup Success Rate
+MV NW Avg Connected User
+MV PS Drop Call Rate
+MV PUSCH SINR
+MV Packet Loss DL
+MV Packet Loss UL
+MV RSRP Sample 110 dBm
+MV Radio NW Availability
+MV VoLTE CSSR
+MV VoLTE DCR
+MV VoLTE Packet Loss DL
+MV VoLTE Packet Loss UL
+PS InterF HOSR
+PS IntraF HOSR CDBH
+RRC Setup Success Rate
+UL NI RSSI SINR
+UL User Throughput Kbps
+VoLTE ERAB Setup Success Rate
+VoLTE InterF HOSR
+VoLTE IntraF HOSR CBBH
+
+Ranks cells and sites using this single selected KPI only.
+
+Analyze
+
+STATUS
+
+PASSED
+
+TOTAL ROWS
+
+12
+
+INVALID ROWS
+
+0
+
+METRIC COLUMNS
+
+27
+
+DUPLICATES
+
+0
+
+Validation Report
+No validation warnings found.
+
+DATE
+
+0 missing
+
+CELL
+
+0 missing
+
+SITE
+
+0 missing
+
+TECHNOLOGY
+
+0 missing
+
+Threshold Summary
+
+CRITICAL
+
+197
+
+MAJOR
+
+29
+
+MINOR
+
+31
+
+WARNING
+
+17
+
+NORMAL
+
+50
+
+Matched 324 of 324 evaluated KPI values.
+Worst Cells
+RANK	CELL	TECH	AVERAGE	MIN	MAX	BREACHES	SEVERITY
+#1	
+204
+	LTE	5.8	5.8	5.8	1	CRITICAL
+#2	
+203
+	LTE	5.1	5.1	5.1	1	CRITICAL
+#3	
+304
+	LTE	4.8	4.8	4.8	1	CRITICAL
+#4	
+104
+	LTE	4.5	4.5	4.5	1	CRITICAL
+#5	
+303
+	LTE	4	4	4	1	CRITICAL
+#6	
+103
+	LTE	3.8	3.8	3.8	1	CRITICAL
+#7	
+202
+	LTE	3.3	3.3	3.3	1	CRITICAL
+#8	
+302
+	LTE	2.9	2.9	2.9	1	CRITICAL
+#9	
+102
+	LTE	2.4	2.4	2.4	1	CRITICAL
+#10	
+201
+	LTE	1.8	1.8	1.8	1	MINOR
+Worst Sites
+RANK	SITE	TECH	AVERAGE	MIN	MAX	BREACHES	SEVERITY
+#1	
+2001
+Worst cell: 204
+	LTE	4	1.8	5.8	4	CRITICAL
+#2	
+3001
+Worst cell: 304
+	LTE	3.22	1.2	4.8	3	CRITICAL
+#3	
+1001
+Worst cell: 104
+	LTE	3.05	1.5	4.5	3	CRITICAL

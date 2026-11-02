@@ -1,0 +1,326 @@
+{
+  "success": true,
+  "message": "File threshold summary evaluated successfully.",
+  "data": {
+    "fileId": 92,
+    "totalRows": 12,
+    "activeRules": 22,
+    "evaluatedValues": 324,
+    "matchedRules": 324,
+    "valuesWithoutRule": 0,
+    "severityCounts": {
+      "CRITICAL": 197,
+      "MAJOR": 29,
+      "MINOR": 31,
+      "WARNING": 17,
+      "NORMAL": 50
+    },
+    "hasBreaches": true,
+    "metrics": [
+      {
+        "metricName": "mv4gdatavolumegb",
+        "severityCounts": {
+          "CRITICAL": 0,
+          "MAJOR": 0,
+          "MINOR": 9,
+          "WARNING": 3,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvpuschsinr",
+        "severityCounts": {
+          "CRITICAL": 0,
+          "MAJOR": 3,
+          "MINOR": 4,
+          "WARNING": 1,
+          "NORMAL": 4
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvnwavgconnecteduser",
+        "severityCounts": {
+          "CRITICAL": 0,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 12
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mveutranaveragecqi",
+        "severityCounts": {
+          "CRITICAL": 3,
+          "MAJOR": 2,
+          "MINOR": 1,
+          "WARNING": 1,
+          "NORMAL": 5
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "dlprbutilisation",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "averageuedistancekm",
+        "severityCounts": {
+          "CRITICAL": 9,
+          "MAJOR": 0,
+          "MINOR": 1,
+          "WARNING": 0,
+          "NORMAL": 2
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvpacketlossdl",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvpacketlossul",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvradionwavailability",
+        "severityCounts": {
+          "CRITICAL": 0,
+          "MAJOR": 0,
+          "MINOR": 3,
+          "WARNING": 4,
+          "NORMAL": 5
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvvoltedcr",
+        "severityCounts": {
+          "CRITICAL": 4,
+          "MAJOR": 3,
+          "MINOR": 3,
+          "WARNING": 2,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "volteerabsetupsuccessrate",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "volteinterfhosr",
+        "severityCounts": {
+          "CRITICAL": 9,
+          "MAJOR": 3,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "volteintrafhosrcbbh",
+        "severityCounts": {
+          "CRITICAL": 9,
+          "MAJOR": 3,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "uluserthroughputkbps",
+        "severityCounts": {
+          "CRITICAL": 0,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 12
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "psintrafhosrcdbh",
+        "severityCounts": {
+          "CRITICAL": 11,
+          "MAJOR": 1,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "psinterfhosr",
+        "severityCounts": {
+          "CRITICAL": 11,
+          "MAJOR": 1,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "rrcsetupsuccessrate",
+        "severityCounts": {
+          "CRITICAL": 11,
+          "MAJOR": 1,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mverabsetupsuccessrate",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvdluserthroughputmbps",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvrsrpsample110dbm",
+        "severityCounts": {
+          "CRITICAL": 5,
+          "MAJOR": 1,
+          "MINOR": 2,
+          "WARNING": 1,
+          "NORMAL": 3
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvpsdropcallrate",
+        "severityCounts": {
+          "CRITICAL": 5,
+          "MAJOR": 4,
+          "MINOR": 2,
+          "WARNING": 1,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvvoltecssr",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "avgrssipusch",
+        "severityCounts": {
+          "CRITICAL": 8,
+          "MAJOR": 1,
+          "MINOR": 2,
+          "WARNING": 1,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "avgrssipucch",
+        "severityCounts": {
+          "CRITICAL": 4,
+          "MAJOR": 2,
+          "MINOR": 1,
+          "WARNING": 1,
+          "NORMAL": 4
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "ulnirssisinr",
+        "severityCounts": {
+          "CRITICAL": 1,
+          "MAJOR": 3,
+          "MINOR": 3,
+          "WARNING": 2,
+          "NORMAL": 3
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvvoltepacketlossdl",
+        "severityCounts": {
+          "CRITICAL": 12,
+          "MAJOR": 0,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      },
+      {
+        "metricName": "mvvoltepacketlossul",
+        "severityCounts": {
+          "CRITICAL": 11,
+          "MAJOR": 1,
+          "MINOR": 0,
+          "WARNING": 0,
+          "NORMAL": 0
+        },
+        "evaluatedValues": 12
+      }
+    ],
+    "generatedAt": "2026-10-29T10:30:21.7495027",
+    "ruleCoverage": {
+      "totalNumericMetrics": 27,
+      "createdRules": 0,
+      "existingRules": 27,
+      "createdMetricNames": []
+    }
+  }
+}

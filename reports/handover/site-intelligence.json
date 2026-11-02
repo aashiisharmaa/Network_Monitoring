@@ -1,0 +1,1100 @@
+{
+  "success": true,
+  "message": "Site intelligence retrieved successfully.",
+  "data": {
+    "fileId": 92,
+    "siteFileId": 91,
+    "analysisMode": "SITE_CONFIGURATION",
+    "analysisSource": "site_csv",
+    "kpiEnrichmentAvailable": true,
+    "calculatedMetrics": [
+      "clusterization",
+      "nearby_neighbours",
+      "pci_collision",
+      "pci_confusion",
+      "band_relations",
+      "technology_relations",
+      "overshooting_risk",
+      "missing_neighbours"
+    ],
+    "generatedAt": "2026-10-29T10:30:21.808808400",
+    "siteCount": 3,
+    "clusterCount": 3,
+    "clusterSummary": {
+      "count": 3,
+      "data": [
+        {
+          "cluster": "Cluster_DELHI",
+          "siteCount": 1,
+          "averageImpactScore": 60.54,
+          "criticalSites": 0,
+          "worstSite": "3001",
+          "worstImpactScore": 60.54
+        },
+        {
+          "cluster": "Cluster_GZB",
+          "siteCount": 1,
+          "averageImpactScore": 59.15,
+          "criticalSites": 0,
+          "worstSite": "1001",
+          "worstImpactScore": 59.15
+        },
+        {
+          "cluster": "Cluster_NOIDA",
+          "siteCount": 1,
+          "averageImpactScore": 59.0,
+          "criticalSites": 0,
+          "worstSite": "2001",
+          "worstImpactScore": 59.0
+        }
+      ]
+    },
+    "data": [
+      {
+        "site": "3001",
+        "analysisMode": "SITE_CONFIGURATION",
+        "analysisSource": "site_csv",
+        "siteId": "3001",
+        "siteName": "3001",
+        "cluster": "Cluster_DELHI",
+        "region": "Delhi NCR",
+        "technology": "LTE",
+        "band": "L03",
+        "cellCount": 4,
+        "sectorCount": 4,
+        "pciValues": [
+          321,
+          326,
+          327
+        ],
+        "latitude": 28.63405,
+        "longitude": 77.3647,
+        "neighborCount": 2,
+        "samePciNeighbourCount": 2,
+        "facingNeighbourCount": 2,
+        "clusterNeighbourCount": 0,
+        "avgDistanceKm": 4.61,
+        "avgTimingAdvance": 5.15,
+        "handoverSuccessRate": 90.45,
+        "handoverAttemptPressure": 0.0,
+        "handoverFailurePressure": 24.17,
+        "interferenceRisk": 65.81,
+        "healthScore": 45.0,
+        "pciCollisionScore": 68.0,
+        "pciConfusionScore": 89.0,
+        "overshootingScore": 62.0,
+        "missingNeighborScore": 86.0,
+        "handoverRisk": 10.31,
+        "impactScore": 60.54,
+        "status": "BAD",
+        "generatedAt": "2026-10-29T10:30:21.808808400",
+        "latestObservedAt": "2026-08-28",
+        "calculationInputs": {
+          "kpiRows": 4,
+          "cellCount": 4,
+          "neighbourCount": 2,
+          "siteRows": 4,
+          "kpiEnriched": true
+        },
+        "dataQuality": {
+          "coordinatesAvailable": true,
+          "topologyAvailable": true,
+          "kpiAvailable": true,
+          "handoverMetricsAvailable": true,
+          "timingAdvanceAvailable": true,
+          "observedAt": "2026-08-28"
+        },
+        "recommendations": [
+          "Review PCI reuse and neighbour overlap.",
+          "Reduce same-PCI confusion and verify dominant neighbour coverage.",
+          "Check overshooting using average distance and timing advance.",
+          "Add or verify missing neighbor relations.",
+          "Investigate interference, SINR, CQI, and overshooting overlap."
+        ],
+        "neighbours": [
+          {
+            "site": "1001",
+            "siteId": "1001",
+            "siteName": "1001",
+            "cluster": "Cluster_GZB",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.668875000000003,
+            "longitude": 77.40945,
+            "distanceKm": 5.84,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 1,
+            "azimuthDelta": 5.0,
+            "relationScore": 85.0,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          },
+          {
+            "site": "2001",
+            "siteId": "2001",
+            "siteName": "2001",
+            "cluster": "Cluster_NOIDA",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.651175,
+            "longitude": 77.39332499999999,
+            "distanceKm": 3.38,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 1,
+            "azimuthDelta": 23.0,
+            "relationScore": 80.0,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          }
+        ],
+        "kpiSummary": {
+          "site": "3001",
+          "healthScore": 45,
+          "status": "BAD",
+          "rowCount": 4,
+          "totalCells": 4,
+          "totalSectors": 4,
+          "bands": [
+            "L18"
+          ],
+          "technologies": [
+            "LTE"
+          ],
+          "matchedValues": 56,
+          "valuesWithoutRule": 52,
+          "breachCount": 41,
+          "criticalCount": 25,
+          "majorCount": 4,
+          "minorCount": 8,
+          "warningCount": 4,
+          "normalCount": 15,
+          "metricAverages": [],
+          "worstMetrics": [
+            {
+              "severityRank": 4,
+              "metricName": "dlprbutilisation"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvpacketlossdl"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvvoltedcr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteerabsetupsuccessrate"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteinterfhosr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvrsrpsample110dbm"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "avgrssipusch"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "averageuedistancekm"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mveutranaveragecqi"
+            },
+            {
+              "severityRank": 3,
+              "metricName": "mvpuschsinr"
+            }
+          ]
+        },
+        "mapOverlay": {
+          "siteId": "3001",
+          "siteName": "3001",
+          "site": "3001",
+          "latitude": 28.63405,
+          "longitude": 77.3647,
+          "impactScore": 60.54,
+          "counts": {
+            "total": 2,
+            "samePci": 2,
+            "facing": 2,
+            "sameCluster": 0,
+            "nearby": 0
+          },
+          "issueMarkers": [
+            {
+              "issueKey": "PCI_COLLISION",
+              "issueLabel": "PCI Collision",
+              "issueShortLabel": "PCI",
+              "issueScore": 68.0,
+              "color": "#EF4444",
+              "radius": 15.555555555555555,
+              "siteId": "3001",
+              "siteName": "3001",
+              "site": "3001",
+              "latitude": 28.63405,
+              "longitude": 77.3647
+            },
+            {
+              "issueKey": "PCI_CONFUSION",
+              "issueLabel": "PCI Confusion",
+              "issueShortLabel": "PCI",
+              "issueScore": 89.0,
+              "color": "#F97316",
+              "radius": 17.88888888888889,
+              "siteId": "3001",
+              "siteName": "3001",
+              "site": "3001",
+              "latitude": 28.63405,
+              "longitude": 77.3647
+            },
+            {
+              "issueKey": "OVERSHOOTING",
+              "issueLabel": "Overshooting",
+              "issueShortLabel": "OVR",
+              "issueScore": 62.0,
+              "color": "#A855F7",
+              "radius": 14.88888888888889,
+              "siteId": "3001",
+              "siteName": "3001",
+              "site": "3001",
+              "latitude": 28.63405,
+              "longitude": 77.3647
+            },
+            {
+              "issueKey": "HANDOVER",
+              "issueLabel": "Handover",
+              "issueShortLabel": "HO",
+              "issueScore": 10.31,
+              "color": "#06B6D4",
+              "radius": 9.14560228362275,
+              "siteId": "3001",
+              "siteName": "3001",
+              "site": "3001",
+              "latitude": 28.63405,
+              "longitude": 77.3647
+            },
+            {
+              "issueKey": "MISSING_NEIGHBOR",
+              "issueLabel": "Missing Neighbour",
+              "issueShortLabel": "NEI",
+              "issueScore": 86.0,
+              "color": "#10B981",
+              "radius": 17.555555555555557,
+              "siteId": "3001",
+              "siteName": "3001",
+              "site": "3001",
+              "latitude": 28.63405,
+              "longitude": 77.3647
+            }
+          ],
+          "handoverRelations": [
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 85.0,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 5.84,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 1,
+              "azimuthDelta": 5.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "3001",
+                "siteName": "3001",
+                "site": "3001",
+                "cluster": "Cluster_DELHI",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.63405,
+                "longitude": 77.3647
+              },
+              "targetSite": {
+                "site": "1001",
+                "siteId": "1001",
+                "siteName": "1001",
+                "cluster": "Cluster_GZB",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.668875000000003,
+                "longitude": 77.40945,
+                "distanceKm": 5.84,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 1,
+                "azimuthDelta": 5.0,
+                "relationScore": 85.0,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.3647,
+                28.63405
+              ],
+              "targetPosition": [
+                77.40945,
+                28.668875000000003
+              ]
+            },
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 80.0,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 3.38,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 1,
+              "azimuthDelta": 23.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "3001",
+                "siteName": "3001",
+                "site": "3001",
+                "cluster": "Cluster_DELHI",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.63405,
+                "longitude": 77.3647
+              },
+              "targetSite": {
+                "site": "2001",
+                "siteId": "2001",
+                "siteName": "2001",
+                "cluster": "Cluster_NOIDA",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.651175,
+                "longitude": 77.39332499999999,
+                "distanceKm": 3.38,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 1,
+                "azimuthDelta": 23.0,
+                "relationScore": 80.0,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.3647,
+                28.63405
+              ],
+              "targetPosition": [
+                77.39332499999999,
+                28.651175
+              ]
+            }
+          ]
+        },
+        "rank": 1
+      },
+      {
+        "site": "1001",
+        "analysisMode": "SITE_CONFIGURATION",
+        "analysisSource": "site_csv",
+        "siteId": "1001",
+        "siteName": "1001",
+        "cluster": "Cluster_GZB",
+        "region": "Delhi NCR",
+        "technology": "LTE",
+        "band": "L03",
+        "cellCount": 4,
+        "sectorCount": 4,
+        "pciValues": [
+          321,
+          322,
+          323
+        ],
+        "latitude": 28.668875000000003,
+        "longitude": 77.40945,
+        "neighborCount": 2,
+        "samePciNeighbourCount": 2,
+        "facingNeighbourCount": 2,
+        "clusterNeighbourCount": 0,
+        "avgDistanceKm": 4.18,
+        "avgTimingAdvance": 5.46,
+        "handoverSuccessRate": 92.0,
+        "handoverAttemptPressure": 0.0,
+        "handoverFailurePressure": 21.65,
+        "interferenceRisk": 60.5,
+        "healthScore": 48.0,
+        "pciCollisionScore": 68.0,
+        "pciConfusionScore": 89.0,
+        "overshootingScore": 62.0,
+        "missingNeighborScore": 86.0,
+        "handoverRisk": 8.85,
+        "impactScore": 59.15,
+        "status": "WATCH",
+        "generatedAt": "2026-10-29T10:30:21.808255600",
+        "latestObservedAt": "2026-08-28",
+        "calculationInputs": {
+          "kpiRows": 4,
+          "cellCount": 4,
+          "neighbourCount": 2,
+          "siteRows": 4,
+          "kpiEnriched": true
+        },
+        "dataQuality": {
+          "coordinatesAvailable": true,
+          "topologyAvailable": true,
+          "kpiAvailable": true,
+          "handoverMetricsAvailable": true,
+          "timingAdvanceAvailable": true,
+          "observedAt": "2026-08-28"
+        },
+        "recommendations": [
+          "Review PCI reuse and neighbour overlap.",
+          "Reduce same-PCI confusion and verify dominant neighbour coverage.",
+          "Check overshooting using average distance and timing advance.",
+          "Add or verify missing neighbor relations.",
+          "Investigate interference, SINR, CQI, and overshooting overlap."
+        ],
+        "neighbours": [
+          {
+            "site": "3001",
+            "siteId": "3001",
+            "siteName": "3001",
+            "cluster": "Cluster_DELHI",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.63405,
+            "longitude": 77.3647,
+            "distanceKm": 5.84,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 1,
+            "azimuthDelta": 5.0,
+            "relationScore": 85.0,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          },
+          {
+            "site": "2001",
+            "siteId": "2001",
+            "siteName": "2001",
+            "cluster": "Cluster_NOIDA",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.651175,
+            "longitude": 77.39332499999999,
+            "distanceKm": 2.52,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 2,
+            "azimuthDelta": 18.0,
+            "relationScore": 73.75,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          }
+        ],
+        "kpiSummary": {
+          "site": "1001",
+          "healthScore": 48,
+          "status": "BAD",
+          "rowCount": 4,
+          "totalCells": 4,
+          "totalSectors": 4,
+          "bands": [
+            "L18"
+          ],
+          "technologies": [
+            "LTE"
+          ],
+          "matchedValues": 56,
+          "valuesWithoutRule": 52,
+          "breachCount": 41,
+          "criticalCount": 23,
+          "majorCount": 4,
+          "minorCount": 8,
+          "warningCount": 6,
+          "normalCount": 15,
+          "metricAverages": [],
+          "worstMetrics": [
+            {
+              "severityRank": 4,
+              "metricName": "dlprbutilisation"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvpacketlossdl"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvvoltedcr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteerabsetupsuccessrate"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteinterfhosr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvrsrpsample110dbm"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "avgrssipusch"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "averageuedistancekm"
+            },
+            {
+              "severityRank": 3,
+              "metricName": "mveutranaveragecqi"
+            },
+            {
+              "severityRank": 2,
+              "metricName": "mv4gdatavolumegb"
+            }
+          ]
+        },
+        "mapOverlay": {
+          "siteId": "1001",
+          "siteName": "1001",
+          "site": "1001",
+          "latitude": 28.668875000000003,
+          "longitude": 77.40945,
+          "impactScore": 59.15,
+          "counts": {
+            "total": 2,
+            "samePci": 2,
+            "facing": 2,
+            "sameCluster": 0,
+            "nearby": 0
+          },
+          "issueMarkers": [
+            {
+              "issueKey": "PCI_COLLISION",
+              "issueLabel": "PCI Collision",
+              "issueShortLabel": "PCI",
+              "issueScore": 68.0,
+              "color": "#EF4444",
+              "radius": 15.555555555555555,
+              "siteId": "1001",
+              "siteName": "1001",
+              "site": "1001",
+              "latitude": 28.668875000000003,
+              "longitude": 77.40945
+            },
+            {
+              "issueKey": "PCI_CONFUSION",
+              "issueLabel": "PCI Confusion",
+              "issueShortLabel": "PCI",
+              "issueScore": 89.0,
+              "color": "#F97316",
+              "radius": 17.88888888888889,
+              "siteId": "1001",
+              "siteName": "1001",
+              "site": "1001",
+              "latitude": 28.668875000000003,
+              "longitude": 77.40945
+            },
+            {
+              "issueKey": "OVERSHOOTING",
+              "issueLabel": "Overshooting",
+              "issueShortLabel": "OVR",
+              "issueScore": 62.0,
+              "color": "#A855F7",
+              "radius": 14.88888888888889,
+              "siteId": "1001",
+              "siteName": "1001",
+              "site": "1001",
+              "latitude": 28.668875000000003,
+              "longitude": 77.40945
+            },
+            {
+              "issueKey": "HANDOVER",
+              "issueLabel": "Handover",
+              "issueShortLabel": "HO",
+              "issueScore": 8.85,
+              "color": "#06B6D4",
+              "radius": 8.983003661683144,
+              "siteId": "1001",
+              "siteName": "1001",
+              "site": "1001",
+              "latitude": 28.668875000000003,
+              "longitude": 77.40945
+            },
+            {
+              "issueKey": "MISSING_NEIGHBOR",
+              "issueLabel": "Missing Neighbour",
+              "issueShortLabel": "NEI",
+              "issueScore": 86.0,
+              "color": "#10B981",
+              "radius": 17.555555555555557,
+              "siteId": "1001",
+              "siteName": "1001",
+              "site": "1001",
+              "latitude": 28.668875000000003,
+              "longitude": 77.40945
+            }
+          ],
+          "handoverRelations": [
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 85.0,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 5.84,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 1,
+              "azimuthDelta": 5.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "1001",
+                "siteName": "1001",
+                "site": "1001",
+                "cluster": "Cluster_GZB",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.668875000000003,
+                "longitude": 77.40945
+              },
+              "targetSite": {
+                "site": "3001",
+                "siteId": "3001",
+                "siteName": "3001",
+                "cluster": "Cluster_DELHI",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.63405,
+                "longitude": 77.3647,
+                "distanceKm": 5.84,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 1,
+                "azimuthDelta": 5.0,
+                "relationScore": 85.0,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.40945,
+                28.668875000000003
+              ],
+              "targetPosition": [
+                77.3647,
+                28.63405
+              ]
+            },
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 73.75,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 2.52,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 2,
+              "azimuthDelta": 18.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "1001",
+                "siteName": "1001",
+                "site": "1001",
+                "cluster": "Cluster_GZB",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.668875000000003,
+                "longitude": 77.40945
+              },
+              "targetSite": {
+                "site": "2001",
+                "siteId": "2001",
+                "siteName": "2001",
+                "cluster": "Cluster_NOIDA",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.651175,
+                "longitude": 77.39332499999999,
+                "distanceKm": 2.52,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 2,
+                "azimuthDelta": 18.0,
+                "relationScore": 73.75,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.40945,
+                28.668875000000003
+              ],
+              "targetPosition": [
+                77.39332499999999,
+                28.651175
+              ]
+            }
+          ]
+        },
+        "rank": 2
+      },
+      {
+        "site": "2001",
+        "analysisMode": "SITE_CONFIGURATION",
+        "analysisSource": "site_csv",
+        "siteId": "2001",
+        "siteName": "2001",
+        "cluster": "Cluster_NOIDA",
+        "region": "Delhi NCR",
+        "technology": "LTE",
+        "band": "L03",
+        "cellCount": 4,
+        "sectorCount": 4,
+        "pciValues": [
+          321,
+          322,
+          324,
+          325
+        ],
+        "latitude": 28.651175,
+        "longitude": 77.39332499999999,
+        "neighborCount": 2,
+        "samePciNeighbourCount": 2,
+        "facingNeighbourCount": 2,
+        "clusterNeighbourCount": 0,
+        "avgDistanceKm": 2.95,
+        "avgTimingAdvance": 5.26,
+        "handoverSuccessRate": 89.11,
+        "handoverAttemptPressure": 0.0,
+        "handoverFailurePressure": 28.78,
+        "interferenceRisk": 66.26,
+        "healthScore": 41.0,
+        "pciCollisionScore": 68.0,
+        "pciConfusionScore": 89.0,
+        "overshootingScore": 47.0,
+        "missingNeighborScore": 86.0,
+        "handoverRisk": 11.94,
+        "impactScore": 59.0,
+        "status": "WATCH",
+        "generatedAt": "2026-10-29T10:30:21.808808400",
+        "latestObservedAt": "2026-08-28",
+        "calculationInputs": {
+          "kpiRows": 4,
+          "cellCount": 4,
+          "neighbourCount": 2,
+          "siteRows": 4,
+          "kpiEnriched": true
+        },
+        "dataQuality": {
+          "coordinatesAvailable": true,
+          "topologyAvailable": true,
+          "kpiAvailable": true,
+          "handoverMetricsAvailable": true,
+          "timingAdvanceAvailable": true,
+          "observedAt": "2026-08-28"
+        },
+        "recommendations": [
+          "Review PCI reuse and neighbour overlap.",
+          "Reduce same-PCI confusion and verify dominant neighbour coverage.",
+          "Check overshooting using average distance and timing advance.",
+          "Add or verify missing neighbor relations.",
+          "Investigate interference, SINR, CQI, and overshooting overlap."
+        ],
+        "neighbours": [
+          {
+            "site": "3001",
+            "siteId": "3001",
+            "siteName": "3001",
+            "cluster": "Cluster_DELHI",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.63405,
+            "longitude": 77.3647,
+            "distanceKm": 3.38,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 1,
+            "azimuthDelta": 23.0,
+            "relationScore": 80.0,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          },
+          {
+            "site": "1001",
+            "siteId": "1001",
+            "siteName": "1001",
+            "cluster": "Cluster_GZB",
+            "technology": "LTE",
+            "band": "L03",
+            "latitude": 28.668875000000003,
+            "longitude": 77.40945,
+            "distanceKm": 2.52,
+            "samePci": true,
+            "sameCluster": false,
+            "facing": true,
+            "pciOverlap": 2,
+            "azimuthDelta": 18.0,
+            "relationScore": 73.75,
+            "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+          }
+        ],
+        "kpiSummary": {
+          "site": "2001",
+          "healthScore": 41,
+          "status": "BAD",
+          "rowCount": 4,
+          "totalCells": 4,
+          "totalSectors": 4,
+          "bands": [
+            "L18"
+          ],
+          "technologies": [
+            "LTE"
+          ],
+          "matchedValues": 56,
+          "valuesWithoutRule": 52,
+          "breachCount": 43,
+          "criticalCount": 26,
+          "majorCount": 5,
+          "minorCount": 9,
+          "warningCount": 3,
+          "normalCount": 13,
+          "metricAverages": [],
+          "worstMetrics": [
+            {
+              "severityRank": 4,
+              "metricName": "dlprbutilisation"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "averageuedistancekm"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvpacketlossdl"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvvoltedcr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteerabsetupsuccessrate"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "volteinterfhosr"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mvrsrpsample110dbm"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "avgrssipusch"
+            },
+            {
+              "severityRank": 4,
+              "metricName": "mveutranaveragecqi"
+            },
+            {
+              "severityRank": 3,
+              "metricName": "mvpuschsinr"
+            }
+          ]
+        },
+        "mapOverlay": {
+          "siteId": "2001",
+          "siteName": "2001",
+          "site": "2001",
+          "latitude": 28.651175,
+          "longitude": 77.39332499999999,
+          "impactScore": 59.0,
+          "counts": {
+            "total": 2,
+            "samePci": 2,
+            "facing": 2,
+            "sameCluster": 0,
+            "nearby": 0
+          },
+          "issueMarkers": [
+            {
+              "issueKey": "PCI_COLLISION",
+              "issueLabel": "PCI Collision",
+              "issueShortLabel": "PCI",
+              "issueScore": 68.0,
+              "color": "#EF4444",
+              "radius": 15.555555555555555,
+              "siteId": "2001",
+              "siteName": "2001",
+              "site": "2001",
+              "latitude": 28.651175,
+              "longitude": 77.39332499999999
+            },
+            {
+              "issueKey": "PCI_CONFUSION",
+              "issueLabel": "PCI Confusion",
+              "issueShortLabel": "PCI",
+              "issueScore": 89.0,
+              "color": "#F97316",
+              "radius": 17.88888888888889,
+              "siteId": "2001",
+              "siteName": "2001",
+              "site": "2001",
+              "latitude": 28.651175,
+              "longitude": 77.39332499999999
+            },
+            {
+              "issueKey": "OVERSHOOTING",
+              "issueLabel": "Overshooting",
+              "issueShortLabel": "OVR",
+              "issueScore": 47.0,
+              "color": "#A855F7",
+              "radius": 13.222222222222221,
+              "siteId": "2001",
+              "siteName": "2001",
+              "site": "2001",
+              "latitude": 28.651175,
+              "longitude": 77.39332499999999
+            },
+            {
+              "issueKey": "HANDOVER",
+              "issueLabel": "Handover",
+              "issueShortLabel": "HO",
+              "issueScore": 11.94,
+              "color": "#06B6D4",
+              "radius": 9.326944256093954,
+              "siteId": "2001",
+              "siteName": "2001",
+              "site": "2001",
+              "latitude": 28.651175,
+              "longitude": 77.39332499999999
+            },
+            {
+              "issueKey": "MISSING_NEIGHBOR",
+              "issueLabel": "Missing Neighbour",
+              "issueShortLabel": "NEI",
+              "issueScore": 86.0,
+              "color": "#10B981",
+              "radius": 17.555555555555557,
+              "siteId": "2001",
+              "siteName": "2001",
+              "site": "2001",
+              "latitude": 28.651175,
+              "longitude": 77.39332499999999
+            }
+          ],
+          "handoverRelations": [
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 80.0,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 3.38,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 1,
+              "azimuthDelta": 23.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "2001",
+                "siteName": "2001",
+                "site": "2001",
+                "cluster": "Cluster_NOIDA",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.651175,
+                "longitude": 77.39332499999999
+              },
+              "targetSite": {
+                "site": "3001",
+                "siteId": "3001",
+                "siteName": "3001",
+                "cluster": "Cluster_DELHI",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.63405,
+                "longitude": 77.3647,
+                "distanceKm": 3.38,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 1,
+                "azimuthDelta": 23.0,
+                "relationScore": 80.0,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.39332499999999,
+                28.651175
+              ],
+              "targetPosition": [
+                77.3647,
+                28.63405
+              ]
+            },
+            {
+              "relationType": "SAME_PCI",
+              "relationScore": 73.75,
+              "color": "#DC2626",
+              "width": 4,
+              "distanceKm": 2.52,
+              "samePci": true,
+              "sameCluster": false,
+              "facing": true,
+              "pciOverlap": 2,
+              "azimuthDelta": 18.0,
+              "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation.",
+              "sourceSite": {
+                "siteId": "2001",
+                "siteName": "2001",
+                "site": "2001",
+                "cluster": "Cluster_NOIDA",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.651175,
+                "longitude": 77.39332499999999
+              },
+              "targetSite": {
+                "site": "1001",
+                "siteId": "1001",
+                "siteName": "1001",
+                "cluster": "Cluster_GZB",
+                "technology": "LTE",
+                "band": "L03",
+                "latitude": 28.668875000000003,
+                "longitude": 77.40945,
+                "distanceKm": 2.52,
+                "samePci": true,
+                "sameCluster": false,
+                "facing": true,
+                "pciOverlap": 2,
+                "azimuthDelta": 18.0,
+                "relationScore": 73.75,
+                "recommendation": "High PCI collision risk. Review PCI reuse, azimuth overlap, and neighbour relation."
+              },
+              "sourcePosition": [
+                77.39332499999999,
+                28.651175
+              ],
+              "targetPosition": [
+                77.40945,
+                28.668875000000003
+              ]
+            }
+          ]
+        },
+        "rank": 3
+      }
+    ]
+  }
+}

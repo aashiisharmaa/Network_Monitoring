@@ -1,0 +1,9 @@
+
+> network-monitor@0.0.0 dev:web:strict
+> vite --host 127.0.0.1 --port 5173 --strictPort
+
+
+  VITE v7.3.5  ready in 5804 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+10:41:30 am [vite] (client) hmr update /src/styles/globals.css, /src/pages/MapPage.jsx

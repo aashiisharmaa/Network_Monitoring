@@ -1,0 +1,40 @@
+{
+  "capturedAt": "2026-10-29T10:24:12.486118+05:30",
+  "checks": [
+    {
+      "name": "Backend health",
+      "path": "/health",
+      "httpStatus": 200,
+      "success": true
+    },
+    {
+      "name": "Dashboard API",
+      "path": "/api/v1/dashboard/stats",
+      "httpStatus": 200,
+      "success": true
+    },
+    {
+      "name": "Frontend login page",
+      "httpStatus": 200
+    }
+  ],
+  "dashboard": {
+    "fileId": null,
+    "companyId": null,
+    "totalCells": 70943,
+    "totalSites": 975,
+    "totalBands": 11,
+    "totalTech": 6,
+    "totalSectors": 9,
+    "totalGroups": 22,
+    "totalRecords": 422247,
+    "latestUpload": {
+      "fileName": "alarm-upload-template.csv",
+      "uploadedBy": "codex",
+      "createdAt": "2026-08-31T16:48:01.632",
+      "_count": {
+        "uploadData": 0
+      }
+    }
+  }
+}

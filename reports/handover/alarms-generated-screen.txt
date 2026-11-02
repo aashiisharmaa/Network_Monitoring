@@ -1,0 +1,2107 @@
+KPI Alarm Dashboard
+
+Generated KPI breaches, status tracking, and engineer actions.
+
+Refresh
+Uploaded Alarm Data
+Generated KPI Alarms
+KPI Upload File
+Select KPI upload
+#92 - kpi-upload-template.csv
+#90 - rv_KPI_SHEET_top10cells_test.csv
+#89 - physical_sitedb_generated_kpi.csv
+#88 - physical_sitedb_generated_kpi.csv
+#87 - physical_sitedb_generated_kpi.csv
+#86 - physical_sitedb_generated_kpi.csv
+#81 - Physical_sitedb_Rw.csv
+#79 - kpi_for_site_map_sample_multiband.csv
+#78 - kpi_for_site_map_sample_multiband.csv
+#72 - rv_KPI_SHEET_top10cells_test.csv
+#71 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#70 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#69 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#68 - rv_KPI_SHEET_top10cells_test.csv
+#67 - rv_KPI_SHEET_top10cells_test.csv
+#65 - rv_KPI_SHEET_top10cells_test.csv
+#64 - rv_KPI_SHEET_top10cells_test.csv
+#63 - rv_KPI_SHEET_top10cells_test.csv
+#62 - rv_KPI_SHEET_top10cells_test.csv
+#61 - rv_KPI_SHEET_top10cells_test.csv
+#60 - rv_KPI_SHEET_top10cells_test.csv
+#59 - rv_KPI_SHEET_top10cells_test.csv
+#58 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#57 - rv_KPI_SHEET_top10cells_test.csv
+#56 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#55 - rv_KPI_SHEET_top10cells_test.csv
+#54 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#53 - rv_KPI_SHEET_top10cells_test.csv
+#52 - rv_KPI_SHEET_top10cells_test.csv
+#51 - rv_KPI_SHEET_top10cells_test.csv
+#50 - rv_KPI_SHEET_top10cells_test.csv
+#49 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#48 - rv_KPI_SHEET_top10cells_test.csv
+#47 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#46 - rv_KPI_SHEET_top10cells_test.csv
+#45 - rv_KPI_SHEET_top10cells_test.csv
+#44 - rv_KPI_SHEET_top10cells_test.csv
+#43 - rv_KPI_SHEET_top10cells_test.csv
+#42 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#41 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xls
+#40 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#39 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#38 - KL_RV Solutions_TB_Layer_Sec_Raw_KPI_Sheet_30-Mar'26 Updated.xlsx
+#37 - rv_KPI_SHEET_top10cells_test.csv
+#36 - rv_KPI_SHEET_top10cells_test.csv
+#16 - rv_KPI_SHEET_ALLcells.csv
+#15 - rv_KPI_SHEET_top10cells_test (1).csv
+Severity
+All severities
+Critical
+Major
+Minor
+Warning
+Status
+All statuses
+Open
+Acknowledged
+Resolved
+Generate
+
+TOTAL
+
+274
+
+CRITICAL
+
+197
+
+MAJOR
+
+29
+
+MINOR
+
+31
+
+WARNING
+
+17
+
+OPEN
+
+274
+
+ACKNOWLEDGED
+
+0
+
+RESOLVED
+
+0
+
+Alarm summary refreshed: 29/10/2026, 10:32:42 am
+
+Generated Alarms
+
+200 visible of 274 alarm(s)
+
+SEVERITY	STATUS	CELL / SITE	METRIC	VALUE	THRESHOLD	RECOMMENDATION	ACTION
+CRITICAL	OPEN	
+101
+1001 / LTE
+	dlprbutilisation	72	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvpacketlossdl	0.2	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvpacketlossul	0.1	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	volteerabsetupsuccessrate	98.5	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mverabsetupsuccessrate	98.8	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvdluserthroughputmbps	18.4	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvrsrpsample110dbm	3.1	9.21	
+CRITICAL KPI breach detected for mvrsrpsample110dbm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvvoltecssr	98.9	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+101
+1001 / LTE
+	mvvoltepacketlossdl	0.05	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	dlprbutilisation	81	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	averageuedistancekm	2.4	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvpacketlossdl	0.9	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvpacketlossul	0.6	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	volteerabsetupsuccessrate	96.8	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	volteinterfhosr	92.1	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	volteintrafhosrcbbh	90.4	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	psintrafhosrcdbh	90.8	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	psinterfhosr	88.6	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	rrcsetupsuccessrate	98.1	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mverabsetupsuccessrate	96.7	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvdluserthroughputmbps	14.6	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvrsrpsample110dbm	7.8	9.21	
+CRITICAL KPI breach detected for mvrsrpsample110dbm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvvoltecssr	96.4	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvvoltepacketlossdl	0.12	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+102
+1001 / LTE
+	mvvoltepacketlossul	0.11	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	dlprbutilisation	89	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	averageuedistancekm	3.8	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvpacketlossdl	1.6	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvpacketlossul	1.1	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	volteerabsetupsuccessrate	94.2	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	volteinterfhosr	88.9	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	volteintrafhosrcbbh	86.5	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	psintrafhosrcdbh	86.1	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	psinterfhosr	84.7	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	rrcsetupsuccessrate	96.9	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mverabsetupsuccessrate	94.1	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvdluserthroughputmbps	11.3	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvvoltecssr	93.7	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	avgrssipusch	-97	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvvoltepacketlossdl	0.24	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+103
+1001 / LTE
+	mvvoltepacketlossul	0.22	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	dlprbutilisation	93	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	averageuedistancekm	4.5	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvpacketlossdl	2.2	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvpacketlossul	1.6	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvvoltedcr	2.4	2.18	
+CRITICAL KPI breach detected for mvvoltedcr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	volteerabsetupsuccessrate	92.7	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	volteinterfhosr	84.8	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	volteintrafhosrcbbh	83.6	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	psintrafhosrcdbh	82.7	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	psinterfhosr	80.9	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	rrcsetupsuccessrate	95.8	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mverabsetupsuccessrate	92.4	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvdluserthroughputmbps	9.6	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvpsdropcallrate	3	2.18	
+CRITICAL KPI breach detected for mvpsdropcallrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvvoltecssr	91.5	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	avgrssipusch	-94	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	avgrssipucch	-100	-100.92	
+CRITICAL KPI breach detected for avgrssipucch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvvoltepacketlossdl	0.31	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+104
+1001 / LTE
+	mvvoltepacketlossul	0.28	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	dlprbutilisation	77	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvpacketlossdl	0.4	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvpacketlossul	0.3	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	volteerabsetupsuccessrate	97.8	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	psintrafhosrcdbh	91.4	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	psinterfhosr	90.5	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	rrcsetupsuccessrate	98.8	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mverabsetupsuccessrate	97.6	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvdluserthroughputmbps	16.9	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvrsrpsample110dbm	5.2	9.21	
+CRITICAL KPI breach detected for mvrsrpsample110dbm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvvoltecssr	97.1	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvvoltepacketlossdl	0.08	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+201
+2001 / LTE
+	mvvoltepacketlossul	0.07	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	dlprbutilisation	88	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	averageuedistancekm	3.3	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvpacketlossdl	1.1	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvpacketlossul	0.9	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	volteerabsetupsuccessrate	95.1	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	volteinterfhosr	89.8	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	volteintrafhosrcbbh	88.6	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	psintrafhosrcdbh	87.2	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	psinterfhosr	85.5	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	rrcsetupsuccessrate	97.4	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mverabsetupsuccessrate	95.5	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvdluserthroughputmbps	12.7	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvvoltecssr	94.6	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	avgrssipusch	-99	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvvoltepacketlossdl	0.18	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+202
+2001 / LTE
+	mvvoltepacketlossul	0.16	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mveutranaveragecqi	7.1	7.65	
+CRITICAL KPI breach detected for mveutranaveragecqi. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	dlprbutilisation	95	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	averageuedistancekm	5.1	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvpacketlossdl	2.6	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvpacketlossul	1.9	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvvoltedcr	2.8	2.18	
+CRITICAL KPI breach detected for mvvoltedcr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	volteerabsetupsuccessrate	91.6	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	volteinterfhosr	83.5	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	volteintrafhosrcbbh	81.9	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	psintrafhosrcdbh	80.8	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	psinterfhosr	79.2	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	rrcsetupsuccessrate	95	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mverabsetupsuccessrate	91.8	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvdluserthroughputmbps	8.4	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvpsdropcallrate	3.8	2.18	
+CRITICAL KPI breach detected for mvpsdropcallrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvvoltecssr	90.4	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	avgrssipusch	-92	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	avgrssipucch	-98	-100.92	
+CRITICAL KPI breach detected for avgrssipucch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvvoltepacketlossdl	0.35	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+203
+2001 / LTE
+	mvvoltepacketlossul	0.32	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mveutranaveragecqi	6.5	7.65	
+CRITICAL KPI breach detected for mveutranaveragecqi. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	dlprbutilisation	97	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	averageuedistancekm	5.8	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvpacketlossdl	3.2	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvpacketlossul	2.4	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvvoltedcr	3.5	2.18	
+CRITICAL KPI breach detected for mvvoltedcr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	volteerabsetupsuccessrate	89.8	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	volteinterfhosr	81.4	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	volteintrafhosrcbbh	79.6	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	psintrafhosrcdbh	78.1	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	psinterfhosr	76.5	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	rrcsetupsuccessrate	93.7	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mverabsetupsuccessrate	89.6	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvdluserthroughputmbps	6.9	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvpsdropcallrate	4.5	2.18	
+CRITICAL KPI breach detected for mvpsdropcallrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvvoltecssr	88.8	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	avgrssipusch	-89	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	avgrssipucch	-95	-100.92	
+CRITICAL KPI breach detected for avgrssipucch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	ulnirssisinr	2.7	2.76	
+CRITICAL KPI breach detected for ulnirssisinr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvvoltepacketlossdl	0.42	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+204
+2001 / LTE
+	mvvoltepacketlossul	0.39	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	dlprbutilisation	74	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvpacketlossdl	0.3	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvpacketlossul	0.2	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	volteerabsetupsuccessrate	98.2	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	psintrafhosrcdbh	92.1	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	psinterfhosr	91.2	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	rrcsetupsuccessrate	99	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mverabsetupsuccessrate	97.9	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvdluserthroughputmbps	17.8	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvrsrpsample110dbm	4.4	9.21	
+CRITICAL KPI breach detected for mvrsrpsample110dbm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvvoltecssr	97.8	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvvoltepacketlossdl	0.06	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+301
+3001 / LTE
+	mvvoltepacketlossul	0.05	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	dlprbutilisation	83	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	averageuedistancekm	2.9	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvpacketlossdl	0.8	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvpacketlossul	0.7	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	volteerabsetupsuccessrate	96	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	volteinterfhosr	90.7	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	volteintrafhosrcbbh	89.5	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	psintrafhosrcdbh	88.9	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	psinterfhosr	86.9	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	rrcsetupsuccessrate	97.8	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mverabsetupsuccessrate	96.1	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvdluserthroughputmbps	13.8	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvrsrpsample110dbm	8.5	9.21	
+CRITICAL KPI breach detected for mvrsrpsample110dbm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvvoltecssr	95.5	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	avgrssipusch	-100	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvvoltepacketlossdl	0.14	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+302
+3001 / LTE
+	mvvoltepacketlossul	0.13	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	dlprbutilisation	91	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	averageuedistancekm	4	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvpacketlossdl	1.9	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvpacketlossul	1.4	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	volteerabsetupsuccessrate	93.4	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	volteinterfhosr	86.4	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	volteintrafhosrcbbh	85	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	psintrafhosrcdbh	84.2	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	psinterfhosr	82.7	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	rrcsetupsuccessrate	96.4	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mverabsetupsuccessrate	93.2	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvdluserthroughputmbps	10.1	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvpsdropcallrate	2.6	2.18	
+CRITICAL KPI breach detected for mvpsdropcallrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvvoltecssr	92.8	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	avgrssipusch	-96	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvvoltepacketlossdl	0.28	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+303
+3001 / LTE
+	mvvoltepacketlossul	0.26	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mveutranaveragecqi	7	7.65	
+CRITICAL KPI breach detected for mveutranaveragecqi. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	dlprbutilisation	94	48.76	
+CRITICAL KPI breach detected for dlprbutilisation. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	averageuedistancekm	4.8	1.98	
+CRITICAL KPI breach detected for averageuedistancekm. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvpacketlossdl	2.4	0.05	
+CRITICAL KPI breach detected for mvpacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvpacketlossul	1.8	0.05	
+CRITICAL KPI breach detected for mvpacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvvoltedcr	2.9	2.18	
+CRITICAL KPI breach detected for mvvoltedcr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	volteerabsetupsuccessrate	90.9	99.15	
+CRITICAL KPI breach detected for volteerabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	volteinterfhosr	82.7	92.86	
+CRITICAL KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	volteintrafhosrcbbh	80.2	92.86	
+CRITICAL KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	psintrafhosrcdbh	79.8	92.86	
+CRITICAL KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	psinterfhosr	77.9	92.86	
+CRITICAL KPI breach detected for psinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	rrcsetupsuccessrate	94.8	99.15	
+CRITICAL KPI breach detected for rrcsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mverabsetupsuccessrate	90.7	99.15	
+CRITICAL KPI breach detected for mverabsetupsuccessrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvdluserthroughputmbps	7.8	200.47	
+CRITICAL KPI breach detected for mvdluserthroughputmbps. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvpsdropcallrate	3.4	2.18	
+CRITICAL KPI breach detected for mvpsdropcallrate. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvvoltecssr	89.9	99.15	
+CRITICAL KPI breach detected for mvvoltecssr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	avgrssipusch	-93	-100.92	
+CRITICAL KPI breach detected for avgrssipusch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	avgrssipucch	-99	-100.92	
+CRITICAL KPI breach detected for avgrssipucch. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvvoltepacketlossdl	0.36	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossdl. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+CRITICAL	OPEN	
+304
+3001 / LTE
+	mvvoltepacketlossul	0.33	0.05	
+CRITICAL KPI breach detected for mvvoltepacketlossul. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+MAJOR	OPEN	
+101
+1001 / LTE
+	volteinterfhosr	96.2	97.65	
+MAJOR KPI breach detected for volteinterfhosr. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+MAJOR	OPEN	
+101
+1001 / LTE
+	volteintrafhosrcbbh	95.9	97.65	
+MAJOR KPI breach detected for volteintrafhosrcbbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve
+
+MAJOR	OPEN	
+101
+1001 / LTE
+	psintrafhosrcdbh	94.5	97.65	
+MAJOR KPI breach detected for psintrafhosrcdbh. Check related alarms, recent changes, radio quality, capacity, and site health.
+	
+View
+Ack
+Resolve

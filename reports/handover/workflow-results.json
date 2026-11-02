@@ -1,0 +1,227 @@
+[
+  {
+    "workflow": "Authentication",
+    "status": "PASS",
+    "detail": "Signed in through the application login form.",
+    "time": "2026-10-29T10:30:17.483019+05:30"
+  },
+  {
+    "workflow": "backend-health",
+    "status": "PASS",
+    "detail": {
+      "httpStatus": 200,
+      "evidence": "backend-health.json"
+    },
+    "time": "2026-10-29T10:30:17.509702+05:30"
+  },
+  {
+    "workflow": "Dashboard",
+    "status": "PASS",
+    "detail": "Sample KPI scope loaded.",
+    "time": "2026-10-29T10:30:19.072415+05:30"
+  },
+  {
+    "workflow": "Upload history",
+    "status": "PASS",
+    "detail": "Existing source records loaded; no duplicate source uploads created.",
+    "time": "2026-10-29T10:30:21.603569+05:30"
+  },
+  {
+    "workflow": "threshold-evaluation",
+    "status": "PASS",
+    "detail": {
+      "httpStatus": 200,
+      "evidence": "threshold-evaluation.json"
+    },
+    "time": "2026-10-29T10:30:21.783688+05:30"
+  },
+  {
+    "workflow": "site-intelligence",
+    "status": "PASS",
+    "detail": {
+      "httpStatus": 200,
+      "evidence": "site-intelligence.json"
+    },
+    "time": "2026-10-29T10:30:21.818955+05:30"
+  },
+  {
+    "workflow": "site-prediction",
+    "status": "PASS",
+    "detail": {
+      "httpStatus": 200,
+      "evidence": "site-prediction.json"
+    },
+    "time": "2026-10-29T10:30:21.848546+05:30"
+  },
+  {
+    "workflow": "KPI charts",
+    "status": "PASS",
+    "detail": {
+      "renderedCharts": 12,
+      "fileId": 92
+    },
+    "time": "2026-10-29T10:30:28.539301+05:30"
+  },
+  {
+    "workflow": "kpi-report-format-1",
+    "status": "PASS",
+    "detail": {
+      "file": "reports\\handover\\exports\\kpi-report-format-1.xlsx",
+      "bytes": 30804,
+      "sheets": [
+        "Summary",
+        "KPI_Overview",
+        "KPI_Data_Long",
+        "By_tech",
+        "By_date",
+        "By_shortname",
+        "By_cellid",
+        "By_siteid",
+        "By_sheetname"
+      ]
+    },
+    "time": "2026-10-29T10:30:37.191707+05:30"
+  },
+  {
+    "workflow": "kpi-report-format-2",
+    "status": "PASS",
+    "detail": {
+      "file": "reports\\handover\\exports\\kpi-report-format-2.xlsx",
+      "bytes": 39860,
+      "sheets": [
+        "Summary",
+        "KPI_Overview",
+        "KPI_Data_Long",
+        "By_tech",
+        "By_date",
+        "By_shortname",
+        "By_cellid",
+        "By_siteid",
+        "By_sheetname"
+      ]
+    },
+    "time": "2026-10-29T10:30:39.915023+05:30"
+  },
+  {
+    "workflow": "Generated KPI alarms",
+    "status": "FAILED",
+    "detail": "Locator.click: Timeout 25000ms exceeded.\n",
+    "time": "2026-10-29T10:31:07.564500+05:30"
+  },
+  {
+    "workflow": "Validation results",
+    "status": "PASS",
+    "detail": "Sample validation and worst-performance results loaded.",
+    "time": "2026-10-29T10:31:11.151947+05:30"
+  },
+  {
+    "workflow": "Sites",
+    "status": "PASS",
+    "detail": "Site health and intelligence sections loaded.",
+    "time": "2026-10-29T10:31:15.206321+05:30"
+  },
+  {
+    "workflow": "RCA execution",
+    "status": "PASS",
+    "detail": {
+      "jobId": 7,
+      "status": "COMPLETED",
+      "evidence": "rca-completed-job.json"
+    },
+    "time": "2026-10-29T10:31:30.971397+05:30"
+  },
+  {
+    "workflow": "rca-recommendation",
+    "status": "PASS",
+    "detail": {
+      "file": "reports\\handover\\exports\\rca-recommendation.xlsx",
+      "bytes": 20345,
+      "sheets": [
+        "Anomaly_Details",
+        "All_Data_Scored",
+        "Root_Cause_Summary",
+        "Top_Impacted_Cells",
+        "Date_Trend",
+        "Rules_Thresholds",
+        "Parameter_Guide"
+      ]
+    },
+    "time": "2026-10-29T10:31:33.451964+05:30"
+  },
+  {
+    "workflow": "Map rendering and layers",
+    "status": "FAILED",
+    "detail": "Locator.wait_for: Timeout 25000ms exceeded.\n",
+    "time": "2026-10-29T10:32:24.244907+05:30"
+  },
+  {
+    "workflow": "Authentication",
+    "status": "PASS",
+    "detail": "Signed in through the application login form.",
+    "time": "2026-10-29T10:32:39.329314+05:30"
+  },
+  {
+    "workflow": "Generated KPI alarms",
+    "status": "PASS",
+    "detail": {
+      "success": true,
+      "message": "Alarms generated.",
+      "data": {
+        "fileId": 92,
+        "total": 274,
+        "severityCounts": {
+          "CRITICAL": 197,
+          "MAJOR": 29,
+          "MINOR": 31,
+          "WARNING": 17
+        },
+        "statusCounts": {
+          "OPEN": 274
+        },
+        "generatedAt": "2026-10-29T05:02:42.007863400Z",
+        "generated": 274
+      }
+    },
+    "time": "2026-10-29T10:32:43.400537+05:30"
+  },
+  {
+    "workflow": "Sites",
+    "status": "PASS",
+    "detail": "Site health and intelligence sections loaded.",
+    "time": "2026-10-29T10:32:46.987463+05:30"
+  },
+  {
+    "workflow": "Map rendering and layers",
+    "status": "FAILED",
+    "detail": "Locator.click: Timeout 25000ms exceeded.\n",
+    "time": "2026-10-29T10:33:37.796099+05:30"
+  },
+  {
+    "workflow": "Authentication",
+    "status": "PASS",
+    "detail": "Signed in through the application login form.",
+    "time": "2026-10-29T10:34:10.723542+05:30"
+  },
+  {
+    "workflow": "Map and issue controls",
+    "status": "PASS",
+    "detail": {
+      "enabledControls": [
+        "PCI Collision ON",
+        "PCI Confusion ON",
+        "Overshooting ON"
+      ],
+      "note": "Visual state verified; RF correctness requires operator acceptance."
+    },
+    "time": "2026-10-29T10:34:39.397083+05:30"
+  },
+  {
+    "workflow": "map-report",
+    "status": "PASS",
+    "detail": {
+      "file": "reports\\handover\\exports\\map-report.pdf",
+      "bytes": 177762
+    },
+    "time": "2026-10-29T10:34:40.143944+05:30"
+  }
+]
