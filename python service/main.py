@@ -376,7 +376,7 @@ def _build_vendor_recommendation_row(vendor: str, row: pd.Series) -> Dict[str, s
     drivers = row.get("Top KPI Drivers")
     if vendor == "ericsson":
         params, values, notes = analyser.build_ericsson_parameter_recommendation(primary, secondary, evidence, drivers)
-        text = "Ericsson recommendation generated from detected RCA pattern."
+        text = f"Ericsson action for {primary}: review the parameter checks and implementation steps below."
     else:
         params, values, notes = analyser.build_nokia_parameter_recommendation(primary, secondary, evidence, drivers)
         text = row.get("Nokia Recommendation", "Nokia recommendation generated from detected RCA pattern.")
@@ -384,7 +384,22 @@ def _build_vendor_recommendation_row(vendor: str, row: pd.Series) -> Dict[str, s
     values = str(values or "").replace("\\n", "\n")
     notes = str(notes or "").replace("\\n", "\n")
 
+    def clean_detail(value: Any) -> str:
+        return "" if value is None or pd.isna(value) else str(value).strip()
+
+    cause = clean_detail(primary)
+    explanation = [
+        f"Detected KPI pattern: {cause}." if cause and cause != "No major anomaly"
+        else "No specific root-cause pattern was identified; review the KPI deviations below."
+    ]
+    for label, value in [("Additional patterns", secondary), ("KPI evidence", evidence), ("Top KPI drivers", drivers)]:
+        detail = clean_detail(value)
+        if detail:
+            explanation.append(f"{label}: {detail}")
+    explanation.append("This is a KPI-based diagnosis. Confirm the underlying fault with counters, alarms and site/transport checks before applying changes.")
+
     return {
+        "RCA Explanation": "\n".join(explanation),
         "Vendor Recommendation": text,
         "Recommended Parameters": params,
         "Recommended Values": values,
