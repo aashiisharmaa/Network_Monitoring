@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,23 +13,18 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 
 @Service
 public class RecommendationJobService {
-
-    private static final int ABANDONED_JOB_MINUTES = 3;
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .findAndRegisterModules()
@@ -38,7 +34,8 @@ public class RecommendationJobService {
     private final JdbcTemplate jdbcTemplate;
     private final RecommendationService recommendationService;
     private final ObjectProvider<RecommendationJobService> selfProvider;
-    private final Set<Long> activeJobIds = ConcurrentHashMap.newKeySet();
+    @Value("${app.jobs.recover-on-startup:true}")
+    private boolean recoverOnStartup = true;
 
     public RecommendationJobService(JdbcTemplate jdbcTemplate,
                                     RecommendationService recommendationService,
@@ -68,44 +65,73 @@ public class RecommendationJobService {
                   INDEX `idx_recommendation_jobs_updated` (`updatedAt`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """);
-        markStaleProcessingJobs("Backend restarted before recommendation finished.");
+        recoverInterruptedJobs();
+    }
+
+    public void recoverInterruptedJobs() {
+        if (recoverOnStartup) markStaleProcessingJobs("Backend restarted before recommendation finished. Please run recommendation again.");
     }
 
     public Map<String, Object> startJob(Long fileId, Map<String, Object> request) {
         if (fileId == null || fileId <= 0) {
             throw new IllegalArgumentException("fileId query parameter is required.");
         }
-        Map<String, Object> safeRequest = request == null ? Map.of() : request;
-        String configHash = hashRequest(safeRequest);
+        // Detach nested settings from the caller before asynchronous processing.
+        Map<String, Object> safeRequest = request == null ? Map.of() : MAPPER.convertValue(request, MAP_TYPE);
+        String cacheKey = recommendationService.currentCacheKey(fileId, safeRequest).orElse(null);
+        String configHash = cacheKey == null
+                ? RecommendationCacheKey.build(safeRequest, UUID.randomUUID().toString(), Map.of("cache", "disabled"))
+                : cacheKey;
 
-        Map<String, Object> cached = findLatestReusableJob(fileId, configHash);
-        if (cached != null) {
+        Map<String, Object> cached = cacheKey == null ? null : findLatestReusableJob(fileId, configHash);
+        if (cached != null && recommendationService.currentCacheKey(fileId, safeRequest).filter(cacheKey::equals).isPresent()) {
             return Map.of("success", true, "message", "Recommendation result loaded from cache.", "data", cached);
         }
 
         Long jobId = createJob(fileId, configHash, safeRequest);
-        selfProvider.getObject().processJob(jobId, fileId, safeRequest);
+        try {
+            selfProvider.getObject().processJob(jobId, fileId, safeRequest, cacheKey);
+        } catch (RejectedExecutionException ex) {
+            String message = "RCA workers and queue are full. Please try again shortly.";
+            updateJob(jobId, "FAILED", 100, message,
+                    Map.of("success", false, "code", "JOB_CAPACITY", "retryable", true, "message", message));
+            throw new JobCapacityException(jobId, message, ex);
+        } catch (RuntimeException ex) {
+            String message = "RCA job could not be scheduled. Please run recommendation again.";
+            updateJob(jobId, "FAILED", 100, message,
+                    Map.of("success", false, "code", "JOB_SUBMISSION_FAILED", "message", message));
+            throw ex;
+        }
         return Map.of("success", true, "message", "Recommendation job started.", "data", getJobData(jobId));
     }
 
     public Map<String, Object> getJob(Long jobId) {
-        expireJobIfAbandoned(jobId);
         return Map.of("success", true, "message", "Recommendation job loaded.", "data", getJobData(jobId));
     }
 
-    @Async
-    public void processJob(Long jobId, Long fileId, Map<String, Object> request) {
-        activeJobIds.add(jobId);
-        updateJob(jobId, "PROCESSING", 20, "Running RCA recommendation...", null);
+    @Async("rcaJobExecutor")
+    public void processJob(Long jobId, Long fileId, Map<String, Object> request, String expectedCacheKey) {
         RecommendationService.RecommendationResult result = null;
         try {
+            int claimed = jdbcTemplate.update("""
+                    UPDATE `recommendation_jobs`
+                    SET `status` = ?, `progressPercent` = ?, `message` = ?, `updatedAt` = ?
+                    WHERE `id` = ? AND `status` = 'QUEUED'
+                    """, "PROCESSING", 20, "Running RCA recommendation...", Timestamp.valueOf(LocalDateTime.now()), jobId);
+            if (claimed == 0) return;
+            verifyCacheKey(fileId, request, expectedCacheKey);
             result = recommendationService.runRecommendation(
                     fileId,
                     request,
                     false,
                     (progressPercent, message) -> updateJob(jobId, "PROCESSING", progressPercent, message, null)
             );
+            if (expectedCacheKey != null && !expectedCacheKey.equals(result.inputCacheKey)) {
+                throw new IllegalStateException("KPI data or RCA settings changed before input was loaded. Please run recommendation again.");
+            }
+            verifyCacheKey(fileId, request, expectedCacheKey);
             Map<String, Object> payload = new LinkedHashMap<>();
+            recommendationService.retainArtifacts(result, fileId, request);
             payload.put("success", true);
             payload.put("fileId", fileId);
             payload.putAll(result.payload);
@@ -116,10 +142,15 @@ public class RecommendationJobService {
             payload.put("message", failureMessage(ex));
             updateJob(jobId, "FAILED", 100, String.valueOf(payload.get("message")), payload);
         } finally {
-            activeJobIds.remove(jobId);
             if (result != null) {
                 recommendationService.cleanup(result.workDir);
             }
+        }
+    }
+
+    private void verifyCacheKey(Long fileId, Map<String, Object> request, String expected) {
+        if (expected != null && recommendationService.currentCacheKey(fileId, request).filter(expected::equals).isEmpty()) {
+            throw new IllegalStateException("KPI data or RCA engine changed during this job. Please run recommendation again.");
         }
     }
 
@@ -195,30 +226,6 @@ public class RecommendationJobService {
         return jobs.get(0);
     }
 
-    private void expireJobIfAbandoned(Long jobId) {
-        if (jobId == null || activeJobIds.contains(jobId)) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        String message = "Recommendation job stopped before completion. Please run recommendation again.";
-        jdbcTemplate.update("""
-                UPDATE `recommendation_jobs`
-                SET `status` = 'FAILED',
-                    `progressPercent` = 100,
-                    `message` = ?,
-                    `resultJson` = ?,
-                    `updatedAt` = ?
-                WHERE `id` = ?
-                  AND `status` IN ('QUEUED', 'PROCESSING')
-                  AND `updatedAt` < ?
-                """,
-                message,
-                writeJson(Map.of("success", false, "message", message)),
-                Timestamp.valueOf(now),
-                jobId,
-                Timestamp.valueOf(now.minusMinutes(ABANDONED_JOB_MINUTES)));
-    }
-
     private void markStaleProcessingJobs(String reason) {
         LocalDateTime now = LocalDateTime.now();
         String message = reason == null || reason.isBlank()
@@ -234,7 +241,7 @@ public class RecommendationJobService {
                 WHERE `status` IN ('QUEUED', 'PROCESSING')
                 """,
                 message,
-                writeJson(Map.of("success", false, "message", message)),
+                writeJson(Map.of("success", false, "code", "BACKEND_RESTARTED", "retryable", true, "message", message)),
                 Timestamp.valueOf(now));
     }
 
@@ -266,16 +273,6 @@ public class RecommendationJobService {
                 SET `status` = ?, `progressPercent` = ?, `message` = ?, `resultJson` = ?, `updatedAt` = ?
                 WHERE `id` = ?
                 """, status, Math.max(0, Math.min(100, progressPercent)), message, writeJson(result), Timestamp.valueOf(LocalDateTime.now()), jobId);
-    }
-
-    private String hashRequest(Map<String, Object> request) {
-        try {
-            byte[] json = MAPPER.writeValueAsBytes(request == null ? Map.of() : request);
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(json);
-            return HexFormat.of().formatHex(digest);
-        } catch (Exception ex) {
-            throw new IllegalStateException("Unable to hash recommendation request.", ex);
-        }
     }
 
     private String writeJson(Object value) {

@@ -73,6 +73,7 @@ public class UploadService {
     private final SitePredictionService sitePredictionService;
     private final RoleAuthorizationService roleAuthorizationService;
     private final JdbcTemplate jdbcTemplate;
+    private final KpiSnapshotStore snapshotStore;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider;
 
@@ -99,7 +100,8 @@ public class UploadService {
                          SitePredictionService sitePredictionService,
                          RoleAuthorizationService roleAuthorizationService,
                          JdbcTemplate jdbcTemplate,
-                         ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider) {
+                         ObjectProvider<RedisService.RedisCacheService> redisCacheServiceProvider,
+                         KpiSnapshotStore snapshotStore) {
         this.parserService = parserService;
         this.fileStorageService = fileStorageService;
         this.uploadHistoryRepository = uploadHistoryRepository;
@@ -115,6 +117,7 @@ public class UploadService {
         this.roleAuthorizationService = roleAuthorizationService;
         this.jdbcTemplate = jdbcTemplate;
         this.redisCacheServiceProvider = redisCacheServiceProvider;
+        this.snapshotStore = snapshotStore;
     }
 
     @PostConstruct
@@ -343,8 +346,10 @@ public class UploadService {
         return uploadHistoryRepository.save(uploadHistory);
     }
 
-    @Transactional
     private Map<String, Object> runUpload(MultipartFile file, String remarks, String uploadedBy, DatasetType datasetType, AppendOption appendOption, Long targetFileId, Map<String, String> columnMapping, boolean cleanKpiData) throws IOException {
+        if (datasetType == DatasetType.KPI && targetFileId != null && snapshotStore.managed(targetFileId)) {
+            throw new IllegalArgumentException("This dataset uses the daily ingestion ledger. Import through /api/v1/ingestion/kpi to preserve duplicate protection.");
+        }
         long requestStartedAt = System.currentTimeMillis();
         if (file == null || file.isEmpty()) {
             return Map.of("success", false, "message", "No file uploaded.");
@@ -1096,6 +1101,55 @@ public class UploadService {
         return payload;
     }
 
+    record PreparedDaily(List<Map<String, Object>> rawRows, Map<String, Object> payload) { }
+
+    void afterDailyCommit(long fileId) {
+        sitePredictionService.invalidateFile(fileId);
+        sitePredictionService.warmFileAsync(fileId);
+        clearRedisKpiCaches(fileId);
+    }
+
+    PreparedDaily prepareDaily(Path path, Map<String, String> mapping) throws IOException {
+        List<Map<String, Object>> rows = parserService.parseFile(path);
+        if (!mapping.isEmpty()) rows = applyColumnMapping(rows, mapping);
+        if (rows.isEmpty()) throw new IllegalArgumentException("Daily KPI input contains no data rows.");
+        return new PreparedDaily(rows, buildKpiDynamicCachePayload(rows));
+    }
+
+    int appendDailyLegacy(long fileId, Long companyId, List<Map<String, Object>> rawRows) {
+        List<UploadData> rows = rawRows.stream().map(this::normalizeRow).map(row -> mapKpiRow(row, fileId)).toList();
+        rows.forEach(row -> row.setCompanyId(companyId));
+        if (!hasLegacyKpiMetrics(rows)) return 0;
+        int inserted = 0;
+        for (int index = 0; index < rows.size(); index += INSERT_CHUNK_SIZE) {
+            inserted += batchInsert(rows.subList(index, Math.min(rows.size(), index + INSERT_CHUNK_SIZE)), UploadData.class, false);
+        }
+        return inserted;
+    }
+
+    Map<String, Object> dailyPayload(Map<String, Object> existing, Map<String, Object> incoming,
+                                     List<Map<String, Object>> records) {
+        Map<String, Object> payload = mergeKpiDynamicCachePayloads(existing, incoming, true);
+        payload.put("records", records);
+        // Count accepted observations, rather than adding counts from overlapping input files.
+        Map<String, Map<String, Object>> stats = toNestedObjectMap(payload.get("columnStats"));
+        for (var entry : stats.entrySet()) {
+            int populated = 0;
+            int numeric = 0;
+            for (Map<String, Object> record : records) {
+                Object value = getObjectMap(record.get("metrics")).get(entry.getKey());
+                if (value == null) value = getObjectMap(record.get("dimensions")).get(entry.getKey());
+                if (value != null && !value.toString().isBlank()) populated++;
+                if (parseFloatSafe(value) != null) numeric++;
+            }
+            entry.getValue().put("nonEmptyCount", populated);
+            entry.getValue().put("numericCount", numeric);
+            entry.getValue().put("numericRatio", populated == 0 ? 0.0 : (double) numeric / populated);
+        }
+        payload.put("columnStats", stats);
+        return payload;
+    }
+
     private Map<String, Object> mergeKpiDynamicCachePayloads(Map<String, Object> existing, Map<String, Object> incoming, boolean dedupeRecords) {
         if (existing == null || existing.isEmpty()) {
             return incoming == null ? new LinkedHashMap<>() : incoming;
@@ -1538,6 +1592,10 @@ public class UploadService {
     }
 
     private <T> int batchInsertIgnore(List<T> rows, Class<T> type) {
+        return batchInsert(rows, type, true);
+    }
+
+    private <T> int batchInsert(List<T> rows, Class<T> type, boolean ignore) {
         String table = getTableName(type);
         List<Field> fields = getPersistentFields(type);
         String columnsSql = fields.stream()
@@ -1545,7 +1603,7 @@ public class UploadService {
                 .map(this::quoteIdentifier)
                 .collect(Collectors.joining(", "));
         String placeholders = fields.stream().map(field -> "?").collect(Collectors.joining(", "));
-        String sql = "INSERT IGNORE INTO " + quoteIdentifier(table) + " (" + columnsSql + ") VALUES (" + placeholders + ")";
+        String sql = (ignore ? "INSERT IGNORE INTO " : "INSERT INTO ") + quoteIdentifier(table) + " (" + columnsSql + ") VALUES (" + placeholders + ")";
 
         int[] counts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override

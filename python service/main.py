@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 import analyser
+import rca_export
 import lb_service
 
 
@@ -480,6 +481,8 @@ def _run_analyser_on_frame(
     severity_rules: Dict[str, float],
     anomaly_rules: Dict[str, float],
     export_excel: bool = False,
+    frame_capture=None,
+    period="Single",
 ) -> pd.DataFrame:
     original_cols = list(analyser.SELECTED_COLS)
     original_meta = dict(analyser.KPI_META)
@@ -495,7 +498,9 @@ def _run_analyser_on_frame(
         analyser.SEVERITY_RULES = severity_rules
         analyser.ANOMALY_RULES = anomaly_rules
         frames = analyser.analyze_frame(input_df)
-        if export_excel:
+        if frame_capture is not None:
+            frame_capture.append((period, frames))
+        elif export_excel:
             _write_fast_excel_export(frames, output_path)
         return frames["anomaly_details"]
     finally:
@@ -940,7 +945,7 @@ def list_presets() -> List[str]:
     return sorted(_load_presets().keys())
 
 
-def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False, excel_output_path: str = None) -> Dict[str, Any]:
+def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False, excel_output_path: str = None, analysis_output_path: str = None) -> Dict[str, Any]:
     vendor = str(config.get("vendor", DEFAULT_VENDOR)).strip().lower()
     if vendor not in {"nokia", "ericsson"}:
         vendor = DEFAULT_VENDOR
@@ -971,6 +976,7 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
         raise ValueError("No valid Date rows found after parsing.")
 
     output_path: Optional[Path] = None
+    captured = [] if export_excel or analysis_output_path else None
 
     if date_mode == "pre_post":
         pre_filter = config.get("pre_date_filter") or {}
@@ -1011,6 +1017,7 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
             export_excel=False,
+            frame_capture=captured, period="Pre",
         )
         post_anomaly_df = _run_analyser_on_frame(
             input_df=post_df,
@@ -1020,6 +1027,7 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
             export_excel=export_excel,
+            frame_capture=captured, period="Post",
         )
 
         pre_payload = _build_response(anomaly_df=pre_anomaly_df, vendor=vendor, detail_limit=response_row_limit)
@@ -1066,6 +1074,7 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
             severity_rules=severity_rules,
             anomaly_rules=anomaly_rules,
             export_excel=export_excel,
+            frame_capture=captured,
         )
         response = _build_response(anomaly_df=anomaly_df, vendor=vendor, detail_limit=response_row_limit)
         response["period_mode"] = "single"
@@ -1083,8 +1092,19 @@ def run_rca(input_path: str, config: Dict[str, Any], export_excel: bool = False,
     response["exported_excel"] = export_excel
     response["excel_file"] = str(output_path) if export_excel and output_path else None
 
-    if export_excel and output_path:
-        _append_recommendation_columns_to_export(output_path=output_path, vendor=vendor)
+    if captured is not None:
+        metadata = {"vendor": vendor, "period_mode": date_mode, "input_row_limit": config.get("input_row_limit"),
+                    "input_rows_sent": config.get("input_rows_sent"), "source_rows_available": config.get("source_rows_available"),
+                    "period_filters": response.get("period_filters"), "applied_date_filter": response.get("applied_date_filter"),
+                    "used_kpis": response["used_kpis"], "missing_kpis": response["missing_kpis"], "thresholds": response["applied_thresholds"]}
+        bundle_path = Path(analysis_output_path) if analysis_output_path else output_path.with_suffix(".analysis.json.gz")
+        try:
+            rca_export.write_bundle(bundle_path, captured, metadata)
+            if export_excel and output_path:
+                rca_export.write_workbook(rca_export.read_bundle(bundle_path), output_path, _build_vendor_recommendation_row, _parameter_guide_rows)
+        finally:
+            if not analysis_output_path:
+                bundle_path.unlink(missing_ok=True)
 
     if not export_excel and output_path and output_path.exists():
         output_path.unlink(missing_ok=True)
@@ -1105,6 +1125,7 @@ def _parse_args() -> argparse.Namespace:
     run_parser.add_argument("--input", required=True, help="Input Excel/CSV path")
     run_parser.add_argument("--config", required=True, help="Path to config JSON")
     run_parser.add_argument("--json-out", required=False, help="Write response JSON to file")
+    run_parser.add_argument("--analysis-out", required=False, help="Persist full scored frames for later export without RCA recomputation")
     run_parser.add_argument("--export-excel", action="store_true", help="Export Excel output")
     run_parser.add_argument("--excel-out", required=False, help="Excel output path")
 
@@ -1128,12 +1149,20 @@ def _parse_args() -> argparse.Namespace:
     load_parser.add_argument("--name", required=True, help="Preset name")
     load_parser.add_argument("--json-out", required=False, help="Write preset JSON")
 
+    export_parser = sub.add_parser("export-analysis", help="Render an existing full RCA analysis cache")
+    export_parser.add_argument("--analysis-in", required=True)
+    export_parser.add_argument("--excel-out", required=True)
+
     sub.add_parser("list-presets", help="List available preset names")
     return parser.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
+    if args.command == "export-analysis":
+        rca_export.write_workbook(rca_export.read_bundle(args.analysis_in), args.excel_out, _build_vendor_recommendation_row, _parameter_guide_rows)
+        return 0
+
     if args.command == "save-preset":
         config = _read_config(args.config)
         save_preset(name=args.name, config=config)
@@ -1197,6 +1226,7 @@ def main() -> int:
             config=config,
             export_excel=bool(args.export_excel),
             excel_output_path=args.excel_out,
+            analysis_output_path=args.analysis_out,
         )
         if args.json_out:
             _write_json(args.json_out, response)

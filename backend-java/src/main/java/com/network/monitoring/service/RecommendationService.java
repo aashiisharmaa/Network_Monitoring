@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -25,9 +26,11 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 @Service
@@ -41,6 +44,8 @@ public class RecommendationService {
     private final KpiCacheService kpiCacheService;
     private final KpiDynamicDataService kpiDynamicDataService;
     private final UploadDataRepository uploadDataRepository;
+    private final RcaConcurrencyGate concurrency;
+    private final RcaArtifactStore artifacts;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Value("${app.python-service-path}")
@@ -55,12 +60,31 @@ public class RecommendationService {
     @Value("${app.perf-logs-enabled:false}")
     private String perfLogsEnabledRaw;
 
+    @Value("${app.rca-cache-revision:1}")
+    private String cacheRevision = "1";
+
+    @Value("${app.jobs.rca.timeout-seconds:900}")
+    private long processTimeoutSeconds = 900;
+
     public RecommendationService(KpiCacheService kpiCacheService,
                                  KpiDynamicDataService kpiDynamicDataService,
                                  UploadDataRepository uploadDataRepository) {
+        this(kpiCacheService, kpiDynamicDataService, uploadDataRepository, new RcaConcurrencyGate(1, 30));
+    }
+
+    public RecommendationService(KpiCacheService kpiCacheService, KpiDynamicDataService kpiDynamicDataService,
+                                   UploadDataRepository uploadDataRepository, RcaConcurrencyGate concurrency) {
+        this(kpiCacheService, kpiDynamicDataService, uploadDataRepository, concurrency, null);
+    }
+
+    @Autowired
+    public RecommendationService(KpiCacheService kpiCacheService, KpiDynamicDataService kpiDynamicDataService,
+                                   UploadDataRepository uploadDataRepository, RcaConcurrencyGate concurrency, RcaArtifactStore artifacts) {
         this.kpiCacheService = kpiCacheService;
         this.kpiDynamicDataService = kpiDynamicDataService;
         this.uploadDataRepository = uploadDataRepository;
+        this.concurrency = concurrency;
+        this.artifacts = artifacts;
     }
 
     public RecommendationResult runRecommendation(long fileId, Map<String, Object> body, boolean exportExcel) throws IOException {
@@ -75,8 +99,10 @@ public class RecommendationService {
         ensurePythonEntry();
         reportProgress(progressReporter, 25, "Loading KPI data...");
 
-        Map<String, Object> cache = kpiCacheService.readKpiCache(fileId);
+        KpiCacheService.Snapshot snapshot = kpiCacheService.readSnapshot(fileId);
+        Map<String, Object> cache = snapshot == null ? null : snapshot.payload();
         List<Map<String, Object>> rows = cache == null ? List.of() : toCanonicalRows(cache);
+        String inputCacheKey = rows.isEmpty() ? null : cacheKeyForSnapshot(body, snapshot.fingerprint()).orElse(null);
         if (rows.isEmpty()) {
             rows = kpiDynamicDataService.findRecordsByFileId(fileId);
         }
@@ -87,57 +113,120 @@ public class RecommendationService {
             throw new IllegalStateException("No KPI data found for fileId " + fileId + ".");
         }
 
+        return runPrepared(fileId, body, exportExcel, progressReporter, rows, inputCacheKey, startedAt, artifacts != null && inputCacheKey != null);
+    }
+
+    public RecommendationResult runSnapshot(long fileId, KpiCacheService.Snapshot snapshot, Map<String, Object> body) throws IOException {
+        ensurePythonEntry();
+        List<Map<String, Object>> rows = toCanonicalRows(snapshot.payload());
+        if (rows.isEmpty()) throw new IllegalArgumentException("Pinned RCA input contains no rows.");
+        return runPrepared(fileId, body, false, null, rows,
+                cacheKeyForSnapshot(body, snapshot.fingerprint()).orElse(null), System.currentTimeMillis(), false);
+    }
+
+    private RecommendationResult runPrepared(long fileId, Map<String, Object> body, boolean exportExcel,
+                                              BiConsumer<Integer, String> progressReporter, List<Map<String, Object>> rows,
+                                              String inputCacheKey, long startedAt, boolean retainFrames) throws IOException {
         int inputRowLimit = normalizeRowLimit(body == null ? null : body.get("inputRowLimit"));
         List<Map<String, Object>> preparedRows = prepareRowsForPython(rows, body == null ? Map.of() : body, inputRowLimit);
         reportProgress(progressReporter, 40, "Preparing RCA input...");
 
         Path workDir = Files.createTempDirectory("rca-run-");
-        Path inputPath = workDir.resolve("input.xlsx");
-        Path configPath = workDir.resolve("config.json");
-        Path jsonOutPath = workDir.resolve("result.json");
-        Path excelOutPath = workDir.resolve("result.xlsx");
+        try {
+            Path inputPath = workDir.resolve("input.xlsx");
+            Path configPath = workDir.resolve("config.json");
+            Path jsonOutPath = workDir.resolve("result.json");
+            Path excelOutPath = workDir.resolve("result.xlsx");
 
-        writeWorkbook(preparedRows, inputPath);
-        Map<String, Object> config = buildPythonConfig(body);
-        config.put("input_row_limit", inputRowLimit);
-        config.put("input_rows_sent", preparedRows.size());
-        config.put("source_rows_available", rows.size());
-        Files.writeString(configPath, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), StandardCharsets.UTF_8);
-        reportProgress(progressReporter, 60, exportExcel ? "Building RCA export..." : "Running RCA engine...");
+            writeWorkbook(preparedRows, inputPath);
+            Map<String, Object> config = buildPythonConfig(body);
+            config.put("input_row_limit", inputRowLimit);
+            config.put("input_rows_sent", preparedRows.size());
+            config.put("source_rows_available", rows.size());
+            Files.writeString(configPath, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), StandardCharsets.UTF_8);
+            reportProgress(progressReporter, 60, exportExcel ? "Building RCA export..." : "Running RCA engine...");
 
-        List<String> args = new ArrayList<>(resolvePythonCommand());
-        args.add(getPythonMainPath().toString());
-        args.add("run");
-        args.add("--input");
-        args.add(inputPath.toString());
-        args.add("--config");
-        args.add(configPath.toString());
-        args.add("--json-out");
-        args.add(jsonOutPath.toString());
-        if (exportExcel) {
-            args.add("--export-excel");
-            args.add("--excel-out");
-            args.add(excelOutPath.toString());
-        }
+            List<String> args = new ArrayList<>(resolvePythonCommand());
+            args.add(getPythonMainPath().toString());
+            args.add("run");
+            args.add("--input");
+            args.add(inputPath.toString());
+            args.add("--config");
+            args.add(configPath.toString());
+            args.add("--json-out");
+            args.add(jsonOutPath.toString());
+            if (retainFrames) { args.add("--analysis-out"); args.add(workDir.resolve("analysis.json.gz").toString()); }
+            if (exportExcel) {
+                args.add("--export-excel");
+                args.add("--excel-out");
+                args.add(excelOutPath.toString());
+            }
 
-        ProcessResult result = executeProcess(args, getWorkspaceRoot());
-        reportProgress(progressReporter, 90, "Finalizing RCA result...");
-        if (result.exitCode != 0) {
+            ProcessResult result = executeProcess(args, getWorkspaceRoot());
+            reportProgress(progressReporter, 90, "Finalizing RCA result...");
+            if (result.exitCode != 0) {
+                throw new IllegalStateException(result.stderr.isBlank() ? result.stdout : result.stderr);
+            }
+
+            if (!Files.exists(jsonOutPath)) {
+                throw new IllegalStateException("Python RCA did not produce JSON output.");
+            }
+
+            Map<String, Object> payload = mapper.readValue(jsonOutPath.toFile(), new TypeReference<>() {});
+            if (isTruthy(perfLogsEnabledRaw)) {
+                logPerf("runRecommendation", fileId, preparedRows.size(), System.currentTimeMillis() - startedAt);
+            }
+
+            return new RecommendationResult(payload, exportExcel ? excelOutPath : null, workDir, inputCacheKey);
+        } catch (IOException | RuntimeException ex) {
             cleanup(workDir);
-            throw new IllegalStateException(result.stderr.isBlank() ? result.stdout : result.stderr);
+            throw ex;
         }
+    }
 
-        if (!Files.exists(jsonOutPath)) {
-            cleanup(workDir);
-            throw new IllegalStateException("Python RCA did not produce JSON output.");
+    public void retainArtifacts(RecommendationResult result, long fileId, Map<String, Object> request) throws IOException {
+        if (artifacts == null || result == null || result.inputCacheKey == null || result.workDir == null) return;
+        Path full = result.workDir.resolve("analysis.json.gz");
+        if (!Files.isRegularFile(full)) return;
+        if (currentCacheKey(fileId, request).filter(result.inputCacheKey::equals).isEmpty()) throw new IllegalStateException("RCA input/engine changed before analysis artifacts could be saved.");
+        artifacts.publishAnalysis(result.inputCacheKey, full);
+        if (result.excelPath != null && Files.isRegularFile(result.excelPath)) artifacts.publishExcel(result.inputCacheKey, result.excelPath);
+    }
+
+    public void renderStoredAnalysis(Path analysis, Path output) throws IOException {
+        ensurePythonEntry();
+        List<String> args = new ArrayList<>(resolvePythonCommand()); args.add(getPythonMainPath().toString()); args.add("export-analysis");
+        args.add("--analysis-in"); args.add(analysis.toString()); args.add("--excel-out"); args.add(output.toString());
+        var result = executeProcess(args, getWorkspaceRoot());
+        if (result.exitCode != 0 || !Files.isRegularFile(output)) throw new IOException("RCA Excel generation failed: " + (result.stderr.isBlank() ? result.stdout : result.stderr));
+    }
+
+    public Optional<String> currentCacheKey(long fileId, Map<String, Object> request) {
+        return kpiCacheService.fingerprintKpiCache(fileId)
+                .flatMap(fingerprint -> cacheKeyForSnapshot(request, fingerprint));
+    }
+
+    public Optional<String> snapshotCacheKey(Map<String, Object> request, String fingerprint) {
+        return cacheKeyForSnapshot(request, fingerprint);
+    }
+
+    private Optional<String> cacheKeyForSnapshot(Map<String, Object> request, String fingerprint) {
+        try {
+            Map<String, String> engine = new LinkedHashMap<>();
+            engine.put("revision", cacheRevision);
+            for (String name : List.of("main.py", "analyser.py", "lb_service.py")) {
+                engine.put(name, RecommendationCacheKey.fileDigest(getPythonServiceDir().resolve(name)));
+            }
+            engine.put("java-pipeline", "rca-export-frames-v1");
+            for (String name : List.of("rca_presets.json", "requirements.txt", "rca_export.py")) {
+                Path path = getPythonServiceDir().resolve(name);
+                engine.put(name, Files.exists(path) ? RecommendationCacheKey.fileDigest(path) : "missing");
+            }
+            return Optional.of(RecommendationCacheKey.build(request, fingerprint, engine));
+        } catch (IOException ex) {
+            // Without a verifiable primary source/engine, recompute rather than trust an old job.
+            return Optional.empty();
         }
-
-        Map<String, Object> payload = mapper.readValue(jsonOutPath.toFile(), new TypeReference<>() {});
-        if (isTruthy(perfLogsEnabledRaw)) {
-            logPerf("runRecommendation", fileId, preparedRows.size(), System.currentTimeMillis() - startedAt);
-        }
-
-        return new RecommendationResult(payload, exportExcel ? excelOutPath : null, workDir);
     }
 
     private void reportProgress(BiConsumer<Integer, String> progressReporter, int progressPercent, String message) {
@@ -487,19 +576,8 @@ public class RecommendationService {
     }
 
     private ProcessResult executeProcess(List<String> args, Path cwd) throws IOException {
-        ProcessBuilder builder = new ProcessBuilder(args);
-        builder.directory(cwd.toFile());
-        builder.redirectErrorStream(true);
-        Process process = builder.start();
-        String stdout = readStream(process.getInputStream());
-        int exitCode;
-        try {
-            exitCode = process.waitFor();
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Python process interrupted", ex);
-        }
-        return new ProcessResult(exitCode, stdout, "");
+        var output = concurrency.execute(args, cwd, processTimeoutSeconds);
+        return new ProcessResult(output.exitCode(), output.text(), "");
     }
 
     private String readStream(java.io.InputStream inputStream) throws IOException {
@@ -642,11 +720,17 @@ public class RecommendationService {
         public final Map<String, Object> payload;
         public final Path excelPath;
         public final Path workDir;
+        public final String inputCacheKey;
 
         public RecommendationResult(Map<String, Object> payload, Path excelPath, Path workDir) {
+            this(payload, excelPath, workDir, null);
+        }
+
+        public RecommendationResult(Map<String, Object> payload, Path excelPath, Path workDir, String inputCacheKey) {
             this.payload = payload;
             this.excelPath = excelPath;
             this.workDir = workDir;
+            this.inputCacheKey = inputCacheKey;
         }
     }
 

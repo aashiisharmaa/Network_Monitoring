@@ -2,6 +2,7 @@ package com.network.monitoring.controller;
 
 import com.network.monitoring.service.RecommendationService;
 import com.network.monitoring.service.RecommendationJobService;
+import com.network.monitoring.service.JobCapacityException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,11 +27,13 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
     private final RecommendationJobService recommendationJobService;
+    private final com.network.monitoring.service.RecommendationExportService exports;
 
     public RecommendationController(RecommendationService recommendationService,
-                                    RecommendationJobService recommendationJobService) {
+                                    RecommendationJobService recommendationJobService, com.network.monitoring.service.RecommendationExportService exports) {
         this.recommendationService = recommendationService;
         this.recommendationJobService = recommendationJobService;
+        this.exports = exports;
     }
 
     @PostMapping("/jobs")
@@ -39,6 +42,12 @@ public class RecommendationController {
             @RequestBody(required = false) Map<String, Object> body) {
         try {
             return ResponseEntity.ok(recommendationJobService.startJob(fileId, body == null ? Map.of() : body));
+        } catch (JobCapacityException ex) {
+            Map<String, Object> error = errorResponse(ex.getMessage());
+            error.put("code", "JOB_CAPACITY");
+            error.put("jobId", ex.getJobId());
+            error.put("retryable", true);
+            return ResponseEntity.status(503).header("Retry-After", "30").body(error);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
         } catch (Exception ex) {
@@ -70,6 +79,7 @@ public class RecommendationController {
                 Map<String, Object> response = new LinkedHashMap<>();
                 response.put("success", true);
                 response.put("fileId", fileId);
+                recommendationService.retainArtifacts(result, fileId, body == null ? Map.of() : body);
                 response.putAll(result.payload);
                 return ResponseEntity.ok(response);
             } finally {
@@ -86,29 +96,13 @@ public class RecommendationController {
     public ResponseEntity<?> exportRecommendation(
             @RequestParam(value = "fileId", required = false) Long fileId,
             @RequestBody(required = false) Map<String, Object> body) {
-        java.nio.file.Path workDir = null;
         try {
-            if (fileId == null || fileId <= 0) {
-                return ResponseEntity.badRequest().body(errorResponse("fileId query parameter is required."));
-            }
-            RecommendationService.RecommendationResult result = recommendationService.runRecommendation(fileId, body == null ? Map.of() : body, true);
-            workDir = result.workDir;
-            if (result.excelPath == null || !Files.exists(result.excelPath)) {
-                throw new IllegalStateException("Excel output was not generated.");
-            }
-            byte[] buffer = Files.readAllBytes(result.excelPath);
-            String fileName = "rca_recommendation_" + fileId + "_" + System.currentTimeMillis() + ".xlsx";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
-            return new ResponseEntity<>(buffer, headers, HttpStatus.OK);
-        } catch (Exception ex) {
-            return ResponseEntity.status(500).body(errorResponse(ex.getMessage()));
-        } finally {
-            if (workDir != null) {
-                recommendationService.cleanup(workDir);
-            }
-        }
+            if (fileId == null || fileId <= 0) return ResponseEntity.badRequest().body(errorResponse("fileId query parameter is required."));
+            var path = exports.blocking(fileId, body == null ? Map.of() : body);
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rca_recommendation_" + fileId + ".xlsx")
+                    .body(new org.springframework.core.io.FileSystemResource(path));
+        } catch (Exception ex) { return ResponseEntity.status(500).body(errorResponse(ex.getMessage())); }
     }
 
     @GetMapping("/presets")

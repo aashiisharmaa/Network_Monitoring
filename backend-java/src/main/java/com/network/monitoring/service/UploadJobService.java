@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 
 @Service
 public class UploadJobService {
@@ -44,6 +45,8 @@ public class UploadJobService {
     private final ObjectProvider<UploadJobService> selfProvider;
     private final Path jobFileBasePath;
     private final int retentionDays;
+    @Value("${app.jobs.recover-on-startup:true}")
+    private boolean recoverOnStartup = true;
 
     public UploadJobService(JdbcTemplate jdbcTemplate,
                             UploadService uploadService,
@@ -100,6 +103,24 @@ public class UploadJobService {
         } catch (IOException ex) {
             throw new IllegalStateException("Unable to create upload job file directory", ex);
         }
+        recoverInterruptedJobs();
+    }
+
+    public void recoverInterruptedJobs() {
+        if (!recoverOnStartup) return;
+        for (String previous : List.of("QUEUED", "PROCESSING")) {
+            boolean safe = "QUEUED".equals(previous);
+            String message = safe
+                    ? "Backend restarted before upload began. Retry when the stored file is available."
+                    : "Backend restarted during upload. Some rows may already exist; verify the data before uploading again with merge.";
+            jdbcTemplate.update("""
+                    UPDATE `upload_jobs`
+                    SET `status` = ?, `progressPercent` = ?, `message` = ?, `resultJson` = ?, `updatedAt` = ?
+                    WHERE `status` = ?
+                    """, "FAILED", 100, message,
+                    writeJson(Map.of("success", false, "code", "BACKEND_RESTARTED", "retrySafe", safe, "message", message)),
+                    Timestamp.valueOf(LocalDateTime.now()), previous);
+        }
     }
 
     public Map<String, Object> startKpiUploadJob(MultipartFile file,
@@ -114,9 +135,18 @@ public class UploadJobService {
         }
 
         Long jobId = createJob(file.getOriginalFilename(), file.getContentType(), remarks, uploadedBy, appendOption, targetFileId, columnMapping, cleanKpiData);
-        Path stagedFile = createStagedUploadFile(jobId, file);
-        updateJobFilePath(jobId, stagedFile);
-        selfProvider.getObject().processKpiUploadJob(jobId, stagedFile, file.getOriginalFilename(), file.getContentType(), remarks, uploadedBy, appendOption, targetFileId, columnMapping, cleanKpiData);
+        try {
+            Path stagedFile = createStagedUploadFile(jobId, file);
+            updateJobFilePath(jobId, stagedFile);
+            selfProvider.getObject().processKpiUploadJob(jobId, stagedFile, file.getOriginalFilename(), file.getContentType(), remarks, uploadedBy, appendOption, targetFileId, columnMapping, cleanKpiData);
+        } catch (RejectedExecutionException ex) {
+            throw capacityFailure(jobId, ex);
+        } catch (IOException | RuntimeException ex) {
+            String message = "Upload could not be staged or scheduled. Please upload the file again.";
+            updateJob(jobId, "FAILED", 100, message,
+                    Map.of("success", false, "code", "UPLOAD_NOT_STARTED", "retrySafe", true, "message", message));
+            throw ex;
+        }
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("jobId", jobId);
@@ -130,7 +160,7 @@ public class UploadJobService {
         );
     }
 
-    @Async
+    @Async("uploadJobExecutor")
     public void processKpiUploadJob(Long jobId,
                                     Path tempFile,
                                     String originalFilename,
@@ -141,11 +171,18 @@ public class UploadJobService {
                                     Long targetFileId,
                                     String columnMapping,
                                     boolean cleanKpiData) {
-        updateJob(jobId, "PROCESSING", 15, "Processing KPI file...", null);
         try {
+            int claimed = jdbcTemplate.update("""
+                    UPDATE `upload_jobs`
+                    SET `status` = ?, `progressPercent` = ?, `message` = ?, `updatedAt` = ?
+                    WHERE `id` = ? AND `status` = 'QUEUED'
+                    """, "PROCESSING", 15, "Processing KPI file...", Timestamp.valueOf(LocalDateTime.now()), jobId);
+            if (claimed == 0) return;
             MultipartFile file = new StoredFileMultipartFile(tempFile, originalFilename, contentType);
             Map<String, Object> result = uploadService.uploadKpiData(file, remarks, uploadedBy, appendOption, targetFileId, columnMapping, cleanKpiData);
             if (Boolean.FALSE.equals(result.get("success"))) {
+                result = new LinkedHashMap<>(result);
+                result.put("retrySafe", false);
                 updateJob(jobId, "FAILED", 100, String.valueOf(result.getOrDefault("message", "KPI upload failed.")), result);
                 return;
             }
@@ -154,6 +191,7 @@ public class UploadJobService {
         } catch (Exception ex) {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("success", false);
+            result.put("retrySafe", false);
             result.put("message", ex.getMessage() == null ? ex.toString() : ex.getMessage());
             updateJob(jobId, "FAILED", 100, String.valueOf(result.get("message")), result);
         }
@@ -189,32 +227,52 @@ public class UploadJobService {
         if (!"FAILED".equals(status)) {
             throw new IllegalArgumentException("Only failed upload jobs can be retried.");
         }
+        if (!(job.get("result") instanceof Map<?, ?> result) || !Boolean.TRUE.equals(result.get("retrySafe"))) {
+            throw new IllegalArgumentException("This upload may have written partial data. Verify the existing rows and use merge before retrying the upload.");
+        }
 
         String filePath = stringValue(job.get("filePath"));
         if (filePath.isBlank() || !Files.exists(Paths.get(filePath))) {
             throw new IllegalArgumentException("Stored upload file is not available for retry. Please upload the file again.");
         }
 
-        jdbcTemplate.update("""
+        int claimed = jdbcTemplate.update("""
                 UPDATE `upload_jobs`
                 SET `status` = ?, `progressPercent` = ?, `message` = ?, `resultJson` = NULL, `updatedAt` = ?
-                WHERE `id` = ?
+                WHERE `id` = ? AND `status` = 'FAILED'
                 """, "QUEUED", 5, "Retry queued.", Timestamp.valueOf(LocalDateTime.now()), jobId);
+        if (claimed == 0) throw new IllegalArgumentException("Upload job is already queued or processing.");
 
-        selfProvider.getObject().processKpiUploadJob(
-                jobId,
-                Paths.get(filePath),
-                stringValue(job.get("fileName")),
-                stringValue(job.get("contentType")),
-                stringValue(job.get("remarks")),
-                stringValue(job.get("uploadedBy")),
-                stringValue(job.get("appendOption")),
-                longValue(job.get("targetFileId")),
-                stringValue(job.get("columnMapping")),
-                Boolean.TRUE.equals(job.get("cleanKpiData"))
-        );
+        try {
+            selfProvider.getObject().processKpiUploadJob(
+                    jobId,
+                    Paths.get(filePath),
+                    stringValue(job.get("fileName")),
+                    stringValue(job.get("contentType")),
+                    stringValue(job.get("remarks")),
+                    stringValue(job.get("uploadedBy")),
+                    stringValue(job.get("appendOption")),
+                    longValue(job.get("targetFileId")),
+                    stringValue(job.get("columnMapping")),
+                    Boolean.TRUE.equals(job.get("cleanKpiData"))
+            );
+        } catch (RejectedExecutionException ex) {
+            throw capacityFailure(jobId, ex);
+        } catch (RuntimeException ex) {
+            String message = "Upload retry could not be scheduled. Please retry this job again.";
+            updateJob(jobId, "FAILED", 100, message,
+                    Map.of("success", false, "code", "UPLOAD_NOT_STARTED", "retrySafe", true, "message", message));
+            throw ex;
+        }
 
         return getJob(jobId);
+    }
+
+    private JobCapacityException capacityFailure(Long jobId, RejectedExecutionException ex) {
+        String message = "Upload workers and queue are full. Please retry this job shortly.";
+        updateJob(jobId, "FAILED", 100, message,
+                Map.of("success", false, "code", "JOB_CAPACITY", "retrySafe", true, "message", message));
+        return new JobCapacityException(jobId, message, ex);
     }
 
     public Map<String, Object> getJob(Long jobId) {
@@ -264,6 +322,9 @@ public class UploadJobService {
         }
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException | RuntimeException ex) {
+            deleteStagedFile(tempFile);
+            throw ex;
         }
         return tempFile;
     }
@@ -326,7 +387,7 @@ public class UploadJobService {
                 """, status, Math.max(0, Math.min(100, progressPercent)), compactMessage(message), writeJson(result), Timestamp.valueOf(LocalDateTime.now()), jobId);
     }
 
-    @Scheduled(cron = "0 20 2 * * *")
+    @Scheduled(cron = "0 20 2 * * *", zone = "Asia/Kolkata")
     public void cleanupOldJobs() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
         List<String> filePaths = jdbcTemplate.query("""
@@ -395,8 +456,10 @@ public class UploadJobService {
         job.put("status", status);
         job.put("progressPercent", progressPercent);
         job.put("message", message);
-        job.put("result", readJsonMap(resultJson));
-        job.put("retryable", "FAILED".equalsIgnoreCase(status) && filePath != null && !filePath.isBlank() && Files.exists(Paths.get(filePath)));
+        Map<String, Object> result = readJsonMap(resultJson);
+        job.put("result", result);
+        job.put("retryable", "FAILED".equalsIgnoreCase(status) && Boolean.TRUE.equals(result.get("retrySafe"))
+                && filePath != null && !filePath.isBlank() && Files.exists(Paths.get(filePath)));
         job.put("createdAt", createdAt);
         job.put("updatedAt", updatedAt);
         return job;

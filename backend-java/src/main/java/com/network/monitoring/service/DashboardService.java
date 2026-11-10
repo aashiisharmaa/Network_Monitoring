@@ -13,7 +13,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,10 +124,7 @@ public class DashboardService {
 
     public UploadHistory getLatestUpload(Long fileId) {
         if (fileId == null) {
-            return uploadHistoryRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
+            return uploadHistoryRepository.findFirstByOrderByCreatedAtDesc().orElse(null);
         }
         return uploadHistoryRepository.findById(fileId).orElse(null);
     }
@@ -144,12 +140,18 @@ public class DashboardService {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("fileId", fileId);
         data.put("companyId", companyId);
-        data.put("totalCells", countMergedDistinct("Cell_Name", "cellName", fileId, companyId));
-        data.put("totalSites", countMergedDistinct("Site", "site", fileId, companyId));
-        data.put("totalBands", countMergedDistinct("Band", "band", fileId, companyId));
-        data.put("totalTech", countMergedDistinct("Tech", "tech", fileId, companyId));
-        data.put("totalSectors", countMergedDistinct("Sector_ID", "sectorId", fileId, companyId));
-        data.put("totalGroups", countMergedDistinct("`Groups`", "groupsName", fileId, companyId));
+        Set<String> preaggregationColumns = preaggregationColumns();
+        for (DashboardDimensionQuery.Dimension dimension : DashboardDimensionQuery.Dimension.values()) {
+            DashboardDimensionQuery.Statement statement = DashboardDimensionQuery.build(
+                    dimension, fileId, companyId,
+                    preaggregationColumns.contains("uploaddata." + dimension.uploadColumn),
+                    preaggregationColumns.contains("kpidynamicdata." + dimension.dynamicColumn));
+            Query query = entityManager.createNativeQuery(statement.sql());
+            for (int index = 0; index < statement.parameters().size(); index++) {
+                query.setParameter(index + 1, statement.parameters().get(index));
+            }
+            data.put(dimension.outputKey, ((Number) query.getSingleResult()).longValue());
+        }
         data.put("totalRecords", countUploadRecords(fileId, companyId));
         data.put("latestUpload", getLatestUploadPayload(fileId));
         return data;
@@ -340,46 +342,22 @@ public class DashboardService {
         return count == null ? 0L : count.longValue();
     }
 
-    private long countMergedDistinct(String uploadColumn, String dynamicColumn, Long fileId) {
-        return countMergedDistinct(uploadColumn, dynamicColumn, fileId, null);
-    }
-
-    private long countMergedDistinct(String uploadColumn, String dynamicColumn, Long fileId, Long companyId) {
-        String uploadValue = "TRIM(CONVERT(" + uploadColumn + " USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
-        String dynamicValue = "TRIM(CONVERT(`" + dynamicColumn + "` USING utf8mb4)) COLLATE utf8mb4_unicode_ci";
-        String uploadWhere = uploadColumn + " IS NOT NULL AND " + uploadValue + " <> ''";
-        String dynamicWhere = "`" + dynamicColumn + "` IS NOT NULL AND " + dynamicValue + " <> ''";
-        List<Object> args = new ArrayList<>();
-
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(*) FROM (");
-        sql.append("SELECT ").append(uploadValue).append(" AS value FROM `uploaddata` WHERE ").append(uploadWhere);
-        if (fileId != null) {
-            sql.append(" AND `fileId` = ?");
-            args.add(fileId);
+    private Set<String> preaggregationColumns() {
+        // Read live metadata: installations using another collation retain the original query.
+        // Never pre-deduplicate under a collation that could merge distinct final values.
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = entityManager.createNativeQuery("""
+                SELECT TABLE_NAME, COLUMN_NAME
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME IN ('uploaddata', 'kpidynamicdata')
+                  AND COLLATION_NAME = 'utf8mb4_unicode_ci'
+                """).getResultList();
+        Set<String> columns = new LinkedHashSet<>();
+        for (Object[] row : rows) {
+            columns.add(row[0] + "." + row[1]);
         }
-        if (companyId != null) {
-            sql.append(" AND `companyId` = ?");
-            args.add(companyId);
-        }
-        sql.append(" UNION ");
-        sql.append("SELECT ").append(dynamicValue).append(" AS value FROM `kpidynamicdata` WHERE ").append(dynamicWhere);
-        if (fileId != null) {
-            sql.append(" AND `fileId` = ?");
-            args.add(fileId);
-        }
-        if (companyId != null) {
-            sql.append(" AND `companyId` = ?");
-            args.add(companyId);
-        }
-        sql.append(") merged");
-
-        Query query = entityManager.createNativeQuery(sql.toString());
-        for (int index = 0; index < args.size(); index++) {
-            query.setParameter(index + 1, args.get(index));
-        }
-        Number count = (Number) query.getSingleResult();
-        return count == null ? 0L : count.longValue();
+        return columns;
     }
 
     private void addNonBlank(Set<String> values, String value) {

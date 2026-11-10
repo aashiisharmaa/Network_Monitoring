@@ -7,3 +7,31 @@
 
   ➜  Local:   http://127.0.0.1:5173/
 10:41:30 am [vite] (client) hmr update /src/styles/globals.css, /src/pages/MapPage.jsx
+1:08:38 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/recommendation/components/RecommendationResultsPanel.jsx
+1:14:41 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/recommendation/components/RecommendationResultsPanel.jsx
+12:37:35 pm [vite] (client) hmr update /src/styles/globals.css, /src/shared/context/AuthContext.jsx, /src/pages/RecommendationPage.jsx, /src/pages/DashboardPage.jsx, /src/pages/WorstCell.jsx, /src/pages/KpiView.jsx, /src/pages/ValidationReportPage.jsx, /src/pages/AlarmsPage.jsx, /src/pages/UploadsPage.jsx, /src/pages/SitesPage.jsx, /src/pages/MapPage.jsx, /src/pages/ThresholdRulesPage.jsx, /src/pages/AdminManagementPage.jsx, /src/pages/LocalLicensePage.jsx
+12:37:35 pm [vite] (client) hmr invalidate /src/shared/context/AuthContext.jsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+12:37:35 pm [vite] (client) hmr update /src/app/AppProviders.jsx, /src/routes/AppRoutes.jsx, /src/routes/ProtectedRoute.jsx, /src/pages/AlarmsPage.jsx, /src/pages/DashboardPage.jsx, /src/pages/UploadsPage.jsx, /src/pages/LoginPage.jsx, /src/shared/components/layout/MainLayout.jsx
+12:40:47 pm [vite] (client) hmr update /src/routes/AppRoutes.jsx, /src/styles/globals.css
+12:40:47 pm [vite] (client) hmr update /src/styles/globals.css, /src/shared/components/layout/Sidebar.jsx
+12:42:24 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:42:49 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:42:49 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/reports/ReportSettings.jsx
+12:42:49 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:46:17 pm [vite] (client) hmr update /src/routes/AppRoutes.jsx, /src/styles/globals.css
+12:51:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:51:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/reports/ReportSettings.jsx
+12:51:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:54:56 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:54:56 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+12:54:56 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/reports/ReportSettings.jsx
+12:54:56 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+1:20:18 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx, /src/features/reports/ReportSettings.jsx
+1:20:19 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+1:22:21 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/ReportsPage.jsx
+1:26:14 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/reports/NightlyPanel.jsx
+2:30:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/RecommendationPage.jsx
+2:30:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/RecommendationPage.jsx
+2:30:23 pm [vite] (client) hmr update /src/styles/globals.css, /src/features/recommendation/components/RecommendationConfigPanel.jsx
+2:44:25 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/RecommendationPage.jsx
+2:45:01 pm [vite] (client) hmr update /src/styles/globals.css, /src/pages/RecommendationPage.jsx

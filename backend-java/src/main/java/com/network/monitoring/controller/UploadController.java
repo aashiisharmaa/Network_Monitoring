@@ -3,6 +3,7 @@ package com.network.monitoring.controller;
 import com.network.monitoring.service.KpiUploadPreviewService;
 import com.network.monitoring.service.UploadJobService;
 import com.network.monitoring.service.UploadService;
+import com.network.monitoring.service.JobCapacityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -84,6 +85,8 @@ public class UploadController {
     public ResponseEntity<Map<String, Object>> retryUploadJob(@PathVariable("jobId") Long jobId) {
         try {
             return ResponseEntity.ok(uploadJobService.retryJob(jobId));
+        } catch (JobCapacityException ex) {
+            return capacityResponse(ex);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
         } catch (Exception ex) {
@@ -175,6 +178,8 @@ public class UploadController {
     private ResponseEntity<Map<String, Object>> executeUpload(ThrowingUploadSupplier supplier) {
         try {
             return wrapUpload(supplier.get());
+        } catch (JobCapacityException ex) {
+            return capacityResponse(ex);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(errorResponse(ex.getMessage()));
         } catch (IOException ex) {
@@ -191,6 +196,14 @@ public class UploadController {
         response.put("success", false);
         response.put("message", message);
         return response;
+    }
+
+    private ResponseEntity<Map<String, Object>> capacityResponse(JobCapacityException ex) {
+        Map<String, Object> body = errorResponse(ex.getMessage());
+        body.put("code", "JOB_CAPACITY");
+        body.put("jobId", ex.getJobId());
+        body.put("retryable", true);
+        return ResponseEntity.status(503).header("Retry-After", "30").body(body);
     }
 
     @FunctionalInterface

@@ -8,6 +8,8 @@ import com.network.monitoring.repository.AlarmDataRepository;
 import com.network.monitoring.repository.SiteDataRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -20,10 +22,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 @Service
 public class SitePredictionService {
@@ -40,7 +40,8 @@ public class SitePredictionService {
     private final JdbcTemplate jdbcTemplate;
     private final Map<Long, CachedRecommendations> recommendationCache = new ConcurrentHashMap<>();
     private final Map<Long, Object> buildLocks = new ConcurrentHashMap<>();
-    private final ExecutorService warmupExecutor = Executors.newFixedThreadPool(2);
+    private final TaskExecutor warmupExecutor;
+    private final Set<Long> warmingFiles = ConcurrentHashMap.newKeySet();
     private volatile MasterContext cachedMasterContext;
     private volatile long masterContextLoadedAt;
     private volatile AlarmContext cachedAlarmContext;
@@ -50,12 +51,14 @@ public class SitePredictionService {
                                  KpiCacheService kpiCacheService,
                                  SiteDataRepository siteDataRepository,
                                  AlarmDataRepository alarmDataRepository,
-                                 JdbcTemplate jdbcTemplate) {
+                                 JdbcTemplate jdbcTemplate,
+                                 @Qualifier("predictionWarmupExecutor") TaskExecutor warmupExecutor) {
         this.kpiDynamicDataService = kpiDynamicDataService;
         this.kpiCacheService = kpiCacheService;
         this.siteDataRepository = siteDataRepository;
         this.alarmDataRepository = alarmDataRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.warmupExecutor = warmupExecutor;
         ensurePredictionTable();
     }
 
@@ -166,15 +169,25 @@ public class SitePredictionService {
     }
 
     public void warmFileAsync(Long fileId) {
-        if (fileId == null) return;
-        CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(1_500L);
-                cachedRecommendations(fileId);
-            } catch (Exception ignored) {
-                recommendationCache.remove(fileId);
-            }
-        }, warmupExecutor);
+        if (fileId == null || !warmingFiles.add(fileId)) return;
+        try {
+            warmupExecutor.execute(() -> {
+                try {
+                    Thread.sleep(1_500L);
+                    cachedRecommendations(fileId);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    recommendationCache.remove(fileId);
+                } catch (Exception ignored) {
+                    recommendationCache.remove(fileId);
+                } finally {
+                    warmingFiles.remove(fileId);
+                }
+            });
+        } catch (RejectedExecutionException ex) {
+            // Optional optimization: on-demand prediction remains available when warmup is full.
+            warmingFiles.remove(fileId);
+        }
     }
 
     private void ensurePredictionTable() {
@@ -270,6 +283,20 @@ public class SitePredictionService {
         List<Map<String, Object>> records = records(fileId);
         MasterContext masterContext = masterContext();
         AlarmContext alarmContext = alarmContext();
+        return buildRecommendations(records, masterContext, alarmContext);
+    }
+
+    public Map<String, Object> predictKpiSnapshot(List<Map<String, Object>> records, int limit) {
+        List<Recommendation> results = buildRecommendations(records, new MasterContext(), new AlarmContext());
+        Map<String, Long> actions = new LinkedHashMap<>();
+        for (Recommendation result : results) actions.merge(result.actionCode, 1L, Long::sum);
+        return Map.of("total", results.size(), "actions", actions,
+                "items", results.stream().limit(Math.max(1, limit)).map(Recommendation::toPayload).toList(),
+                "detailsLimited", results.size() > limit, "mode", "KPI_ONLY",
+                "limitation", "Current-data heuristics only; no pinned site-master, alarm context, TA or future forecasting.");
+    }
+
+    private List<Recommendation> buildRecommendations(List<Map<String, Object>> records, MasterContext masterContext, AlarmContext alarmContext) {
         Map<String, CellStats> cells = new LinkedHashMap<>();
 
         for (Map<String, Object> record : records) {

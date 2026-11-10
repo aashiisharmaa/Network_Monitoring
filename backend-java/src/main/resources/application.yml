@@ -36,10 +36,59 @@ spring:
         enabled: false
 
 app:
+  nightly:
+    enabled: ${NIGHTLY_ENABLED:false}
+    tick-millis: ${NIGHTLY_TICK_MILLIS:30000}
+    stable-seconds: ${NIGHTLY_STABLE_SECONDS:60}
+    max-source-bytes: ${NIGHTLY_MAX_SOURCE_BYTES:200000000}
+    max-active-runs: ${NIGHTLY_MAX_ACTIVE_RUNS:20}
+    max-attempts: ${NIGHTLY_MAX_ATTEMPTS:3}
+  report-mail:
+    outbound-enabled: ${REPORT_MAIL_OUTBOUND_ENABLED:false}
+    from: ${REPORT_MAIL_FROM:reports@localhost.invalid}
+    host: ${REPORT_MAIL_SMTP_HOST:}
+    port: ${REPORT_MAIL_SMTP_PORT:587}
+    username: ${REPORT_MAIL_SMTP_USERNAME:}
+    password: ${REPORT_MAIL_SMTP_PASSWORD:}
+    starttls: ${REPORT_MAIL_STARTTLS:true}
+    ssl: ${REPORT_MAIL_SSL:false}
+    timeout-millis: ${REPORT_MAIL_TIMEOUT_MILLIS:10000}
+    max-message-bytes: ${REPORT_MAIL_MAX_MESSAGE_BYTES:20000000}
+    max-attempts: ${REPORT_MAIL_MAX_ATTEMPTS:5}
+    spool-path: ${REPORT_MAIL_SPOOL_PATH:uploads/report-mail}
+  jobs:
+    mail:
+      workers: ${REPORT_MAIL_WORKERS:1}
+      queue-capacity: ${REPORT_MAIL_QUEUE_CAPACITY:4}
+    report:
+      workers: ${COMMON_REPORT_WORKERS:1}
+      queue-capacity: ${COMMON_REPORT_QUEUE_CAPACITY:2}
+      max-comparison-rows: ${COMMON_REPORT_MAX_COMPARISON_ROWS:100000}
+      max-module-records: ${COMMON_REPORT_MAX_MODULE_RECORDS:50000}
+      detail-limit: ${COMMON_REPORT_DETAIL_LIMIT:200}
+      max-prediction-cells: ${COMMON_REPORT_MAX_PREDICTION_CELLS:500}
+    analysis:
+      workers: ${DAILY_ANALYSIS_WORKERS:1}
+      queue-capacity: ${DAILY_ANALYSIS_QUEUE_CAPACITY:4}
+      max-group-days: ${DAILY_ANALYSIS_MAX_GROUP_DAYS:25000}
+    # Startup recovery assumes one backend instance; distributed claims/leases are a later phase.
+    recover-on-startup: ${JOB_RECOVERY_ON_STARTUP:true}
+    upload:
+      workers: ${UPLOAD_JOB_WORKERS:1}
+      queue-capacity: ${UPLOAD_JOB_QUEUE_CAPACITY:4}
+    rca:
+      workers: ${RCA_JOB_WORKERS:1}
+      queue-capacity: ${RCA_JOB_QUEUE_CAPACITY:4}
+      timeout-seconds: ${RCA_PROCESS_TIMEOUT_SECONDS:900}
+      permit-wait-seconds: ${RCA_PERMIT_WAIT_SECONDS:30}
+    warmup:
+      workers: ${PREDICTION_WARMUP_WORKERS:1}
+      queue-capacity: ${PREDICTION_WARMUP_QUEUE_CAPACITY:2}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:4173,http://127.0.0.1:4173,file://}
   upload-base-path: ${UPLOADS_BASE:uploads}
   kpi-cache-path: ${KPI_CACHE_DIR:uploads/kpi-cache}
+  report-base-path: ${COMMON_REPORT_DIR:uploads/common-reports}
   python-service-path: ${PYTHON_SERVICE_PATH:python service}
   python-venv-path: ${PROJECT_VENV_PYTHON:}
   python-bin: ${PYTHON_BIN:}
@@ -47,6 +96,8 @@ app:
   redis-url: ${REDIS_URL:redis://127.0.0.1:6379}
   redis-ttl-seconds: ${REDIS_TTL_SECONDS:300}
   perf-logs-enabled: ${PERF_LOGS:false}
+  rca-artifact-dir: ${RCA_ARTIFACT_DIR:uploads/rca-artifacts}
+  rca-cache-revision: ${RCA_CACHE_REVISION:1}
   kpi-debug-logs-enabled: ${KPI_DEBUG_LOGS:false}
   jwt-secret: ${JWT_SECRET:change-me-in-env}
   jwt-expiry-seconds: 604800

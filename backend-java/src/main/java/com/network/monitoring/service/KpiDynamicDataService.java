@@ -45,20 +45,25 @@ public class KpiDynamicDataService {
 
     @Transactional
     public void replaceRecords(long fileId, Long companyId, List<Map<String, Object>> records) {
-        ensureTable();
         deleteByFileId(fileId);
         insertRecords(fileId, companyId, records);
     }
 
     @Transactional
     public void deleteByFileId(long fileId) {
-        ensureTable();
         jdbcTemplate.update("DELETE FROM `kpi_metric_values` WHERE `fileId` = ?", fileId);
         jdbcTemplate.update("DELETE FROM `kpidynamicdata` WHERE `fileId` = ?", fileId);
     }
 
     public List<Map<String, Object>> findRecordsByFileId(long fileId) {
         return findRecords(fileId);
+    }
+
+    @Transactional
+    public void appendRecords(long fileId, Long companyId, List<Map<String, Object>> records) {
+        Integer next = jdbcTemplate.queryForObject(
+                "SELECT COALESCE(MAX(rowIndex),-1)+1 FROM kpidynamicdata WHERE fileId=?", Integer.class, fileId);
+        insertRecords(fileId, companyId, records, next == null ? 0 : next);
     }
 
     private List<Map<String, Object>> findRecords(Long fileId) {
@@ -275,6 +280,10 @@ public class KpiDynamicDataService {
     }
 
     private void insertRecords(long fileId, Long companyId, List<Map<String, Object>> records) {
+        insertRecords(fileId, companyId, records, 0);
+    }
+
+    private void insertRecords(long fileId, Long companyId, List<Map<String, Object>> records, int offset) {
         if (records == null || records.isEmpty()) {
             return;
         }
@@ -296,7 +305,7 @@ public class KpiDynamicDataService {
             args.add(new Object[]{
                     fileId,
                     companyId,
-                    index,
+                    index + offset,
                     rowKey,
                     safeString(record.get("date")),
                     safeString(record.get("cellName")),
@@ -310,7 +319,7 @@ public class KpiDynamicDataService {
                     writeJson(getObjectMap(record.get("metrics"))),
                     Timestamp.valueOf(createdAt)
             });
-            appendMetricValues(metricArgs, fileId, companyId, index, rowKey, record, createdAt);
+            appendMetricValues(metricArgs, fileId, companyId, index + offset, rowKey, record, createdAt);
 
             if (args.size() >= INSERT_BATCH_SIZE) {
                 jdbcTemplate.batchUpdate(sql, args);

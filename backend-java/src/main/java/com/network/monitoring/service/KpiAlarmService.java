@@ -19,6 +19,42 @@ import java.util.Map;
 
 @Service
 public class KpiAlarmService {
+    public Map<String, Object> evaluateSnapshot(Long fileId, List<Map<String, Object>> records,
+            List<com.network.monitoring.entity.KpiThresholdRule> rules, List<Map<String, Object>> alarmRules, int detailLimit) {
+        Map<String, java.util.Optional<com.network.monitoring.entity.KpiThresholdRule>> matches = new LinkedHashMap<>();
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        List<Map<String, Object>> details = new ArrayList<>();
+        int candidates = 0, unknown = 0, invalid = 0;
+        for (Map<String, Object> record : records) {
+            String technology = firstNonBlank(record.get("tech"), dimension(record, "tech", "technology", "rat"));
+            for (var metric : objectMap(record.get("metrics")).entrySet()) {
+                Double value = parseNumber(metric.getValue());
+                if (value == null || !Double.isFinite(value)) { invalid++; continue; }
+                var rule = matches.computeIfAbsent(normalize(technology) + "|" + normalize(metric.getKey()),
+                        key -> java.util.Optional.ofNullable(thresholdRuleService.snapshotRule(metric.getKey(), technology, rules))).orElse(null);
+                if (rule == null) { unknown++; continue; }
+                String severity = thresholdRuleService.calculateSeverity(rule, value);
+                if (!SEVERITIES.contains(severity)) continue;
+                candidates++;
+                counts.merge(severity, 1, Integer::sum);
+                if (details.size() < detailLimit) {
+                    Map<String, Object> thresholds = new LinkedHashMap<>();
+                    thresholds.put("criticalValue", rule.getCriticalValue()); thresholds.put("majorValue", rule.getMajorValue());
+                    thresholds.put("minorValue", rule.getMinorValue()); thresholds.put("warningValue", rule.getWarningValue());
+                    var candidate = buildAlarm(fileId, record, metric.getKey(), value, severity, thresholds,
+                            findAlarmRule(alarmRules, metric.getKey(), technology, severity), LocalDateTime.MIN);
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("date", record.get("date")); row.put("cellName", candidate.cellName()); row.put("site", candidate.site());
+                    row.put("technology", candidate.technology()); row.put("band", candidate.band()); row.put("metric", metric.getKey());
+                    row.put("value", value); row.put("threshold", candidate.thresholdValue()); row.put("severity", severity);
+                    row.put("message", candidate.message()); row.put("recommendation", candidate.recommendation()); details.add(row);
+                }
+            }
+        }
+        return Map.of("candidateCount", candidates, "severityCounts", counts, "valuesWithoutRule", unknown,
+                "invalidValues", invalid, "items", details, "detailsLimited", candidates > details.size(),
+                "mode", "READ_ONLY_THRESHOLD_CANDIDATES", "note", "These are detected conditions, not live alarm lifecycle or confirmed resolutions.");
+    }
 
     private static final int BATCH_SIZE = 1000;
     private static final List<String> SEVERITIES = List.of("CRITICAL", "MAJOR", "MINOR", "WARNING");

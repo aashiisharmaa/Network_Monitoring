@@ -157,6 +157,22 @@ public class KpiThresholdRuleService {
         return response;
     }
 
+    public Map<String, Object> evaluateSnapshot(Long fileId, List<Map<String, Object>> records, List<KpiThresholdRule> rules) {
+        return evaluateRecords(fileId, records, rules);
+    }
+
+    public Map<String, Object> evaluateSnapshotValue(String metricName, Double value, String technology, List<KpiThresholdRule> rules) {
+        KpiThresholdRule rule = findBestRule(metricName, technology, rules);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("severity", rule == null ? "UNKNOWN" : calculateSeverity(rule, value));
+        result.put("rule", rule == null ? null : toPayload(rule));
+        return result;
+    }
+
+    public KpiThresholdRule snapshotRule(String metricName, String technology, List<KpiThresholdRule> rules) {
+        return findBestRule(metricName, technology, rules);
+    }
+
     @Transactional
     public Map<String, Object> evaluateFile(Long fileId) {
         if (fileId == null) {
@@ -310,13 +326,15 @@ public class KpiThresholdRuleService {
         int evaluatedValues = 0;
         int matchedRules = 0;
         int valuesWithoutRule = 0;
+        int invalidValues = 0;
 
         for (Map<String, Object> record : safeRecords) {
             String technology = technologyFrom(record);
             Map<String, Object> metrics = objectMap(record.get("metrics"));
             for (Map.Entry<String, Object> metric : metrics.entrySet()) {
                 Double value = parseNumber(metric.getValue());
-                if (value == null) {
+                if (value == null || !Double.isFinite(value)) {
+                    if (metric.getValue() != null) invalidValues++;
                     continue;
                 }
 
@@ -345,6 +363,7 @@ public class KpiThresholdRuleService {
         response.put("evaluatedValues", evaluatedValues);
         response.put("matchedRules", matchedRules);
         response.put("valuesWithoutRule", valuesWithoutRule);
+        response.put("invalidValues", invalidValues);
         response.put("severityCounts", severityCounts);
         response.put("hasBreaches", hasBreaches(severityCounts));
         response.put("metrics", metricSummaries.values().stream().toList());
