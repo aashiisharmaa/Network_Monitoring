@@ -23,6 +23,10 @@ backend-java/*.err.log
 
 # Keep the backend engineering plan; benchmark outputs stay local.
 !BACKEND_ENGINEERING_PLAN.md
+!reports/api-reference/*.md
+!reports/api-reference/*.docx
+!reports/api-reference/*.pdf
+!reports/brd-review/*.md
 reports/performance/
 scripts/__pycache__/
 python service/__pycache__/rca_export.*.pyc
