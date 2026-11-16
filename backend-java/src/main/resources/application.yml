@@ -36,6 +36,11 @@ spring:
         enabled: false
 
 app:
+  alarm-workflow:
+    enabled: ${ALARM_WORKFLOW_ENABLED:false}
+    storage-path: ${ALARM_WORKFLOW_STORAGE:uploads/alarm-workflow}
+    input-root: ${ALARM_INPUT_ROOT:}
+    tick-millis: ${ALARM_WORKFLOW_TICK_MILLIS:3000}
   nightly:
     enabled: ${NIGHTLY_ENABLED:false}
     tick-millis: ${NIGHTLY_TICK_MILLIS:30000}

@@ -117,6 +117,15 @@ def _rule_value(group, key, default):
 def median_skipna(s):
     return s.median(skipna=True)
 
+
+def mean_skipna(s):
+    numeric = pd.to_numeric(s, errors='coerce').replace([np.inf, -np.inf], np.nan)
+    return numeric.mean(skipna=True)
+
+
+def format_period_mean(value):
+    return 'NA' if pd.isna(value) else f"{float(value):.2f}"
+
 def mad_skipna(s):
     med = s.median(skipna=True)
     return float(np.nanmedian(np.abs(s.to_numpy(dtype=float) - med)))
@@ -159,7 +168,12 @@ def analyze_frame(input_df):
         'MV_4G Data Volume_GB': df.groupby('Short name')['MV_4G Data Volume_GB'].transform('median'),
     }
 
-    score_dict, flag_dict, median_dict = {}, {}, {}
+    extra_means = {
+        key: df.groupby('Short name')[key].transform(mean_skipna)
+        for key in extra_medians
+    }
+
+    score_dict, flag_dict, median_dict, mean_dict = {}, {}, {}, {}
     for kpi, meta in KPI_META.items():
         grp = df.groupby('Short name')[kpi]
         med = grp.transform(median_skipna)
@@ -175,6 +189,7 @@ def analyze_frame(input_df):
         score_dict[kpi] = (z + threshold_breach.astype(float) * 1.5) * meta['weight']
         flag_dict[kpi] = (z >= 2) | threshold_breach
         median_dict[kpi] = med
+        mean_dict[kpi] = grp.transform(mean_skipna)
 
     score_df = pd.DataFrame(score_dict)
     flag_df = pd.DataFrame(flag_dict)
@@ -300,10 +315,10 @@ def analyze_frame(input_df):
                 baseline = median_dict[kpi].iloc[row.name]
                 limit = KPI_META[kpi]['threshold']
                 label = FRIENDLY_MAP.get(kpi, kpi)
-                parts.append(f"{label}: {value_fmt(actual)} vs median {value_fmt(baseline)} (limit {value_fmt(limit)})")
+                parts.append(f"{label}: {value_fmt(actual)} vs median {value_fmt(baseline)} (mean {format_period_mean(mean_dict[kpi].iloc[row.name])}) (limit {value_fmt(limit)})")
             elif baseline_source == 'extra':
                 baseline = extra_medians[kpi].iloc[row.name]
-                parts.append(f"{kpi}: {value_fmt(actual)} vs median {value_fmt(baseline)}")
+                parts.append(f"{kpi}: {value_fmt(actual)} vs median {value_fmt(baseline)} (mean {format_period_mean(extra_means[kpi].iloc[row.name])})")
 
         cause = row['Primary Cause']
         if cause == 'Availability / outage':
@@ -433,7 +448,12 @@ def build_output(input_path=INPUT_PATH, output_xlsx=OUTPUT_XLSX):
         'MV_4G Data Volume_GB': df.groupby('Short name')['MV_4G Data Volume_GB'].transform('median'),
     }
 
-    score_dict, flag_dict, median_dict = {}, {}, {}
+    extra_means = {
+        key: df.groupby('Short name')[key].transform(mean_skipna)
+        for key in extra_medians
+    }
+
+    score_dict, flag_dict, median_dict, mean_dict = {}, {}, {}, {}
     for kpi, meta in KPI_META.items():
         grp = df.groupby('Short name')[kpi]
         med = grp.transform(median_skipna)
@@ -449,6 +469,7 @@ def build_output(input_path=INPUT_PATH, output_xlsx=OUTPUT_XLSX):
         score_dict[kpi] = (z + threshold_breach.astype(float) * 1.5) * meta['weight']
         flag_dict[kpi] = (z >= 2) | threshold_breach
         median_dict[kpi] = med
+        mean_dict[kpi] = grp.transform(mean_skipna)
 
     score_df = pd.DataFrame(score_dict)
     flag_df = pd.DataFrame(flag_dict)
@@ -574,10 +595,10 @@ def build_output(input_path=INPUT_PATH, output_xlsx=OUTPUT_XLSX):
                 baseline = median_dict[kpi].iloc[row.name]
                 limit = KPI_META[kpi]['threshold']
                 label = FRIENDLY_MAP.get(kpi, kpi)
-                parts.append(f"{label}: {value_fmt(actual)} vs median {value_fmt(baseline)} (limit {value_fmt(limit)})")
+                parts.append(f"{label}: {value_fmt(actual)} vs median {value_fmt(baseline)} (mean {format_period_mean(mean_dict[kpi].iloc[row.name])}) (limit {value_fmt(limit)})")
             elif baseline_source == 'extra':
                 baseline = extra_medians[kpi].iloc[row.name]
-                parts.append(f"{kpi}: {value_fmt(actual)} vs median {value_fmt(baseline)}")
+                parts.append(f"{kpi}: {value_fmt(actual)} vs median {value_fmt(baseline)} (mean {format_period_mean(extra_means[kpi].iloc[row.name])})")
 
         cause = row['Primary Cause']
         if cause == 'Availability / outage':

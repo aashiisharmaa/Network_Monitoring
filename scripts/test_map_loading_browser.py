@@ -37,6 +37,7 @@ async def scenario(browser,hold_sdk=False,hold_data=False,hold_renderer=False):
     page=await context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
     await page.clock.install()
     await page.goto('http://localhost:5173/map')
+    await page.get_by_role('button',name='Filter',exact=True).click()
     await expect(page.get_by_label('Site Upload File',exact=True)).to_have_value('100')
     await expect(page.get_by_test_id('map-loading-state')).to_be_visible()
     await expect(page.get_by_role('button',name='Download PDF',exact=True)).to_be_disabled()

@@ -1360,3 +1360,212 @@ SMTP/provider settings, deployment hardware and missing-file policy.
 Record problem, measured evidence, chosen approach, alternatives rejected with reason,
 schema/API compatibility, correctness tests, before/after performance, rollback and remaining risk.
 No dependency, infrastructure or performance setting is added just to claim optimization.
+
+## Increment 17 - Portal UI/UX consistency (2026-11-10)
+
+Implemented shared design tokens, neutral surfaces, consistent card corners,
+readable system typography and keyboard/reduced-motion styles. Grouped sidebar
+navigation into Monitoring, Analysis and Administration without widening role
+permissions. Desktop sidebar preference persists; mobile has a dedicated header,
+focus containment, Escape dismissal and no overlapping hamburger.
+
+Dashboard now prioritizes evaluated KPI threshold status, a daily-comparison
+shortcut and selected upload information. Missing samples are excluded from the
+new summary. This summary describes KPI aggregates, not affected-site counts.
+Upload timestamps are labelled as uploads, not data-observation freshness.
+
+KPI export formats are grouped under one keyboard-accessible menu with descriptive
+labels. Comparison dates, dimension filters and column setup use disclosures;
+active chips, existing date application and full export handlers remain available.
+RCA configuration collapses after current-scope results arrive. Recommendations
+remain opt-in; cause cells contain only cause/additional patterns. Native modal
+row details show available evidence separately. Scrollable tables have sticky
+headers/first columns, and RCA supports compact/comfortable rows and severity
+labels. Report portal history uses the shared table treatment.
+
+Map filters start closed, use a narrower desktop panel and a mobile bottom sheet.
+The persistent map, progressive basemap startup and deferred renderer remain.
+Map controls have expansion labels; removed the hardcoded Admin identity.
+Worst Cell layout and action styling align with the shared visual language.
+
+Validation: production build and 23 frontend unit tests passed. Synthetic browser
+checks cover KPI/Worst Cell data flows, export menu Escape/focus, mobile navigation,
+RCA pagination/opt-in recommendations/details/density/mobile results, dashboard
+navigation/role visibility/persisted sidebar, report workflows and Map controls
+plus independently delayed SDK/data/renderer readiness. No customer database
+writes or external email sends. See frontend/UI_UX_GUIDE.md and
+reports/performance/portal-design-checks.json. Screenshots use synthetic fixtures.
+Existing Dashboard hook dependency and deferred chunk-size warnings remain.
+
+## Increment 18 - Visual hierarchy, page search and shared frontend components (2026-11-10)
+
+Dashboard now uses an explicit OverviewPanel and InventoryCard presentation layer:
+navy overview surface, assessed threshold counts/meter, source metadata and daily
+comparison navigation. Every number comes from the existing dashboard data; the
+meter describes assessed KPI aggregates, not site health or predicted changes.
+No decorative synthetic trends were added to the product.
+
+Added role-filtered Find a page search with Ctrl/Cmd+K, arrow keys, Enter, Escape,
+empty-search recovery and a mobile header trigger. It filters the local navigation
+registry without API calls. Sidebar labels, groups, search descriptions and tab
+titles share portalNavigation.js. Route/backend authorization remains separate.
+
+Extracted PageHeading (Dashboard, KPI, Reports, RCA, Worst Cell, Uploads), PageState
+(KPI and report feedback), and Modal (centered search and RCA details wrapper).
+Modal handles unique accessible title IDs, native focus containment, body scroll
+locking and focus restoration. Reorganized styles into globals.css, portal.css
+and workspace.css; new components use explicit class names instead of DOM-depth
+selectors. Added npm run check:ui and usage examples in frontend/UI_UX_GUIDE.md.
+Upload header uses less vertical space and puts the task description in the shared
+heading. Existing processing, mapping, exports and customer delivery actions remain.
+
+Validation: production build, focused UI lint, 23 data correctness tests, production
+Dashboard/search/mobile/role checks, KPI/Worst Cell and RCA browser regressions,
+report portal and Map controls all pass with synthetic intercepted APIs. New checks
+exercise search autofocus, arrows/Enter, empty recovery, mobile Escape/focus,
+role filtering and browser titles. Existing Dashboard/Uploads hook warnings and
+large deferred renderer/PDF chunk warnings remain. No new dependency, customer
+DB write or external email send. Screenshots under reports/performance include
+portal-design-dashboard-desktop.png and portal-quick-navigation-mobile.png.
+
+## Increment 19 - Map workspace controls and visual polish (2026-11-10)
+
+Added a coordinated light map toolbar with readiness status, filtered site/cell
+counts, explicit Filter/Analytics states and Fit sites. The latter fits current
+filtered coordinates and uses a useful fixed zoom for a single site. Dark filter
+panel now has compact statistics and a flex scroll region; mobile bottom sheet
+and toolbar wrapping keep controls within the viewport. Display settings close
+with Escape/outside click and restore trigger focus.
+
+Site legend supports name/ID search, empty recovery, selected-row state and an
+initial 100-row list with Show more. Legend search does not filter map layers.
+Its drag handle also supports keyboard arrow movement. All map-specific styling
+is isolated in map-workspace.css and imported directly from the entry module.
+
+Validation: build and changed-component lint passed. Map browser regression checks
+cover Fit sites, legend search, size controls, exports, source retry, mobile layout
+and cleanup. Independent delayed SDK/data/renderer checks passed. Actual Google
+Maps/deck smoke and production startup tests passed with synthetic site APIs:
+basemap and camera usable before data/renderer, no provider/runtime errors and
+no customer DB writes. Updated preview: reports/performance/map-progressive-ready.png.
+
+## Increment 20 - Route-owned Map styles and refined analysis cards (2026-11-10)
+
+Moved map-workspace.css from the app entry into MapPage.jsx so Map navigation and
+hot updates carry the stylesheet dependency. Restarted the workspace Vite server
+after the reported unstyled toolbar. Production now emits a MapPage CSS chunk;
+computed toolbar/tab/drawer styles are asserted in browser checks.
+
+Refined the site picker as a light searchable floating card with explicit selected
+rows, readable metadata, sector chips and a compact footer. Analytics inventory
+uses reusable MapSummaryCards with real supplied values, icons and restrained
+accents; no synthetic health trends. Filter/Analytics remain mutually exclusive,
+Analytics tabs wrap, and cell layer visibility is distinct from a zero count.
+
+Validation: production build, changed component lint, dev Map interaction/search/
+keyboard/mobile/export/cleanup checks and actual Google Maps production startup
+checks passed. Basemap remains usable before site data and renderer. Fixtures
+intercept application APIs; no customer writes or external messages. Updated
+previews: map-site-picker.png, map-analytics-desktop.png, map-analytics-mobile.png.
+
+## Increment 21 - RCA evidence UI (2026-11-12)
+
+Fixed the field mismatch: the analysis engine returns Evidence, while the old
+details drawer read only KPI Evidence. A conservative formatter supports both
+keys and preserves unrecognized text rather than guessing values. Results now
+have a separate KPI evidence preview column; cause/additional patterns remain
+separate and recommendations stay opt-in.
+
+The responsive evidence drawer shows compact date/severity/score metadata, cause,
+observed/median/limit values and available Top KPI Drivers. Missing evidence and
+limits are explicit; numeric zero and negative values are preserved. EvidencePanel
+owns its stylesheet as a route dependency. No backend scoring, API or export
+schema changes were needed.
+
+Validation: production build, changed component lint and all 25 frontend tests
+passed. Synthetic browser verification covers the engine's Evidence key, observed
+zero, recommendations hidden independently, pagination and mobile drawer layout;
+styles/evidence values are checked against preview and the running dev server.
+Screenshots: reports/performance/rca-evidence-desktop.png and rca-evidence-mobile.png.
+
+## Increment 22 - Per-cell RCA period mean (2026-11-12)
+
+Added arithmetic period mean beside median in evidence, grouped by the same cell
+and selected KPI after the analysis date filter. Missing/nonfinite/nonnumeric
+mean inputs are excluded and zero/negative values retained. Pre/Post calculations
+remain separate. Both analyzer entry paths emit mean text; the existing captured
+workbook export carries it without rerunning analysis. Mean values use two decimal
+places, including values above 100. RCA scoring and cause rules are unchanged.
+
+The frontend evidence parser accepts the new mean segment and legacy evidence.
+The drawer now shows Observed, Period Mean, Median and Target; older persisted
+results show mean as unavailable until RCA is rerun. Preview includes available
+mean. No duplicate Limit column was reintroduced.
+
+Validation: real-engine tests cover cell/date isolation, zero/missing/negative
+inputs, separate Pre/Post means and score/cause invariance. All four mean tests,
+four existing export tests and 27 frontend tests passed, along with production
+build, changed-file lint and dev/production responsive RCA browser checks using
+synthetic APIs. Engine file digests already participate in the backend cache key.
+No customer imports, database writes or outgoing messages were performed.
+
+## Alarm BRD implementation: tenant master data (16 November 2026)
+
+Implemented tenant-owned Zone/Circle configuration, explicit circle aliases and
+source-feed profiles under `/api/v1/alarm-config/companies/{companyId}`. USER reads
+own configuration; ADMIN writes own configuration; SUPER_ADMIN selects an explicit
+company. Blank roles, missing tenancy, blocked accounts and blocked companies fail
+closed in this feature. Existing legacy authorization behaviour is unchanged.
+
+Migration `backend-java/db/migrations/008_alarm_master_data.sql` adds four tables
+with tenant-scoped keys and composite parent foreign keys. Circle creation and
+canonical alias reservation are atomic. Codes/aliases share one namespace per
+tenant. Configuration writes serialize briefly on the company row; versioned updates
+reject stale saves. Feed profiles require explicit OEM/RAT, format/sheet, timezone
+and SNAPSHOT/DELTA semantics and start inactive. They do not activate jobs or delivery.
+
+Verification: `scripts/test_alarm_configuration.ps1 -FullSuite` used a disposable
+localhost-only MySQL 8.0.44 instance. 96 tests passed, 31 environment-dependent checks
+skipped, no failures/errors. All 17 new configuration tests executed, including
+seven migration/repository/transaction/concurrency integration tests. The test server
+was shut down. No application/customer database migration was applied.
+
+API/deployment details: `reports/brd-review/alarm-master-data.md`. Durable ingestion,
+profile-connected preview/import, site mapping, customer catalogue and lifecycle
+remain subsequent increments; current master versions do not constitute a complete
+configuration history. The pre-existing read-only alarm preview is unchanged.
+
+## Alarm BRD snapshot workflow and portal (16 November 2026)
+
+Implemented the bounded native OSS snapshot vertical slice in the existing Java
+application. Migration 009 adds immutable source/run metadata, explicit catalogue
+and object/site mappings, observations, configuration, delivery outbox, escalation
+decisions and operator events. Frozen adapter/configuration values accompany each
+source checksum. Imports support atomic batch writes, slot/content idempotency,
+new snapshot observations, failed-run correction revisions and fenced worker leases.
+
+Reports now include source and national/circle cohort PDF/CSV, explicit source
+timestamps and snapshot comparisons. Customer classification remains separate from
+source severity. Delivery cohorts are pinned; scoped MIME capture, existing SMTP
+transport, finite pre-send retry backoff, uncertain-send handling and once-per-policy
+escalation decisions are implemented. Approved-root folder watches support explicit
+source timestamps/readiness and optional local-time processing windows/deadlines.
+
+Frontend `/alarm-operations` integrates master configuration, catalogue/site entry,
+source activation, import/retry/corrected revision, evidence/history, comparisons,
+reports, automation and outbox history. Shared layout CSS explicitly reserves the
+desktop sidebar width to prevent content overlap when generated utility margins
+are absent. Initial setup guidance yields to data cards after the first import.
+
+Verification: isolated MySQL 8.0.44 full run, 114 tests passed and 31 environment-
+dependent checks skipped (145 discovered, zero failures/errors). The 16 workflow
+MySQL cases and two schedule tests executed. Frontend build/lint and all 27 existing
+frontend tests passed. Synthetic alarm desktop/mobile flows, existing portal design
+and map loading-order browser checks passed. Real customer data was not imported,
+and no external emails were sent. The owned MySQL test servers were shut down.
+
+Deployment, contracts, limits and remaining BRD/acceptance gaps are recorded in
+`reports/brd-review/alarm-workflow-delivery.md`. Live migration/restart is pending.
+Actual customer catalogue/routing values, native delta/clear lifecycle semantics,
+MS2/LR operational inputs, large-export streaming and final customer-template/volume
+UAT remain explicit work; the entire BRD is not marked complete by synthetic tests.

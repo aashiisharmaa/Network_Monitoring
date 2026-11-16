@@ -12,7 +12,7 @@ assets = []
 def mock_api(route):
     request = route.request
     path = request.url.split('localhost:3001/')[-1].split('?')[0]
-    headers = {'Access-Control-Allow-Origin': 'http://localhost:4173', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'}
+    headers = {'Access-Control-Allow-Origin': request.headers.get('origin', 'http://localhost:4173'), 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'}
     if request.method == 'OPTIONS':
         route.fulfill(status=204, headers=headers); return
     if path == 'upload/uploads/history':
@@ -27,7 +27,7 @@ def mock_api(route):
         if state['pending']:
             data = {'jobId': state['posts'], 'status': 'QUEUED', 'message': 'Synthetic pending analysis'}
         else:
-            rows = [{'Short name': 'CURRENT_DATASET_B', 'Date': '2026-11-09', 'Severity': 'Major', 'Anomaly Score': 120-i, 'Primary Cause': 'Synthetic cause', 'Secondary Causes': f'Pattern {i}', 'Vendor Recommendation': 'Synthetic investigation only'} for i in range(120)]
+            rows = [{'Short name': 'CURRENT_DATASET_B', 'Date': '2026-11-09', 'Severity': 'Major', 'Anomaly Score': 120-i, 'Primary Cause': 'Synthetic cause', 'Secondary Causes': f'Pattern {i}', 'Vendor Recommendation': 'Synthetic investigation only', 'Evidence': 'RRC Setup SR (%): 96.02 vs median 99.41 (mean 98.35) (limit 98.00); Packet Loss UL (%): 0.00 vs median 0.10 (mean 0.00) (limit 2.00)', 'Top KPI Drivers': 'RRC Setup SR (%) (7.8), Packet Loss UL (%) (3.5)'} for i in range(120)]
             data = {'jobId': state['posts'], 'status': 'COMPLETED', 'result': {'anomaly_details': rows, 'summary': {'anomaly_count': 120}}}
     elif path.startswith('kpi/recommendation/jobs/'):
         state['polls'] += 1
@@ -66,13 +66,46 @@ with sync_playwright() as p:
     page.get_by_role('button', name='Next rows', exact=True).click()
     expect(table.locator('tbody tr')).to_have_count(20)
     expect(page.get_by_role('button', name='Next rows', exact=True)).to_be_disabled()
+    page.get_by_role('combobox', name='Table density', exact=True).select_option('compact')
+    expect(page.get_by_role('region', name='RCA analysis rows', exact=True)).to_have_attribute('data-density', 'compact')
+    expect(page.get_by_role('columnheader', name='Recommendation and implementation', exact=True)).to_have_count(0)
+    page.get_by_role('button', name='View evidence for CURRENT_DATASET_B', exact=True).first.click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    dialog = page.get_by_role('dialog')
+    expect(dialog.get_by_role('columnheader', name='Observed', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('cell', name='96.02', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('cell', name='0.00', exact=True)).to_have_count(2)
+    expect(dialog.get_by_role('cell', name='98.35', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('columnheader', name='Period Mean', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('heading', name='Top KPI drivers', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('columnheader', name='Target', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('columnheader', name='Limit', exact=True)).to_have_count(0)
+    expect(dialog.get_by_role('cell', name='\u2265 98.00', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('cell', name='\u2264 2.00', exact=True)).to_be_visible()
+    expect(dialog.get_by_role('heading', name='Recommendation', exact=True)).to_have_count(0)
+    expect(dialog.locator('.rca-evidence-heading')).to_have_css('display', 'flex')
+    page.screenshot(path=str(OUTPUT/'rca-evidence-desktop.png'), full_page=False)
+    page.set_viewport_size({'width': 390, 'height': 844})
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Evidence drawer mobile overflow'
+    page.screenshot(path=str(OUTPUT/'rca-evidence-mobile.png'), full_page=False)
+    page.set_viewport_size({'width': 1440, 'height': 1050})
+    page.keyboard.press('Escape')
+    expect(page.get_by_role('dialog')).to_have_count(0)
     page.get_by_role('checkbox', name='Show recommendations', exact=True).check()
     page.get_by_role('columnheader', name='Recommendation and implementation', exact=True).wait_for()
     assert any('/RecommendationResultsPanel-' in url for url in assets)
     page.screenshot(path=str(OUTPUT/'frontend-smooth-desktop.png'), full_page=True)
+    page.set_viewport_size({'width': 390, 'height': 844})
+    page.screenshot(path=str(OUTPUT/'portal-design-rca-results-mobile.png'), full_page=False)
+    if not page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'):
+        print('RCA OVERFLOW', page.evaluate("[...document.querySelectorAll('body *')].map(e=>({tag:e.tagName,cls:String(e.className),right:e.getBoundingClientRect().right,width:e.getBoundingClientRect().width})).filter(e=>e.right>innerWidth+1).sort((a,b)=>b.width-a.width).slice(0,12)"))
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'RCA result mobile overflow'
+    page.screenshot(path=str(OUTPUT/'portal-design-rca-results-mobile.png'), full_page=False)
+    page.set_viewport_size({'width': 1440, 'height': 1050})
     page.wait_for_timeout(600)
     # Settings/results survive a reload, but never appear under a different source.
     page.reload(); page.get_by_role('heading', name='Result Summary').wait_for()
+    page.locator('summary').filter(has_text='Configure analysis').click()
     source = page.locator('select').filter(has=page.locator('option[value="500"]'))
     source.select_option('500')
     expect(page.get_by_role('heading', name='Result Summary')).to_have_count(0)
@@ -89,6 +122,17 @@ with sync_playwright() as p:
     page.locator('a[href="/recommendation"]').click()
     run.wait_for(); expect(page.get_by_role('heading', name='This page could not load')).to_have_count(0)
     (OUTPUT/'frontend-smooth-browser.json').write_text(json.dumps({'checks': ['lazy page assets', 'lazy RCA results', 'persisted initial dataset', 'cancel old polling', '50-row pagination with all returned rows accessible', 'recommendation toggle', 'persist/reload', 'hide stale results', 'mobile overflow', 'failed chunk recovery via sidebar'], 'customerDatabaseWrites': 0, 'unexpectedErrors': errors}, indent=2))
+    # Verify route-owned evidence styles on the running development server too.
+    dev_context = browser.new_context(viewport={'width': 1280, 'height': 900})
+    dev_context.add_init_script("localStorage.setItem('authToken','synthetic-token');localStorage.setItem('user',JSON.stringify({id:1,role:'SUPER_ADMIN',companyId:10}));localStorage.setItem('globalSelectedKpiFileId:v1','501');")
+    dev_context.route('http://localhost:3001/**', mock_api)
+    dev_page = dev_context.new_page()
+    dev_page.goto('http://localhost:5173/recommendation')
+    dev_page.get_by_role('button', name='Run Recommendation', exact=True).click()
+    dev_page.get_by_role('heading', name='Result Summary', exact=True).wait_for()
+    dev_page.get_by_role('button', name='View evidence for CURRENT_DATASET_B', exact=True).first.click()
+    expect(dev_page.get_by_role('dialog').locator('.rca-evidence-heading')).to_have_css('display', 'flex')
+    expect(dev_page.get_by_role('dialog').get_by_role('cell', name='96.02', exact=True)).to_be_visible()
     browser.close()
 
 dist=ROOT/'frontend/dist'; html=(dist/'index.html').read_text()

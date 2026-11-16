@@ -56,6 +56,7 @@ public class BackgroundJobConfig {
         return bounded("nightly-workflow-", 1, 1);
     }
     @Bean("rcaExportExecutor") public ThreadPoolTaskExecutor rcaExportExecutor(){return bounded("rca-export-",1,2);}
+    @Bean("alarmWorkflowExecutor") public ThreadPoolTaskExecutor alarmWorkflowExecutor(){return bounded("oss-alarm-",1,2);}
 
     static ThreadPoolTaskExecutor bounded(String prefix, int workers, int capacity) {
         if (workers < 1 || capacity < 0) {

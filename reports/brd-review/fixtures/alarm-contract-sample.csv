@@ -1,0 +1,6 @@
+Circle Name,EnodeB ID,Name,Alarm Number,Alarm Text,Supplementry Information,Severity,Alarm Time,OEM
+TEST,PLMN/MRBTS-1,SYNTHETIC_NOKIA,100,Example transport alarm,Synthetic fixture only,Major,2026-11-15 09:30:00,Nokia
+TEST,PLMN/ENODEB-2,SYNTHETIC_ERICSSON,,Example equipment alarm,Synthetic fixture only,INDETERMINATE,2026-11-15 09:31:00,E///
+TEST,PLMN/ENODEB-3,SYNTHETIC_ZTE,,Example radio alarm,Synthetic fixture only,,2026-11-15 09:32:00,ZTE
+TEST,PLMN/ENODEB-4,SYNTHETIC_HUAWEI,,Example power alarm,Synthetic fixture only,,2026-11-15 09:33:00,Huawei
+TEST,PLMN/ENODEB-5,SYNTHETIC_SAMSUNG,,Example synchronization alarm,Synthetic fixture only,,2026-11-15 09:34:00,Samsung

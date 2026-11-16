@@ -78,12 +78,27 @@ async def main():
             await page.screenshot(path=str(OUTPUT/'map-debug.png'),full_page=True)
         await page.wait_for_function("window.__mapLayers?.find(l=>l.id==='deck-sites')?.props.data.length===2")
         assert ('100',2) in state['pages']
+        await expect(page.locator('.map-toolbar')).to_have_css('display','flex')
+        fit_count=await page.evaluate('window.__testMap.fits||0')
+        await page.get_by_role('button',name='Fit map to sites',exact=True).click()
+        assert await page.evaluate('window.__testMap.fits||0')==fit_count+1
+        await page.get_by_role('button',name='Expand legend',exact=True).click()
+        site_search=page.get_by_role('textbox',name='Search map sites',exact=True)
+        await site_search.fill('not-a-site')
+        await expect(page.locator('.map-site-legend button[aria-pressed]')).to_have_count(0)
+        await page.get_by_text('No matching sites. Try another name or ID.',exact=True).wait_for()
+        await page.get_by_role('button',name='Clear site search',exact=True).click()
+        await expect(page.locator('.map-site-legend button[aria-pressed]')).to_have_count(2)
+        await page.screenshot(path=str(OUTPUT/'map-site-picker.png'),full_page=False)
+        await page.get_by_role('button',name='Collapse legend',exact=True).click()
+        await page.get_by_role('button',name='Filter',exact=True).click()
         await page.get_by_label('KPI Upload File',exact=True).first.select_option('201')
         await page.get_by_label('Worst Cell KPI Metric',exact=True).first.select_option('throughput')
         await page.get_by_role('switch',name='Predictions OFF',exact=True).click()
         await page.get_by_role('button',name='Run LB',exact=True).first.click()
-        await page.get_by_text('LB prediction completed. No unbalanced/actionable cells found.',exact=False).first.wait_for()
+        await page.locator('#map-analytics-panel').get_by_text('LB prediction completed. No unbalanced/actionable cells found.',exact=False).first.wait_for()
         await page.get_by_role('button',name='Close analytics',exact=True).click()
+        await page.get_by_role('button',name='Filter',exact=True).click()
         await page.wait_for_timeout(3200)
         assert await page.get_by_label('Worst Cell KPI Metric',exact=True).first.input_value()=='throughput'
         assert await page.get_by_text('OLD_METRIC',exact=True).count()==0
@@ -101,14 +116,33 @@ async def main():
         await page.evaluate('window.__testMap.setZoom(15)');await page.wait_for_timeout(250)
         after=await page.evaluate("window.__mapLayers.find(l=>l.id==='deck-cells').props.getPolygon(window.__mapLayers.find(l=>l.id==='deck-cells').props.data[0])")
         assert before!=after,'Zoom listener did not update cell geometry'
-        await page.get_by_role('button',name='Utility',exact=True).click()
+        await page.get_by_role('button',name='Display',exact=True).click()
+        await page.keyboard.press('Escape')
+        await expect(page.get_by_role('button',name='Display',exact=True)).to_be_focused()
+        await page.get_by_role('button',name='Display',exact=True).click()
         site_radius=await page.evaluate("window.__mapLayers.find(l=>l.id==='deck-sites').props.getRadius(window.__mapLayers.find(l=>l.id==='deck-sites').props.data[0])")
         await page.get_by_role('button',name='Increase site size',exact=True).click()
         new_radius=await page.evaluate("window.__mapLayers.find(l=>l.id==='deck-sites').props.getRadius(window.__mapLayers.find(l=>l.id==='deck-sites').props.data[0])")
         assert new_radius>site_radius
         assert await page.get_by_role('slider',name='Cell Radius',exact=True).input_value()=='1'
-        await page.get_by_role('button',name='Utility',exact=True).click()
+        await page.get_by_role('button',name='Display',exact=True).click()
         # PDF uses the real jsPDF exporter against synthetic data.
+        await page.get_by_role('button',name='Analytics',exact=True).click()
+        assert await page.locator('#map-filter-panel').evaluate('element=>element.inert'), 'Filter panel remained open behind analytics'
+        tabs=page.get_by_role('tablist',name='Map analytics sections',exact=True)
+        await expect(tabs).to_have_css('display','grid')
+        await expect(page.locator('#map-analytics-panel')).to_have_css('display','flex')
+        assert await tabs.evaluate('element=>element.scrollWidth<=element.clientWidth'), 'Analytics tabs overflow'
+        await tabs.get_by_role('tab',name='Overview',exact=True).focus()
+        await page.keyboard.press('End')
+        await expect(tabs.get_by_role('tab',name='Alarm Cells',exact=True)).to_have_attribute('aria-selected','true')
+        await page.keyboard.press('Home')
+        await expect(tabs.get_by_role('tab',name='Overview',exact=True)).to_have_attribute('aria-selected','true')
+        await expect(page.locator('.map-summary-grid')).to_have_css('display','grid')
+        await page.screenshot(path=str(OUTPUT/'map-analytics-desktop.png'),full_page=False)
+        await page.keyboard.press('Escape')
+        await expect(page.get_by_role('button',name='Analytics',exact=True)).to_be_focused()
+        await page.get_by_role('button',name='Filter',exact=True).click()
         async with page.expect_download() as download:
             await page.get_by_role('button',name='Download PDF',exact=True).click()
         artifact=await download.value;target=OUTPUT/'map-synthetic-export.pdf';await artifact.save_as(str(target))
@@ -122,17 +156,23 @@ async def main():
         await page.set_viewport_size({'width':390,'height':844})
         assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Mobile horizontal overflow'
         assert await page.get_by_label('Site Upload File',exact=True).evaluate('(element)=>element.getBoundingClientRect().right<=innerWidth'),'Mobile source controls are clipped'
-        await page.get_by_role('button',name='Utility',exact=True).click()
+        await page.get_by_role('button',name='Display',exact=True).click()
         await page.screenshot(path=str(OUTPUT/'map-utility-mobile.png'),full_page=True)
         assert await page.get_by_role('slider',name='Site Size',exact=True).evaluate('(element)=>element.getBoundingClientRect().left>=0 && element.getBoundingClientRect().right<=innerWidth'),'Mobile utility controls are clipped'
-        await page.get_by_role('button',name='Utility',exact=True).click()
+        await page.get_by_role('button',name='Display',exact=True).click()
         await page.screenshot(path=str(OUTPUT/'map-fixed-mobile.png'),full_page=True)
+        await page.get_by_role('button',name='Analytics',exact=True).click()
+        tabs=page.get_by_role('tablist',name='Map analytics sections',exact=True)
+        assert await tabs.evaluate('element=>element.scrollWidth<=element.clientWidth'), 'Mobile analytics tabs overflow'
+        assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), 'Mobile analytics overflow'
+        await page.screenshot(path=str(OUTPUT/'map-analytics-mobile.png'),full_page=False)
+        await page.get_by_role('button',name='Close analytics',exact=True).click()
         await page.set_viewport_size({'width':1440,'height':1000})
         await page.locator('a[href="/recommendation"]').click()
         await page.wait_for_function('window.__overlayFinalized===true')
         assert await page.evaluate('window.__testMap.listenerCount()')==0
         assert not errors,errors
-        (OUTPUT/'map-browser-checks.json').write_text(json.dumps({'checks':['all site pages','coordinate validation','obsolete metric responses ignored','newer manual LB result wins over pending automatic response','overlay toggle preserves sites','single handover renderer','zoom geometry update','independent size controls','real PDF exporter','source retry','mobile overflow','overlay and listener cleanup'],'sdk':'instrumented Google Maps/deck adapters; external basemap not exercised','pageErrors':errors,'customerDatabaseWrites':0},indent=2))
+        (OUTPUT/'map-browser-checks.json').write_text(json.dumps({'checks':['all site pages','fit filtered sites','legend search and empty recovery','display Escape and focus restoration','coordinate validation','obsolete metric responses ignored','newer manual LB result wins over pending automatic response','overlay toggle preserves sites','single handover renderer','zoom geometry update','independent size controls','real PDF exporter','source retry','mobile overflow','overlay and listener cleanup'],'sdk':'instrumented Google Maps/deck adapters; external basemap not exercised','pageErrors':errors,'customerDatabaseWrites':0},indent=2))
         await browser.close()
     print('Map browser checks passed')
 
