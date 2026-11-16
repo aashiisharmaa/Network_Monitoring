@@ -1,0 +1,16 @@
+{
+  "controllers": 28,
+  "logicalOperations": 186,
+  "expandedMethodPathCombinations": 304,
+  "jsonBodyOperations": 41,
+  "postmanRequests": 186,
+  "pdfPages": 109,
+  "liveOpenApiListedCanonicalOperations": 147,
+  "sourceOnlyCanonicalOperations": 39,
+  "runtimeUnverifiedOperations": 0,
+  "allOperationIdsPresentInDocxAndPdf": true,
+  "jsonArtifactsParse": true,
+  "businessRequestsExecuted": false,
+  "credentialFilesRead": false,
+  "generationDate": "2026-11-16"
+}

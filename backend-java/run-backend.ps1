@@ -153,7 +153,8 @@ if (-not (Test-Path $maven)) {
     throw "Maven executable not found: $maven"
 }
 
-& $maven -q "-Dmaven.repo.local=.m2" -DskipTests package
+# Package moves leave stale class files in incremental builds; start from clean output.
+& $maven -q "-Dmaven.repo.local=.m2" -DskipTests clean package
 if ($LASTEXITCODE -ne 0) {
     throw "Backend package failed with exit code $LASTEXITCODE"
 }

@@ -2,19 +2,19 @@ package com.network.monitoring.alarm.ingestion;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import org.apache.poi.ss.usermodel.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.zip.ZipInputStream;
 import java.util.concurrent.Semaphore;
+import java.util.zip.ZipInputStream;
+import org.apache.poi.ss.usermodel.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import static com.network.monitoring.alarm.dto.AlarmImport.*;
 
 /** Read-only contract validation. Does not classify, reconcile, or persist alarms. */
 @Service
@@ -28,17 +28,6 @@ public class AlarmImportPreviewService {
     public static final class PreviewBusyException extends RuntimeException {
         public PreviewBusyException() { super("Alarm preview is busy. Retry after the current preview finishes."); }
     }
-
-    public record AlarmRow(int sourceRow, String oem, String technology, String circle,
-                           String resource, String name, String alarmCode, String alarmText,
-                           String sourceSeverity, String customerClassification,
-                           Instant raisedAt, String supplementaryInformation) {}
-    public record RowIssue(int sourceRow, String field, String message) {}
-    public record Preview(String contractVersion, String sheet, String sourceTimezone,
-                          int rowsRead, int validRows, int rejectedRows, int missingSourceSeverity,
-                          int missingAlarmCode, List<AlarmRow> sample, List<RowIssue> issues,
-                          boolean issuesTruncated, List<String> warnings) {}
-    public record Parsed(Preview validation, List<AlarmRow> rows) {}
 
     public Preview preview(MultipartFile file, String sheetName, String defaultOem,
                            String technology, String sourceTimezone) {

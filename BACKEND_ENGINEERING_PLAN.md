@@ -1,5 +1,17 @@
 # Backend optimization and nightly reporting plan
 
+Customer alarm architecture/status update (16 November 2026): see
+[backend structure and BRD status](reports/brd-review/backend-structure-and-status.md).
+The alarm feature now owns its API/DTO/service/repository/ingestion/storage/security/
+scheduling packages. This does not mark native OEM lifecycle, template parity,
+customer configuration or production UAT complete.
+
+Backend-wide module migration: 120 legacy classes and 37 legacy tests now live under
+identity/licensing/ingestion/KPI/spatial/RCA/reporting/nightly ownership, with platform
+and shared support. See [module structure and dependency rules](reports/brd-review/backend-module-structure.md).
+Remaining service decomposition/SQL extraction is recorded there separately from
+the completed package migration.
+
 Status: foundation work started on 2026-11-05. Dashboard optimization, RCA cache
 correctness, background-worker limits/restart recovery and the manual daily-ingestion
 foundation are implemented locally. Versioned daily KPI snapshots and calendar-day /

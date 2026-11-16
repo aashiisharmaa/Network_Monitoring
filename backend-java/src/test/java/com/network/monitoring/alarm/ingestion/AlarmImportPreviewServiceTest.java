@@ -1,16 +1,15 @@
 package com.network.monitoring.alarm.ingestion;
 
+import com.network.monitoring.alarm.dto.AlarmImport;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.concurrent.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
-
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.concurrent.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class AlarmImportPreviewServiceTest {
@@ -146,7 +145,7 @@ class AlarmImportPreviewServiceTest {
         }
     }
 
-    private AlarmImportPreviewService.Preview preview(String csv, String oem, String rat, String zone) {
+    private AlarmImport.Preview preview(String csv, String oem, String rat, String zone) {
         return service.preview(new MockMultipartFile("file", "alarms.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8)),
                 null, oem, rat, zone);
     }

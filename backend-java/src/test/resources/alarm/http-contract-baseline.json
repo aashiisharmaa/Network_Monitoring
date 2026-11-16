@@ -1,0 +1,3822 @@
+[
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/zones"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "afterId",
+        "location": "query",
+        "required": false,
+        "default": "0",
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "100",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/zones"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "ZoneCreate"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/zones/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "ZoneUpdate"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circles"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "afterId",
+        "location": "query",
+        "required": false,
+        "default": "0",
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "100",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circles"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "CircleCreate"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circles/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "CircleUpdate"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circle-aliases"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "afterId",
+        "location": "query",
+        "required": false,
+        "default": "0",
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "100",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circle-aliases"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "AliasCreate"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circle-aliases/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/circle-resolution"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "value",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/feeds"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "afterId",
+        "location": "query",
+        "required": false,
+        "default": "0",
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "100",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/feeds/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/feeds"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "FeedCreate"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/alarm-config/companies/{companyId}/feeds/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "FeedUpdate"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-ingestion/preview"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "sheet",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "oem",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "technology",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "sourceTimezone",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "feedId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "snapshotAt",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "50",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "afterId",
+        "location": "query",
+        "required": false,
+        "default": "0",
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "100",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/dashboard"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "asOf",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/catalogue"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/catalogue"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "rule",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Catalog"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/catalogue/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "site",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Site"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "siteId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "format",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "circleId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format}"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "format",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "asOf",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "circleId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "key",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "key",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,String>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/automation"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/automation"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Settings"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/status"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/deliveries"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,String>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/auth/register",
+      "/auth/register"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/auth/login",
+      "/auth/login"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/auth/logout",
+      "/auth/logout"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/reports"
+    ],
+    "parameters": [
+      {
+        "name": "snapshotId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "options",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Options"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/reports"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "20",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/reports/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/reports/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/reports/{id}/download/{format}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "format",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/companies",
+      "/companies"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/companies/{id}",
+      "/companies/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/companies",
+      "/companies"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/companies/{id}",
+      "/companies/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "paths": [
+      "/api/v1/companies/{id}/block",
+      "/companies/{id}/block"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/daily-analysis/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "profile",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Profile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/daily-analysis/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/daily-analysis/snapshots"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "date",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/daily-analysis/snapshots"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "20",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/daily-analysis/snapshots/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/daily-analysis/snapshots/{id}/comparisons"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": "1",
+        "type": "int"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "50",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/daily-analysis/snapshots/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats",
+      "/api/v1/dashboard/summary",
+      "/dashboard/stats",
+      "/dashboard/summary"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "companyId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/cells",
+      "/dashboard/stats/cells"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/sites",
+      "/dashboard/stats/sites"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/bands",
+      "/dashboard/stats/bands"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/tech",
+      "/dashboard/stats/tech"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/sectors",
+      "/dashboard/stats/sectors"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/groups",
+      "/dashboard/stats/groups"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/stats/detailed",
+      "/dashboard/stats/detailed"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/dashboard/performance",
+      "/api/v1/dashboard/stats/performance",
+      "/dashboard/performance",
+      "/dashboard/stats/performance"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "companyId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/health",
+      "/health"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/alarms/rules",
+      "/api/v1/alarms/rules"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/alarms/rules",
+      "/api/v1/alarms/rules"
+    ],
+    "parameters": [
+      {
+        "name": "request",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/alarms/rules/{id}",
+      "/api/v1/alarms/rules/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "request",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/alarms/rules/{id}",
+      "/api/v1/alarms/rules/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/alarms/generate",
+      "/api/v1/alarms/generate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/alarms/summary",
+      "/api/v1/alarms/summary"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/alarms",
+      "/api/v1/alarms"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "severity",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "status",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/alarms/{id}/acknowledge",
+      "/api/v1/alarms/{id}/acknowledge"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "request",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/alarms/{id}/resolve",
+      "/api/v1/alarms/{id}/resolve"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "request",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/available-metrics",
+      "/kpi/available-metrics"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/all",
+      "/kpi/all"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/ul-prb-utilization",
+      "/kpi/ul-prb-utilization"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dl-prb-utilization",
+      "/kpi/dl-prb-utilization"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/data-volume",
+      "/kpi/data-volume"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/ul-throughput",
+      "/kpi/ul-throughput"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dl-throughput",
+      "/kpi/dl-throughput"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/erab-drop-rate",
+      "/kpi/erab-drop-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/erab-success-rate",
+      "/kpi/erab-success-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/rrc-success-rate",
+      "/kpi/rrc-success-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/mean-rrc-users",
+      "/kpi/mean-rrc-users"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/max-rrc-users",
+      "/kpi/max-rrc-users"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/erab-setup-rate",
+      "/kpi/erab-setup-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/rrc-drop-rate",
+      "/kpi/rrc-drop-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/volte-cssr",
+      "/kpi/volte-cssr"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/volte-dcr",
+      "/kpi/volte-dcr"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/inter-freq-hosr",
+      "/kpi/inter-freq-hosr"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/intra-freq-hosr",
+      "/kpi/intra-freq-hosr"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/csfb-success-rate",
+      "/kpi/csfb-success-rate"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dynamic/metrics",
+      "/kpi/dynamic/metrics"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dynamic/summary",
+      "/kpi/dynamic/summary"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dynamic/columns",
+      "/kpi/dynamic/columns"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dynamic/data",
+      "/kpi/dynamic/data"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "metricKey",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/dynamic/batch-data",
+      "/kpi/dynamic/batch-data"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/dynamic/selection",
+      "/kpi/dynamic/selection"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/dynamic/bad-days",
+      "/kpi/dynamic/bad-days"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/dynamic/export",
+      "/kpi/dynamic/export"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/ingestion/kpi"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "fileId",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "identityFields",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "sourceName",
+        "location": "form",
+        "required": false,
+        "default": "common",
+        "type": "String"
+      },
+      {
+        "name": "columnMapping",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/ingestion/runs"
+    ],
+    "parameters": [
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "20",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/ingestion/runs/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/ingestion/runs/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/threshold-rules",
+      "/threshold-rules"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/threshold-rules",
+      "/threshold-rules"
+    ],
+    "parameters": [
+      {
+        "name": "request",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "KpiThresholdRuleRequest"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/threshold-rules/{id}",
+      "/threshold-rules/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "request",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "KpiThresholdRuleRequest"
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/api/v1/threshold-rules/{id}",
+      "/threshold-rules/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/threshold-rules/evaluate",
+      "/threshold-rules/evaluate"
+    ],
+    "parameters": [
+      {
+        "name": "metricName",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "value",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Double"
+      },
+      {
+        "name": "technology",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/threshold-rules/evaluate-file",
+      "/threshold-rules/evaluate-file"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/threshold-rules/ensure-file",
+      "/threshold-rules/ensure-file"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/threshold-rules/results",
+      "/threshold-rules/results"
+    ],
+    "parameters": [
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/threshold-rules/results/{fileId}",
+      "/threshold-rules/results/{fileId}"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/validation-report/{fileId}",
+      "/kpi/validation-report/{fileId}"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/licenses",
+      "/licenses"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/licenses/{id}",
+      "/licenses/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/licenses",
+      "/licenses"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "paths": [
+      "/api/v1/licenses/{id}/renew",
+      "/licenses/{id}/renew"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "paths": [
+      "/api/v1/licenses/{id}/block",
+      "/licenses/{id}/block"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/licenses/{id}/download",
+      "/licenses/{id}/download"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/local-license/upload",
+      "/local-license/upload"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/local-license/status",
+      "/local-license/status"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/local-license/device-id",
+      "/local-license/device-id"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/nightly/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/nightly/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "profile",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "NightlyProfile"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/nightly/runs"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "date",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "allowLate",
+        "location": "query",
+        "required": false,
+        "default": "false",
+        "type": "boolean"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/nightly/runs"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "20",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/nightly/runs/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/nightly/runs/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "rediscoverInput",
+        "location": "query",
+        "required": false,
+        "default": "false",
+        "type": "boolean"
+      },
+      {
+        "name": "refreshMailProfile",
+        "location": "query",
+        "required": false,
+        "default": "false",
+        "type": "boolean"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/pci/analysis",
+      "/pci/analysis"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "pci",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Integer"
+      },
+      {
+        "name": "sourceSiteId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/recommendation/jobs",
+      "/kpi/recommendation/jobs"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/recommendation/jobs/{jobId}",
+      "/kpi/recommendation/jobs/{jobId}"
+    ],
+    "parameters": [
+      {
+        "name": "jobId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/recommendation/run",
+      "/kpi/recommendation/run"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/recommendation/export",
+      "/kpi/recommendation/export"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/recommendation/presets",
+      "/kpi/recommendation/presets"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/kpi/recommendation/presets",
+      "/kpi/recommendation/presets"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/recommendation/presets/{name}",
+      "/kpi/recommendation/presets/{name}"
+    ],
+    "parameters": [
+      {
+        "name": "name",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/rca-exports"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": false,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/rca-exports/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/rca-exports/{id}/download"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/report-datasets"
+    ],
+    "parameters": [
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": "1",
+        "type": "int"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "50",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "paths": [
+      "/api/v1/report-mail/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "profile",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "ReportMailProfile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/report-mail/profile"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/report-mail/deliveries"
+    ],
+    "parameters": [
+      {
+        "name": "reportId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "expectedProfileHash",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/report-mail/deliveries"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "20",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/report-mail/deliveries/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/report-mail/deliveries/{id}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/report-mail/deliveries/{id}/cancel"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/report-mail/deliveries/{id}/reconcile"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "resolution",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Resolution"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/report-mail/deliveries/{id}/message.eml"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/setting/getsettings",
+      "/setting/getsettings"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/setting/updateSetting",
+      "/setting/updateSetting"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/setting/thresholds/export",
+      "/setting/thresholds/export"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/setting/thresholds/import",
+      "/setting/thresholds/import"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/sites/summary",
+      "/sites/summary"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/sites/worst",
+      "/sites/worst"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/sites/details",
+      "/sites/details"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "site",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/sites/intelligence",
+      "/api/v1/sites/site-intelligence",
+      "/sites/intelligence",
+      "/sites/site-intelligence"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "siteFileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/site-prediction/recommendations",
+      "/site-prediction/recommendations"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "site",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/site-prediction/summary",
+      "/site-prediction/summary"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/site-prediction/lb-wcf",
+      "/site-prediction/lb-wcf"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "taFile",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "method",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "quantile",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Double"
+      },
+      {
+        "name": "mlMode",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/upload",
+      "/upload/upload"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "remarks",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "uploadedBy",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "appendOption",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "fileId",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "targetFileId",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "columnMapping",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "cleanKpiData",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Boolean"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/kpi",
+      "/upload/kpi"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "remarks",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "uploadedBy",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "appendOption",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "fileId",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "targetFileId",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "columnMapping",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "cleanKpiData",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "Boolean"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/jobs/{jobId}",
+      "/upload/jobs/{jobId}"
+    ],
+    "parameters": [
+      {
+        "name": "jobId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/jobs",
+      "/upload/jobs"
+    ],
+    "parameters": [
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/jobs/{jobId}/retry",
+      "/upload/jobs/{jobId}/retry"
+    ],
+    "parameters": [
+      {
+        "name": "jobId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/kpi/preview",
+      "/upload/kpi/preview"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/site",
+      "/upload/site"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "remarks",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "uploadedBy",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/upload/alarm",
+      "/upload/alarm"
+    ],
+    "parameters": [
+      {
+        "name": "file",
+        "location": "form",
+        "required": true,
+        "default": null,
+        "type": "MultipartFile"
+      },
+      {
+        "name": "remarks",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "uploadedBy",
+        "location": "form",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/uploads",
+      "/upload/uploads"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "DELETE",
+    "paths": [
+      "/api/v1/upload/uploads/{id}",
+      "/upload/uploads/{id}"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/network-data",
+      "/upload/network-data"
+    ],
+    "parameters": [
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": "1",
+        "type": "int"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "50",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/uploads/history",
+      "/upload/uploads/history"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/history",
+      "/upload/history"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/site-data",
+      "/upload/site-data"
+    ],
+    "parameters": [
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": "1",
+        "type": "int"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "10000",
+        "type": "int"
+      },
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/upload/alarm-data",
+      "/upload/alarm-data"
+    ],
+    "parameters": [
+      {
+        "name": "page",
+        "location": "query",
+        "required": false,
+        "default": "1",
+        "type": "int"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "10",
+        "type": "int"
+      },
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "circle",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "severity",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "search",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "startDate",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "endDate",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/users",
+      "/users"
+    ],
+    "parameters": []
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/users",
+      "/users"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Map<String,Object>"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/worst-cells",
+      "/kpi/worst-cells"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "metric",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/worst-sites",
+      "/kpi/worst-sites"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "metric",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": null,
+        "type": "Integer"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/kpi/worst-cells/detail",
+      "/kpi/worst-cells/detail"
+    ],
+    "parameters": [
+      {
+        "name": "fileId",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "Long"
+      },
+      {
+        "name": "cellName",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      },
+      {
+        "name": "metric",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  }
+]

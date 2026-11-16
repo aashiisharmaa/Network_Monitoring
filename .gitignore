@@ -26,6 +26,9 @@ backend-java/*.err.log
 !reports/api-reference/*.md
 !reports/api-reference/*.docx
 !reports/api-reference/*.pdf
+!reports/api-reference/structured-backend/*.md
+!reports/api-reference/structured-backend/*.docx
+!reports/api-reference/structured-backend/*.pdf
 !reports/brd-review/*.md
 reports/performance/
 scripts/__pycache__/

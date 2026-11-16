@@ -1,6 +1,7 @@
 param(
     [string]$MySqlBin = 'C:\Program Files\MySQL\MySQL Server 8.0\bin',
-    [switch]$FullSuite
+    [switch]$FullSuite,
+    [string]$BuildDirectory = 'target'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,8 +32,13 @@ function Test-OwnedAlarmListener([int]$CandidateId) {
 }
 Push-Location $backendPath
 try {
-    & $serverPath '--no-defaults' '--initialize-insecure' "--datadir=$testDataPath" '--console'
-    if ($LASTEXITCODE -ne 0) { throw 'Disposable MySQL initialization failed.' }
+    # MySQL writes ordinary initialization notices to stderr. Start-Process keeps
+    # PowerShell 5's NativeCommandError handling from treating these as a failure.
+    $initializer = Start-Process -FilePath $serverPath -ArgumentList @(
+        '--no-defaults', '--initialize-insecure', ('--datadir="' + $testDataPath + '"'), '--console'
+    ) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput ($testDataPath + '.initialize.out.log') `
+        -RedirectStandardError ($testDataPath + '.initialize.err.log')
+    if ($initializer.ExitCode -ne 0) { throw 'Disposable MySQL initialization failed; inspect retained initialization logs.' }
     $serverProcess = Start-Process -FilePath $serverPath -ArgumentList @(
         '--no-defaults', ('--datadir="' + $testDataPath + '"'), '--port=13316', '--bind-address=127.0.0.1',
         '--mysqlx=OFF', '--innodb-buffer-pool-size=32M', '--console'
@@ -55,9 +61,14 @@ try {
     $env:ALARM_CONFIG_TEST_DB_URL = 'jdbc:mysql://127.0.0.1:13316/alarm_config_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
     # FullSuite must not inherit a separate database target for existing integration tests.
     Remove-Item Env:KPI_TEST_DB_URL -ErrorAction SilentlyContinue
-    if ($FullSuite) { & $mavenPath 'test' '-q' }
-    else { & $mavenPath '-Dtest=AlarmTenantAccessTest,AlarmConfigurationServiceTest,AlarmConfigurationControllerTest,AlarmConfigurationMysqlTest,AlarmWorkflowMysqlTest' 'test' '-q' }
-    $testExitCode = $LASTEXITCODE
+    $buildArgument = '-Dbackend.build.directory=' + $BuildDirectory
+    # On PowerShell 5, JVM warnings on stderr must not bypass Maven's exit code.
+    $ErrorActionPreference = 'Continue'
+    try {
+        if ($FullSuite) { & $mavenPath $buildArgument 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() } }
+        else { & $mavenPath $buildArgument '-Dtest=AlarmTenantAccessTest,AlarmConfigurationServiceTest,AlarmConfigurationControllerTest,AlarmConfigurationMysqlTest,AlarmWorkflowMysqlTest' 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() } }
+        $testExitCode = $LASTEXITCODE
+    } finally { $ErrorActionPreference = 'Stop' }
 } finally {
     $env:ALARM_CONFIG_TEST_DB_URL = $previousAlarmUrl
     $env:KPI_TEST_DB_URL = $previousKpiUrl

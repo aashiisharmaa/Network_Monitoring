@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTROLLERS = ROOT / "backend-java/src/main/java/com/network/monitoring/controller"
+CONTROLLERS = ROOT / "backend-java/src/main/java/com/network/monitoring"
 OUT = ROOT / "reports/api-reference"
 
 
@@ -112,7 +112,7 @@ def parameter(raw):
 
 def inventory():
     endpoints, source_hashes = [], {}
-    for file in sorted(CONTROLLERS.glob("*Controller.java")):
+    for file in sorted(CONTROLLERS.rglob("*Controller.java")):
         original = file.read_text(encoding="utf-8-sig")
         source = without_comments(original)
         class_at = source.index("public class")
@@ -151,7 +151,10 @@ def inventory():
 if __name__ == "__main__":
     cli=argparse.ArgumentParser(description=__doc__)
     cli.add_argument('--inventory-only', action='store_true')
+    cli.add_argument('--output', type=Path, help='Separate artifact directory, e.g. when the existing handbook is open in Word')
     args=cli.parse_args()
+    if args.output:
+        OUT = args.output.resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     entries, hashes = inventory()
     if not args.inventory_only:

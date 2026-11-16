@@ -163,16 +163,16 @@ def call_url(entry, postman=False):
 
 def records(root):
     from build_backend_api_documentation import annotations, balanced, split_top, parameter, without_comments
-    locations = ["alarm/config/AlarmConfiguration.java", "alarm/ingestion/AlarmImportPreviewService.java", "alarm/workflow/AlarmWorkflowService.java", "alarm/workflow/AlarmAutomationService.java", "service/DailyKpiCalculator.java", "service/CommonReportModules.java", "service/ReportMailProfile.java", "service/NightlyProfile.java", "controller/ReportMailController.java"]
+    locations = ["alarm/dto/AlarmConfiguration.java", "alarm/dto/AlarmImport.java", "alarm/dto/AlarmModels.java", "alarm/dto/AlarmAutomation.java", "reporting/service/DailyKpiCalculator.java", "reporting/service/CommonReportModules.java", "reporting/mail/service/ReportMailProfile.java", "nightly/service/NightlyProfile.java", "reporting/mail/api/ReportMailController.java"]
     result = []
     for path in locations:
         file = root / "backend-java/src/main/java/com/network/monitoring" / path
         text = without_comments(file.read_text(encoding="utf-8-sig"))
         for match in re.finditer(r"public record (\w+)\s*\(", text):
-            exposed = {"alarm/ingestion/AlarmImportPreviewService.java": {"AlarmRow", "Preview"},
-                "alarm/workflow/AlarmWorkflowService.java": {"Catalog", "Site", "Outcome"},
-                "alarm/workflow/AlarmAutomationService.java": {"Route", "Policy", "Watch", "Settings"},
-                "service/DailyKpiCalculator.java": {"Metric", "Profile"}}
+            exposed = {"alarm/dto/AlarmImport.java": {"AlarmRow", "Preview"},
+                "alarm/dto/AlarmModels.java": {"Catalog", "Site", "Outcome"},
+                "alarm/dto/AlarmAutomation.java": {"Route", "Policy", "Watch", "Settings"},
+                "reporting/service/DailyKpiCalculator.java": {"Metric", "Profile"}}
             if path in exposed and match[1] not in exposed[path]: continue
             end = balanced(text, match.end() - 1)
             fields = [parameter(raw) for raw in split_top(text[match.end():end])]
