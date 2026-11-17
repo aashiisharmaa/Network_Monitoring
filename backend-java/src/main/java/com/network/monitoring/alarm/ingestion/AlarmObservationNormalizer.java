@@ -43,7 +43,7 @@ public class AlarmObservationNormalizer {
                 var observation = new Observation(key, scope, site, row, rules.isEmpty() ? null : rules.get(0));
                 var previous = observations.putIfAbsent(key, observation);
                 if (previous != null && (!previous.row().alarmText().equals(row.alarmText()) || !previous.row().sourceSeverity().equals(row.sourceSeverity())
-                        || !previous.row().name().equals(row.name()) || !previous.row().supplementaryInformation().equals(row.supplementaryInformation()) || previous.scope().circleId() != scope.circleId()))
+                        || !previous.row().name().equals(row.name()) || !previous.row().supplementaryInformation().equals(row.supplementaryInformation()) || !previous.row().sourceAnnotations().equals(row.sourceAnnotations()) || previous.scope().circleId() != scope.circleId()))
                     throw invalid("Row " + row.sourceRow() + ": conflicting records share the same provisional alarm identity.");
             }
         return observations;

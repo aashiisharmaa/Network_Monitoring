@@ -16,6 +16,28 @@ class AlarmImportPreviewServiceTest {
     private final AlarmImportPreviewService service = new AlarmImportPreviewService();
     private static final String HEADER = "Circle Name,EnodeB ID,Name,Alarm Number,Alarm Text,Supplementry Information,Severity,Alarm Time,OEM\n";
 
+    @Test void preservesCustomerOperationalNotesAsEvidenceWithoutInferringClassification() {
+        var result=preview(HEADER.stripTrailing()+",Remarks,L2 Remarks,Circle Update\n"
+                +"MU,node,,100,Alarm,extra,Major,2026-11-01 09:30:00,Nokia,Remote Doable-NOC,Resolved,Power issue\n",
+                null,"4G","UTC");
+        assertEquals(1,result.validRows());
+        var row=result.sample().get(0);
+        assertEquals(java.util.Map.of("remarks","Remote Doable-NOC","l2Remarks","Resolved","circleUpdate","Power issue"),row.sourceAnnotations());
+        assertEquals("UNMAPPED",row.customerClassification());assertEquals("Major",row.sourceSeverity());
+    }
+    @Test void v1ReplayIgnoresPreviouslyUnmappedAnnotationFormulasButV2RequiresSourceValues() throws Exception {
+        try(var book=new XSSFWorkbook();var out=new ByteArrayOutputStream()) {
+            var sheet=book.createSheet("Alarm Dump");var header=sheet.createRow(0);var row=sheet.createRow(1);
+            String[] names={"Circle","Resource","Alarm Text","Alarm Time","L2 Remarks"};
+            String[] values={"MU","node","Alarm","2026-11-01 09:30:00",""};
+            for(int i=0;i<names.length;i++){header.createCell(i).setCellValue(names[i]);row.createCell(i).setCellValue(values[i]);}
+            row.getCell(4).setCellFormula("NOW()");book.write(out);
+            var file=new MockMultipartFile("file","source.xlsx","application/octet-stream",out.toByteArray());
+            assertTrue(service.parse(file,"Alarm Dump","NOKIA","4G","UTC",false).rows().get(0).sourceAnnotations().isEmpty());
+            assertThrows(IllegalArgumentException.class,()->service.parse(file,"Alarm Dump","NOKIA","4G","UTC"));
+        }
+    }
+
     @Test void supportsAllFiveOemsWithoutInventingClassificationOrCodes() {
         String csv = HEADER;
         for (String oem : new String[]{"Nokia", "E///", "ZTE", "Huawei", "Samsung"})

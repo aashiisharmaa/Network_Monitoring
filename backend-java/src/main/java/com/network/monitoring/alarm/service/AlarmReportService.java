@@ -2,6 +2,9 @@ package com.network.monitoring.alarm.service;
 
 import com.network.monitoring.alarm.exception.AlarmConfigurationException;
 import com.network.monitoring.alarm.security.AlarmTenantAccess;
+import com.network.monitoring.alarm.dto.AlarmReport;
+import com.network.monitoring.alarm.reporting.AlarmWorkbookRenderer;
+import com.network.monitoring.alarm.repository.AlarmReportRepository;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
@@ -10,7 +13,6 @@ import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import static com.network.monitoring.alarm.dto.AlarmModels.*;
 import static com.network.monitoring.alarm.support.AlarmValues.*;
@@ -19,31 +21,39 @@ import static com.network.monitoring.alarm.support.AlarmValues.*;
 public class AlarmReportService {
     private final AlarmWorkflowService workflow;
     private final AlarmTenantAccess access;
-    private final JdbcTemplate jdbc;
+    private final AlarmReportRepository repository;
     private final java.util.concurrent.Semaphore downloadSlot=new java.util.concurrent.Semaphore(1);
-    public AlarmReportService(AlarmWorkflowService workflow, AlarmTenantAccess access, JdbcTemplate jdbc) {
-        this.workflow=workflow; this.access=access; this.jdbc=jdbc;
+    public AlarmReportService(AlarmWorkflowService workflow, AlarmTenantAccess access, AlarmReportRepository repository) {
+        this.workflow=workflow; this.access=access; this.repository=repository;
     }
     public byte[] download(long company,long run,Long circle,String format) {
         access.require(company,false);
         circle(company,circle);
-        return guarded(()->format.equals("pdf") ? pdf(company,run,circle,null) : csv(company,run,circle,null));
+        return guarded(()->switch(format) {
+            case "pdf" -> pdf(company,run,circle,null);
+            case "xlsx" -> workbook(company,List.of(run),circle);
+            case "csv" -> csv(company,run,circle,null);
+            default -> throw AlarmConfigurationException.invalid("Report format must be csv, pdf or xlsx.");
+        });
     }
     List<Map<String,Object>> rows(long company,long run,Long circle,Set<String> keys) {
-        workflow.completed(company,run);
-        String filter=circle==null?"":" AND circle_id=?";
-        Object[] args=circle==null?new Object[]{company,run}:new Object[]{company,run,circle};
-        var rows=jdbc.queryForList("SELECT *,JSON_UNQUOTE(JSON_EXTRACT(row_json,'$.supplementaryInformation')) supplementary_information FROM alarm_observations WHERE company_id=? AND run_id=?"+filter+" ORDER BY circle_name,classification,resource_name LIMIT 5001",args);
+        completed(company,run);
+        var rows=repository.observations(company,run,circle,false);
         if(rows.size()>5000) throw new IllegalStateException("Observation budget exceeded");
         return keys==null?rows:rows.stream().filter(row->keys.contains(string(row,"identity_key"))).toList();
     }
+    private Map<String,Object> completed(long company,long run) {
+        var source=repository.source(company,run).orElseThrow(AlarmConfigurationException::missing);
+        if(!"SUCCEEDED".equals(source.get("status"))) throw AlarmConfigurationException.conflict("The import has not completed successfully.");
+        return source;
+    }
     public byte[] csv(long company,long run,Long circle,Set<String> keys) {
-        var info=workflow.completed(company,run); Instant asOf=jdbcInstant(info.get("snapshot_at"));
+        var info=completed(company,run); Instant asOf=jdbcInstant(info.get("snapshot_at"));
         StringBuilder result=new StringBuilder("\uFEFF");
-        result.append("Import ID,Feed ID,Snapshot UTC,Circle,Zone,Site,OEM,Technology,Resource,Alarm Code,Alarm Text,Source Severity,Customer Classification,Included,Service Affecting,Site Down,Raised UTC,Age Hours,Identity,Supplementary Information\r\n");
+        result.append("Import ID,Feed ID,Snapshot UTC,Circle,Zone,Site,OEM,Technology,Resource,Alarm Code,Alarm Text,Source Severity,Customer Classification,Included,Service Affecting,Site Down,Raised UTC,Age Hours,Identity,Supplementary Information,Source Remarks,L2 Remarks,Circle Update\r\n");
         for(var row:rows(company,run,circle,keys)) {
             List<Object> cells=Arrays.asList(run,info.get("feed_id"),asOf,string(row,"circle_name"),string(row,"zone_name"),string(row,"site_code"),string(row,"oem"),string(row,"technology"),string(row,"resource_name"),string(row,"alarm_code"),string(row,"alarm_text"),string(row,"source_severity"),string(row,"classification"),row.get("included"),row.get("service_affecting"),row.get("site_down"),jdbcInstant(row.get("raised_at")),String.format(Locale.ROOT,"%.2f",Duration.between(jdbcInstant(row.get("raised_at")),asOf).toSeconds()/3600.0),string(row,"identity_key"));
-            result.append(String.join(",",cells.stream().map(AlarmReportService::cell).toList())).append(',').append(cell(row.get("supplementary_information"))).append("\r\n");
+            result.append(String.join(",",cells.stream().map(AlarmReportService::cell).toList())).append(',').append(cell(row.get("supplementary_information"))).append(',').append(cell(string(row,"source_remarks"))).append(',').append(cell(string(row,"l2_remarks"))).append(',').append(cell(string(row,"circle_update"))).append("\r\n");
         }
         return result.toString().getBytes(StandardCharsets.UTF_8);
     }
@@ -54,7 +64,7 @@ public class AlarmReportService {
         return "\""+text.replace("\"","\"\"")+"\"";
     }
     public byte[] pdf(long company,long run,Long circle,Set<String> keys) {
-        var info=workflow.completed(company,run); var rows=rows(company,run,circle,keys);
+        var info=completed(company,run); var rows=rows(company,run,circle,keys);
         long unmapped=rows.stream().filter(r->string(r,"classification").equals("UNMAPPED")).count();
         List<String> lines=new ArrayList<>();
         lines.add("ALARM MONITORING | SNAPSHOT REPORT");
@@ -89,21 +99,58 @@ public class AlarmReportService {
         access.require(company,false);var ids=sourceIds(company,at);
         circle(company,circle);
         if(ids.isEmpty()) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.conflict("No completed source snapshots exist at the requested report time.");
-        return guarded(()->format.equals("pdf")?cohortPdf(company,ids,circle):cohortCsv(company,ids,circle));
+        return guarded(()->switch(format) {
+            case "pdf" -> cohortPdf(company,ids,circle);
+            case "xlsx" -> workbook(company,ids,circle);
+            case "csv" -> cohortCsv(company,ids,circle);
+            default -> throw AlarmConfigurationException.invalid("Report format must be csv, pdf or xlsx.");
+        });
     }
-    private byte[] guarded(java.util.function.Supplier<byte[]> render) {
-        if(!downloadSlot.tryAcquire()) throw new com.network.monitoring.alarm.exception.AlarmConfigurationException(503,"ALARM_REPORT_BUSY","Another alarm export is running; retry shortly.");
+
+    public Map<String,Object> dashboard(long company,String at) {
+        access.require(company,false);
+        return guarded(()->{
+        Map<String,Object> result=new LinkedHashMap<>(workflow.dashboardInternal(company,at));
+        @SuppressWarnings("unchecked") var sources=(List<Map<String,Object>>)result.get("sources");
+        var ids=sources.stream().map(source->number(source,"id")).toList();
+        result.put("reportSummary",AlarmSummaryCalculator.summarize(loadSources(company,ids,null,true)));
+        return result;
+        });
+    }
+
+    private List<AlarmReport.Source> loadSources(long company,List<Long> runs,Long circle,boolean summaryOnly) {
+        if(runs.size()>200 || new HashSet<>(runs).size()!=runs.size())
+            throw AlarmConfigurationException.invalid("Supply at most 200 distinct source snapshots.");
+        List<AlarmReport.Source> sources=new ArrayList<>();
+        int count=0;
+        for(long run:runs) {
+            var info=completed(company,run);
+            var evidence=repository.observations(company,run,circle,summaryOnly);
+            if(evidence.size()>5000) throw new IllegalStateException("Observation budget exceeded");
+            count+=evidence.size();
+            if(count>50000) throw AlarmConfigurationException.invalid("Summary exceeds 50000 observations; narrow the report scope.");
+            sources.add(new AlarmReport.Source(run,number(info,"feed_id"),jdbcInstant(info.get("snapshot_at")),evidence));
+        }
+        return List.copyOf(sources);
+    }
+
+    private byte[] workbook(long company,List<Long> runs,Long circle) {
+        var sources=loadSources(company,runs,circle,false);
+        return AlarmWorkbookRenderer.render(sources,AlarmSummaryCalculator.summarize(sources));
+    }
+    private <T> T guarded(java.util.function.Supplier<T> render) {
+        if(!downloadSlot.tryAcquire()) throw new com.network.monitoring.alarm.exception.AlarmConfigurationException(503,"ALARM_REPORT_BUSY","Another alarm report or summary is running; retry shortly.");
         try{return render.get();}finally{downloadSlot.release();}
     }
     private void circle(long company,Long circle) {
-        if(circle!=null && jdbc.queryForObject("SELECT COUNT(*) FROM alarm_circles WHERE company_id=? AND id=?",Integer.class,company,circle)!=1) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.missing();
+        if(circle!=null && !repository.circleExists(company,circle)) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.missing();
     }
     public byte[] cohortCsv(long company,List<Long> runs,Long circle) {
         if(runs.size()>200) throw new IllegalStateException("Source budget exceeded");
         try(var output=new ByteArrayOutputStream()) {
             int rows=0;
             for(long run:runs) {
-                rows+=jdbc.queryForObject("SELECT COUNT(*) FROM alarm_observations WHERE company_id=? AND run_id=?",Integer.class,company,run);
+                rows+=repository.count(company,run,circle);
                 if(rows>50000) throw new IllegalStateException("National export exceeds 50000 records; narrow the scope");
                 byte[] bytes=csv(company,run,circle,null);
                 int start=0;
@@ -115,33 +162,29 @@ public class AlarmReportService {
         }catch(IOException error){throw new IllegalStateException(error);}
     }
     public byte[] cohortPdf(long company,List<Long> runs,Long circle) {
-        List<String> lines=new ArrayList<>();lines.add("NATIONAL / CIRCLE ALARM REPORT");
+        var sources=loadSources(company,runs,circle,true);
+        var summary=AlarmSummaryCalculator.summarize(sources);
+        List<String> lines=new ArrayList<>();
+        lines.add("NATIONAL / CIRCLE ALARM REPORT");
         lines.add("Company "+company+" | Scope: "+(circle==null?"All circles":"Circle "+circle));
-        lines.add("Source cohort is pinned by immutable import IDs; timestamps may differ between feeds.");
-        Map<String,long[]> totals=new TreeMap<>();Set<String> downSites=new HashSet<>();
-        int count=0;
-        for(long run:runs) {
-            var source=workflow.completed(company,run);
-            lines.add("Feed "+source.get("feed_id")+" | Import "+run+" | "+jdbcInstant(source.get("snapshot_at")));
-            for(var row:rows(company,run,circle,null)) {
-                if(++count>50000) throw new IllegalStateException("National summary exceeds 50000 records");
-                String key=string(row,"zone_name")+" / "+string(row,"circle_name")+" / "+string(row,"technology");
-                long[] group=totals.computeIfAbsent(key,ignored->new long[5]);group[0]++;
-                if(string(row,"classification").equals("UNMAPPED"))group[4]++;
-                if(bool(row,"included")) {
-                    switch(string(row,"classification")){case "CRITICAL"->group[1]++;case "MAJOR"->group[2]++;case "MINOR"->group[3]++;default->{}}
-                    if(bool(row,"site_down")&&row.get("site_code")!=null)downSites.add(row.get("circle_id")+"|"+row.get("site_code"));
-                }
-            }
-        }
-        lines.add("Observed records (deduplicated within each source): "+count+" | Known down sites: "+downSites.size());
-        lines.add("CIRCLE / TECHNOLOGY SUMMARY | Observed / Critical / Major / Minor / Unmapped");
-        totals.forEach((name,value)->lines.add(name+" | "+value[0]+" / "+value[1]+" / "+value[2]+" / "+value[3]+" / "+value[4]));
-        lines.add("The companion CSV includes complete alarm evidence, source IDs, source timestamps and age.");
-        lines.add("Different feeds may overlap. Record totals are not certified unique national incidents.");
-        lines.add("Missing observations do not prove clearance. Stale/missing feeds require review.");
-        lines.add("Customer MS2/LR operational inputs and recovery reasons are not inferred.");
+        for(var source:sources) lines.add("Feed "+source.feedId()+" | Import "+source.runId()+" | "+source.snapshotAt());
+        lines.add("Observed records: "+summary.observedRecords()+" | Included: "+summary.includedRecords()+" | Known down sites: "+summary.knownDownSites());
+        lines.add("ZONE / TECHNOLOGY SUMMARY");
+        for(var group:summary.zones()) summaryLines(lines,group);
+        lines.add("CIRCLE / TECHNOLOGY SUMMARY");
+        for(var group:summary.circles()) summaryLines(lines,group);
+        lines.add("PENDING CUSTOMER OPERATIONAL INPUTS (not zero)");
+        lines.addAll(summary.pendingOperationalInputs());
+        lines.addAll(summary.notes());
+        lines.add("Companion CSV contains complete evidence; Excel also includes structured summaries and pending inputs.");
         return textPdf(lines);
+    }
+    private void summaryLines(List<String> lines,com.network.monitoring.alarm.dto.AlarmReport.Group group) {
+        lines.add(group.zone()+" / "+(group.circle()==null?"All circles":group.circle())+" / "+group.technology());
+        lines.add("Observed "+group.observedRecords()+" | Included "+group.includedRecords()+" | Critical "+group.critical()+" | Major "+group.major()+" | Minor "+group.minor());
+        lines.add("Service-affecting records "+group.serviceAffectingRecords()+" | Known down sites "+group.knownDownSites()+" | Unmapped catalogue "+group.unmappedCatalogue()+" | Unmapped sites "+group.unmappedSites());
+        var age=group.downSiteAge();
+        lines.add("Down-site age: <12h "+age.under12Hours()+" | 12h-48h "+age.from12To48Hours()+" | >48h and <72h "+age.above48Under72Hours()+" | >=72h "+age.atLeast72Hours());
     }
     private byte[] textPdf(List<String> lines) {
         try(var document=new PDDocument();var output=new ByteArrayOutputStream()) {

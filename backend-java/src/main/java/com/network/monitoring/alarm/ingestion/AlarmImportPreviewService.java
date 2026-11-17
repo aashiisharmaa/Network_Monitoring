@@ -23,6 +23,7 @@ public class AlarmImportPreviewService {
     private static final int MAX_ROWS = 5000, MAX_COLUMNS = 80, MAX_TEXT = 4000;
     private static final Set<String> OEMS = Set.of("NOKIA", "ERICSSON", "ZTE", "HUAWEI", "SAMSUNG");
     private static final Map<String, String> ALIASES = aliases();
+    private static final Set<String> ANNOTATION_FIELDS = Set.of("remarks","l2Remarks","circleUpdate");
     private final Semaphore previewSlot = new Semaphore(1);
 
     public static final class PreviewBusyException extends RuntimeException {
@@ -32,19 +33,24 @@ public class AlarmImportPreviewService {
     public Preview preview(MultipartFile file, String sheetName, String defaultOem,
                            String technology, String sourceTimezone) {
         if (!previewSlot.tryAcquire()) throw new PreviewBusyException();
-        try { return decode(file, sheetName, defaultOem, technology, sourceTimezone, false).validation(); }
+        try { return decode(file, sheetName, defaultOem, technology, sourceTimezone, false, true).validation(); }
         finally { previewSlot.release(); }
     }
 
     /** Full bounded parse for durable imports; never persist the 50-row preview sample. */
     public Parsed parse(MultipartFile file, String sheet, String oem, String technology, String timezone) {
+        return parse(file,sheet,oem,technology,timezone,true);
+    }
+
+    /** Frozen v1 jobs keep their pre-annotation column/formula policy. */
+    public Parsed parse(MultipartFile file, String sheet, String oem, String technology, String timezone, boolean captureAnnotations) {
         if (!previewSlot.tryAcquire()) throw new PreviewBusyException();
-        try { return decode(file, sheet, oem, technology, timezone, true); }
+        try { return decode(file, sheet, oem, technology, timezone, true, captureAnnotations); }
         finally { previewSlot.release(); }
     }
 
     private Parsed decode(MultipartFile file, String sheetName, String defaultOem,
-                           String technology, String sourceTimezone, boolean allRows) {
+                           String technology, String sourceTimezone, boolean allRows, boolean captureAnnotations) {
         if (file == null || file.isEmpty()) throw invalid("A non-empty alarm file is required.");
         if (file.getSize() > MAX_BYTES) throw invalid("Alarm preview file must be at most 10 MiB.");
         String oem = oem(defaultOem);
@@ -57,7 +63,7 @@ public class AlarmImportPreviewService {
         try (InputStream input = file.getInputStream()) {
             byte[] data = input.readNBytes((int) MAX_BYTES + 1);
             if (data.length > MAX_BYTES) throw invalid("Alarm preview file must be at most 10 MiB.");
-            Collector collector = new Collector(zone, oem, rat, allRows);
+            Collector collector = new Collector(zone, oem, rat, allRows, captureAnnotations);
             String selected;
             if (name.endsWith(".csv")) {
                 if (!clean(sheetName).isEmpty()) throw invalid("Sheet selection is only valid for XLSX files.");
@@ -131,11 +137,12 @@ public class AlarmImportPreviewService {
         private final List<RowIssue> issues = new ArrayList<>();
         private final List<AlarmRow> all = new ArrayList<>();
         private final boolean allRows;
+        private final boolean captureAnnotations;
         private int rows, valid, missingSeverity, missingCode, issueCount;
         private boolean header;
 
-        Collector(ZoneId zone, String oem, String rat, boolean allRows) {
-            this.zone = zone; defaultOem = oem; defaultRat = rat; this.allRows = allRows;
+        Collector(ZoneId zone, String oem, String rat, boolean allRows, boolean captureAnnotations) {
+            this.zone = zone; defaultOem = oem; defaultRat = rat; this.allRows = allRows; this.captureAnnotations = captureAnnotations;
         }
 
         void accept(int line, List<String> cells) {
@@ -145,6 +152,7 @@ public class AlarmImportPreviewService {
             if (!header) {
                 for (int i = 0; i < cells.size(); i++) {
                     String field = ALIASES.get(key(cells.get(i)));
+                    if (!captureAnnotations && ANNOTATION_FIELDS.contains(field == null ? "" : field)) field = null;
                     if (field != null && columns.putIfAbsent(field, i) != null)
                         throw invalid("Ambiguous duplicate column for " + field + ". Supply one canonical column.");
                 }
@@ -178,12 +186,20 @@ public class AlarmImportPreviewService {
             if (before == issueCount) {
                 valid++;
                 var normalized = new AlarmRow(line, vendor, rat, circle, resource, name,
-                        code, text, severity, "UNMAPPED", raised, value(cells, "supplementary"));
+                        code, text, severity, "UNMAPPED", raised, value(cells, "supplementary"), annotations(cells));
                 if (sample.size() < 50) sample.add(normalized);
                 if (allRows) all.add(normalized);
             }
         }
 
+        Map<String,String> annotations(List<String> cells) {
+            Map<String,String> values=new LinkedHashMap<>();
+            for(String field:List.of("remarks","l2Remarks","circleUpdate")) {
+                String text=value(cells,field);
+                if(!text.isEmpty()) values.put(field,text);
+            }
+            return values;
+        }
         String value(List<String> cells, String field) {
             Integer index = columns.get(field);
             return index == null || index >= cells.size() ? "" : clean(cells.get(index));
@@ -237,6 +253,9 @@ public class AlarmImportPreviewService {
         add(aliases, "supplementary", "Supplementry Info", "Supplementary Info", "Supplementary Information", "Supplementry Information");
         add(aliases, "oem", "OEM", "Vendor");
         add(aliases, "technology", "Technology", "RAT");
+        add(aliases, "remarks", "Remarks", "Responsibility");
+        add(aliases, "l2Remarks", "L2 Remarks");
+        add(aliases, "circleUpdate", "Circle Update", "Circle Remark", "Circle Remarks");
         return Map.copyOf(aliases);
     }
     private static void add(Map<String, String> map, String field, String... names) {

@@ -3,14 +3,15 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from datetime import date
+from datetime import date, datetime, timezone, timedelta
 from html import escape
 from pathlib import Path
 from urllib.parse import urlencode
 
 from backend_api_contracts import MODULES, NOTES, PURPOSES, request_example, PROFILE, RCA, OPTIONS
 
-DATE = "16 November 2026"
+GENERATED_DATE = datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
+DATE = GENERATED_DATE.strftime("%d %B %Y")
 ID_EXAMPLES = {"companyId": 100, "fileId": 500, "targetFileId": 500, "feedId": 20, "siteId": 30, "snapshotId": 40, "reportId": 50, "jobId": 60, "id": 1}
 
 
@@ -44,7 +45,7 @@ def security(entry):
         admin = "admin();" in entry["_body"]
         role = ("Legacy SUPER_ADMIN mutation/profile check plus " if admin else "") + "dataset ownership/company scope checked in the controller."
     if controller == "ReportDatasetController": role = "SUPER_ADMIN can discover datasets across companies; other authenticated users need a company assignment and see only that company's matching KPI datasets."
-    return {"jwt": "JWT filter bypass for this route; service checks may still reject it" if public else "Bearer JWT and active session required", "license": "License-filter exempt" if license_exempt else "Valid installed license required (otherwise HTTP 402)", "authorization": role}
+    return {"jwt": ("JWT filter bypass; controller/service checks still apply" if controller in {"AuthController", "HealthController"} else "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated") if public else "Bearer JWT and active session required", "license": "License-filter exempt" if license_exempt else "Valid installed license required (otherwise HTTP 402)", "authorization": role}
 
 
 def purpose(entry):
@@ -94,7 +95,7 @@ def response(entry):
             partial = False
         elif h == "history": data = {"snapshots": [], "operatorEvents": [], "warning": "Operator actions are distinct from OSS state. Absence from a dump is not confirmed clearance."}
         elif h == "status": data = {"workflowEnabled": False, "inputRootConfigured": False, "smtpEnabled": False, "folderStatus": [], "imports": [], "deliveries": []}; partial = False
-        elif h == "dashboard": data = {"asOf": "2026-11-16T00:00:00Z", "sources": [], "circles": [], "configuredActiveFeeds": 0, "warning": "Inspect source timestamps; missing alarms are not confirmed cleared."}
+        elif h == "dashboard": data = {"asOf": "2026-11-16T00:00:00Z", "sources": [], "circles": [], "configuredActiveFeeds": 0, "reportSummary": {"contractVersion": "alarm-summary-v1", "zones": [], "circles": [], "observedRecords": 0, "includedRecords": 0, "unmappedCatalogue": 0, "knownDownSites": 0, "pendingOperationalInputs": ["MS2 pending 2G/4G", "LR pending status/count"], "notes": ["Counts are source observations; missing observations do not confirm clearance."]}, "warning": "Inspect source timestamps; missing alarms are not confirmed cleared."}
         example = {"success": True, "data": data}
     elif c == "AlarmImportPreviewController": example = {"success": True, "data": {"contractVersion": "alarm-preview-v1", "sheet": "CSV", "sourceTimezone": "Asia/Kolkata", "rowsRead": 2, "validRows": 1, "rejectedRows": 1, "missingSourceSeverity": 1, "missingAlarmCode": 1, "sample": [{"sourceRow": 2, "oem": "NOKIA", "technology": "4G", "circle": "MU", "resource": "SYNTHETIC-NODE", "name": "", "alarmCode": "", "alarmText": "Synthetic source alarm", "sourceSeverity": "", "customerClassification": "UNMAPPED", "raisedAt": "2026-11-15T00:00:00Z", "supplementaryInformation": ""}], "issues": [{"sourceRow": 3, "field": "raisedAt", "message": "Use an ISO timestamp or yyyy-MM-dd/dd-MM-yyyy HH:mm:ss."}], "issuesTruncated": False, "warnings": ["Read-only validation: no alarms imported or cleared."]}}
     elif c == "KpiController":
@@ -163,13 +164,13 @@ def call_url(entry, postman=False):
 
 def records(root):
     from build_backend_api_documentation import annotations, balanced, split_top, parameter, without_comments
-    locations = ["alarm/dto/AlarmConfiguration.java", "alarm/dto/AlarmImport.java", "alarm/dto/AlarmModels.java", "alarm/dto/AlarmAutomation.java", "reporting/service/DailyKpiCalculator.java", "reporting/service/CommonReportModules.java", "reporting/mail/service/ReportMailProfile.java", "nightly/service/NightlyProfile.java", "reporting/mail/api/ReportMailController.java"]
+    locations = ["alarm/dto/AlarmConfiguration.java", "alarm/dto/AlarmReport.java", "alarm/dto/AlarmImport.java", "alarm/dto/AlarmModels.java", "alarm/dto/AlarmAutomation.java", "reporting/service/DailyKpiCalculator.java", "reporting/service/CommonReportModules.java", "reporting/mail/service/ReportMailProfile.java", "nightly/service/NightlyProfile.java", "reporting/mail/api/ReportMailController.java"]
     result = []
     for path in locations:
         file = root / "backend-java/src/main/java/com/network/monitoring" / path
         text = without_comments(file.read_text(encoding="utf-8-sig"))
         for match in re.finditer(r"public record (\w+)\s*\(", text):
-            exposed = {"alarm/dto/AlarmImport.java": {"AlarmRow", "Preview"},
+            exposed = {"alarm/dto/AlarmReport.java": {"AgeBands", "Group", "Summary"}, "alarm/dto/AlarmImport.java": {"AlarmRow", "Preview"},
                 "alarm/dto/AlarmModels.java": {"Catalog", "Site", "Outcome"},
                 "alarm/dto/AlarmAutomation.java": {"Route", "Policy", "Watch", "Settings"},
                 "reporting/service/DailyKpiCalculator.java": {"Metric", "Profile"}}
@@ -200,7 +201,8 @@ def make_sections(entries, root):
     add("table", ["Item", "Value"], [["Typical local base URL", "http://localhost:3001 (frontend default); server application.yml fallback is port 3000; PORT may override."], ["Swagger UI", "/swagger-ui/index.html"], ["Runtime OpenAPI", "/v3/api-docs"], ["Preferred URLs", "/api/v1/...; legacy aliases are listed for each operation."], ["JSON request header", "Content-Type: application/json"], ["Authentication", "Authorization: Bearer <token from login>; active session required where JWT filter applies."], ["File upload", "multipart/form-data; let the client generate its boundary. File content is not a JSON path."], ["Downloads", "Save response bytes; inspect Content-Type and Content-Disposition."], ["Async APIs", "A successful HTTP response can mean QUEUED. Poll the returned job/run ID; do not repeatedly submit the same action."]])
     add("h1", "2. Authentication, roles and response conventions")
     add("p", "POST /api/v1/auth/login with email/password. Read data.token and send it in Authorization. Logout invalidates that token's session. First self-registration becomes SUPER_ADMIN; later self-registration becomes USER and does not automatically acquire a company assignment.")
-    add("p", "Security is documented in layers: JWT filter, installed-license filter and controller/service authorization. Legacy read routes may bypass JWT parsing even when a token is supplied. A bypass is not a declaration of tenant safety or successful service authorization. Native alarm APIs use strict persisted company/role checks.")
+    add("p", "Native alarm report formats are csv/pdf/xlsx. The dashboard adds reportSummary for zone/circle/RAT counts and source-snapshot age bands. Excel includes evidence and blank operational inputs; its structured layout is not a certification of customer-template parity. V2 imports retain sourceAnnotations; frozen v1 imports preserve their older parsing policy.")
+    add("p", "Security is documented in layers: JWT filter, installed-license filter and controller/service authorization. Legacy public GET routes bypass JWT parsing only without an Authorization header; supplied tokens are verified and populate the authenticated principal. A bypass is not a declaration of tenant safety or successful service authorization. Native alarm APIs use strict persisted company/role checks.")
     add("table", ["Role", "Important behaviour"], [["SUPER_ADMIN", "Cross-company administration only where the corresponding API authorizes it."], ["ADMIN", "Recognized by native OSS authorization for own-company mutations. Current /users creation accepts only USER/SUPER_ADMIN."], ["USER", "Native OSS own-company reads; dataset access varies by module."], ["Legacy blank role", "Legacy requireSuperAdmin helper permits it; strict native OSS APIs reject it."]])
     add("p", "Not all responses use the same envelope. Some use success/data/message, KPI endpoints include statistics/metrics at the top level, auth logout returns message only, and binary/204 responses have no JSON. Partial response examples are explicitly labelled and are not exhaustive schemas.")
     add("code", json.dumps({"success": True, "data": {"id": 1, "status": "QUEUED"}}, indent=2))

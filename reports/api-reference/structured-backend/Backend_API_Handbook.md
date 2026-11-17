@@ -1,6 +1,6 @@
 # Network Monitoring Backend API Handbook
 
-Source-verified developer reference | 16 November 2026 | Java / Spring Boot
+Source-verified developer reference | 17 November 2026 | Java / Spring Boot
 
 Coverage: 28 controllers, 186 logical operations and 304 expanded method/URL combinations including legacy aliases. All examples use synthetic identifiers and reserved example.invalid addresses. No actual credentials, customer data or license contents are included.
 
@@ -39,7 +39,9 @@ Read-only/live check: current source has 186 operations. At capture, 147 canonic
 
 POST /api/v1/auth/login with email/password. Read data.token and send it in Authorization. Logout invalidates that token's session. First self-registration becomes SUPER_ADMIN; later self-registration becomes USER and does not automatically acquire a company assignment.
 
-Security is documented in layers: JWT filter, installed-license filter and controller/service authorization. Legacy read routes may bypass JWT parsing even when a token is supplied. A bypass is not a declaration of tenant safety or successful service authorization. Native alarm APIs use strict persisted company/role checks.
+Native alarm report formats are csv/pdf/xlsx. The dashboard adds reportSummary for zone/circle/RAT counts and source-snapshot age bands. Excel includes evidence and blank operational inputs; its structured layout is not a certification of customer-template parity. V2 imports retain sourceAnnotations; frozen v1 imports preserve their older parsing policy.
+
+Security is documented in layers: JWT filter, installed-license filter and controller/service authorization. Legacy public GET routes bypass JWT parsing only without an Authorization header; supplied tokens are verified and populate the authenticated principal. A bypass is not a declaration of tenant safety or successful service authorization. Native alarm APIs use strict persisted company/role checks.
 
 | Role | Important behaviour |
 | --- | --- |
@@ -1342,6 +1344,22 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
     "sources": [],
     "circles": [],
     "configuredActiveFeeds": 0,
+    "reportSummary": {
+      "contractVersion": "alarm-summary-v1",
+      "zones": [],
+      "circles": [],
+      "observedRecords": 0,
+      "includedRecords": 0,
+      "unmappedCatalogue": 0,
+      "knownDownSites": 0,
+      "pendingOperationalInputs": [
+        "MS2 pending 2G/4G",
+        "LR pending status/count"
+      ],
+      "notes": [
+        "Counts are source observations; missing observations do not confirm clearance."
+      ]
+    },
     "warning": "Inspect source timestamps; missing alarms are not confirmed cleared."
   }
 }
@@ -1950,7 +1968,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /auth/register
 
-Access: JWT filter bypass for this route; service checks may still reject it. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: JWT filter bypass; controller/service checks still apply. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -1998,7 +2016,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /auth/login
 
-Access: JWT filter bypass for this route; service checks may still reject it. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: JWT filter bypass; controller/service checks still apply. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -2046,7 +2064,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /auth/logout
 
-Access: JWT filter bypass for this route; service checks may still reject it. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: JWT filter bypass; controller/service checks still apply. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -2260,7 +2278,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /companies
 
-Access: JWT filter bypass for this route; service checks may still reject it. License-filter exempt. Legacy requireSuperAdmin check (blank legacy roles are treated as super admin by that helper).
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. License-filter exempt. Legacy requireSuperAdmin check (blank legacy roles are treated as super admin by that helper).
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2764,7 +2782,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /api/v1/dashboard/summary; /dashboard/stats; /dashboard/summary
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -2802,7 +2820,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/cells
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2834,7 +2852,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/sites
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2866,7 +2884,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/bands
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2898,7 +2916,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/tech
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2930,7 +2948,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/sectors
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2962,7 +2980,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/groups
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -2994,7 +3012,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /dashboard/stats/detailed
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -3023,7 +3041,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /api/v1/dashboard/stats/performance; /dashboard/performance; /dashboard/stats/performance
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3059,7 +3077,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /health
 
-Access: JWT filter bypass for this route; service checks may still reject it. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: JWT filter bypass; controller/service checks still apply. License-filter exempt. No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -3433,7 +3451,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/available-metrics
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3467,7 +3485,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/all
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3499,7 +3517,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/ul-prb-utilization
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3532,7 +3550,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dl-prb-utilization
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3565,7 +3583,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/data-volume
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3598,7 +3616,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/ul-throughput
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3631,7 +3649,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dl-throughput
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3664,7 +3682,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/erab-drop-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3697,7 +3715,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/erab-success-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3730,7 +3748,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/rrc-success-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3763,7 +3781,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/mean-rrc-users
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3796,7 +3814,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/max-rrc-users
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3829,7 +3847,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/erab-setup-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3862,7 +3880,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/rrc-drop-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3895,7 +3913,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/volte-cssr
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3928,7 +3946,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/volte-dcr
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3961,7 +3979,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/inter-freq-hosr
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -3994,7 +4012,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/intra-freq-hosr
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4027,7 +4045,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/csfb-success-rate
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4060,7 +4078,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dynamic/metrics
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4092,7 +4110,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dynamic/summary
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4124,7 +4142,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dynamic/columns
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4158,7 +4176,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dynamic/data
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4200,7 +4218,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/dynamic/batch-data
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -4848,7 +4866,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/validation-report/{fileId}
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -5511,7 +5529,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/recommendation/jobs/{jobId}
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -5660,7 +5678,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/recommendation/presets
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -5751,7 +5769,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/recommendation/presets/{name}
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6265,7 +6283,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /setting/getsettings
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6418,7 +6436,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /sites/summary
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6450,7 +6468,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /sites/worst
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6483,7 +6501,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /sites/details
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6516,7 +6534,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /api/v1/sites/site-intelligence; /sites/intelligence; /sites/site-intelligence
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6778,7 +6796,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/jobs/{jobId}
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6813,7 +6831,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/jobs
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -6992,7 +7010,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/uploads
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -7052,7 +7070,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/network-data
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7084,7 +7102,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/uploads/history
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -7113,7 +7131,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/history
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 Inputs: no declared client parameters or JSON body.
 
@@ -7142,7 +7160,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/site-data
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7175,7 +7193,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /upload/alarm-data
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7301,7 +7319,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/worst-cells
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7335,7 +7353,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/worst-sites
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7369,7 +7387,7 @@ Declaration: listed in running OpenAPI at capture. Source: backend-java/src/main
 
 Other declared aliases: /kpi/worst-cells/detail
 
-Access: JWT filter bypass for this route; service checks may still reject it. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
+Access: Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated. Valid installed license required (otherwise HTTP 402). No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented.
 
 | Field | Where / Java type | Required / default | Meaning |
 | --- | --- | --- | --- |
@@ -7526,6 +7544,48 @@ These fields are extracted from actual Java record declarations used by the publ
 | active | boolean | No bean constraint on this field; see service validation |
 | version | int | No bean constraint on this field; see service validation |
 
+### alarm/dto/AlarmReport.java:AgeBands
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| under12Hours | long | No bean constraint on this field; see service validation |
+| from12To48Hours | long | No bean constraint on this field; see service validation |
+| above48Under72Hours | long | No bean constraint on this field; see service validation |
+| atLeast72Hours | long | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmReport.java:Group
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| zone | String | No bean constraint on this field; see service validation |
+| circleId | Long | No bean constraint on this field; see service validation |
+| circle | String | No bean constraint on this field; see service validation |
+| technology | String | No bean constraint on this field; see service validation |
+| observedRecords | long | No bean constraint on this field; see service validation |
+| includedRecords | long | No bean constraint on this field; see service validation |
+| critical | long | No bean constraint on this field; see service validation |
+| major | long | No bean constraint on this field; see service validation |
+| minor | long | No bean constraint on this field; see service validation |
+| serviceAffectingRecords | long | No bean constraint on this field; see service validation |
+| knownDownSites | long | No bean constraint on this field; see service validation |
+| unmappedCatalogue | long | No bean constraint on this field; see service validation |
+| unmappedSites | long | No bean constraint on this field; see service validation |
+| downSiteAge | AgeBands | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmReport.java:Summary
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| contractVersion | String | No bean constraint on this field; see service validation |
+| zones | List<Group> | No bean constraint on this field; see service validation |
+| circles | List<Group> | No bean constraint on this field; see service validation |
+| observedRecords | long | No bean constraint on this field; see service validation |
+| includedRecords | long | No bean constraint on this field; see service validation |
+| unmappedCatalogue | long | No bean constraint on this field; see service validation |
+| knownDownSites | long | No bean constraint on this field; see service validation |
+| pendingOperationalInputs | List<String> | No bean constraint on this field; see service validation |
+| notes | List<String> | No bean constraint on this field; see service validation |
+
 ### alarm/dto/AlarmImport.java:AlarmRow
 
 | JSON property | Java type | Declared annotations |
@@ -7542,6 +7602,7 @@ These fields are extracted from actual Java record declarations used by the publ
 | customerClassification | String | No bean constraint on this field; see service validation |
 | raisedAt | Instant | No bean constraint on this field; see service validation |
 | supplementaryInformation | String | No bean constraint on this field; see service validation |
+| sourceAnnotations | Map<String,String> | No bean constraint on this field; see service validation |
 
 ### alarm/dto/AlarmImport.java:Preview
 

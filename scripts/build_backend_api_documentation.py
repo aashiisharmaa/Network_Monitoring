@@ -158,7 +158,7 @@ if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     entries, hashes = inventory()
     if not args.inventory_only:
-        from backend_api_reference_render import render
+        from backend_api_reference_render import render, GENERATED_DATE
         entries=render(entries,ROOT,OUT)
     public = [{key: value for key, value in entry.items() if not key.startswith("_")} for entry in entries]
     (OUT / "backend-api-inventory.json").write_text(json.dumps({"source": "current Java controller source; not a live-response recording", "controllers": len(hashes), "logicalOperations": len(entries), "sourceHashes": hashes, "endpoints": public}, indent=2), encoding="utf-8")
@@ -181,6 +181,6 @@ if __name__ == "__main__":
         postman_count=sum(len(group['item']) for group in collection['item'])
         if postman_count!=len(entries):raise ValueError('Postman coverage mismatch')
         for artifact in OUT.glob('*.json'):json.loads(artifact.read_text(encoding='utf-8'))
-        validation={'controllers':len(hashes),'logicalOperations':len(entries),'expandedMethodPathCombinations':len(pairs),'jsonBodyOperations':sum(any(p['location']=='body' for p in e['parameters']) for e in entries),'postmanRequests':postman_count,'pdfPages':len(reader.pages),'liveOpenApiListedCanonicalOperations':sum(e['liveOpenApiListed'] is True for e in entries),'sourceOnlyCanonicalOperations':sum(e['liveOpenApiListed'] is False for e in entries),'runtimeUnverifiedOperations':sum(e['liveOpenApiListed'] is None for e in entries),'allOperationIdsPresentInDocxAndPdf':True,'jsonArtifactsParse':True,'businessRequestsExecuted':False,'credentialFilesRead':False,'generationDate':'2026-11-16'}
+        validation={'controllers':len(hashes),'logicalOperations':len(entries),'expandedMethodPathCombinations':len(pairs),'jsonBodyOperations':sum(any(p['location']=='body' for p in e['parameters']) for e in entries),'postmanRequests':postman_count,'pdfPages':len(reader.pages),'liveOpenApiListedCanonicalOperations':sum(e['liveOpenApiListed'] is True for e in entries),'sourceOnlyCanonicalOperations':sum(e['liveOpenApiListed'] is False for e in entries),'runtimeUnverifiedOperations':sum(e['liveOpenApiListed'] is None for e in entries),'allOperationIdsPresentInDocxAndPdf':True,'jsonArtifactsParse':True,'businessRequestsExecuted':False,'credentialFilesRead':False,'generationDate':GENERATED_DATE.isoformat()}
         (OUT/'documentation-validation.json').write_text(json.dumps(validation,indent=2),encoding='utf-8')
         print(json.dumps(validation))

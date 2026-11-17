@@ -28,7 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         return HttpMethod.OPTIONS.matches(request.getMethod())
-                || isPublicReadOnlyGet(request, path)
+                // Optional authentication still has to populate the principal on public reads.
+                || (isPublicReadOnlyGet(request, path) && request.getHeader("Authorization") == null)
                 || path.startsWith("/auth")
                 || path.startsWith("/api/v1/auth")
                 || path.startsWith("/health")

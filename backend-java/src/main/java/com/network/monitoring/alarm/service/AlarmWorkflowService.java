@@ -27,7 +27,7 @@ import static com.network.monitoring.alarm.support.AlarmValues.*;
 /** Native OSS domain. Immutable observations are separate from KPI-generated alarms. */
 @Service
 public class AlarmWorkflowService {
-    public static final String ADAPTER_VERSION="oss-snapshot-v1";
+    public static final String ADAPTER_VERSION="oss-snapshot-v2";
     private final JdbcTemplate jdbc;
     private final AlarmTenantAccess access;
     private final AlarmConfigurationRepository master;
@@ -160,10 +160,10 @@ public class AlarmWorkflowService {
             var run = jdbc.queryForMap("SELECT * FROM alarm_ingestion_runs WHERE id=? AND lease_token=?", id, token);
             long company = number(run, "company_id");
             Frozen config = json.readValue(string(run, "config_json"), Frozen.class);
-            if(!ADAPTER_VERSION.equals(config.adapterVersion())) throw invalid("Saved adapter version is not supported by this build. Use its matching adapter or explicitly replace the failed revision.");
+            if(!Set.of("oss-snapshot-v1",ADAPTER_VERSION).contains(config.adapterVersion())) throw invalid("Saved adapter version is not supported by this build. Use its matching adapter or explicitly replace the failed revision.");
             byte[] bytes = sources.readVerified(string(run, "source_key"), string(run, "checksum"));
             var parsed = parser.parse(new AlarmMemoryFile(string(run, "file_name"), bytes), config.feed().sheet(),
-                    config.feed().oem().equals("MIXED") ? null : config.feed().oem(), config.feed().technology(), config.feed().sourceTimezone());
+                    config.feed().oem().equals("MIXED") ? null : config.feed().oem(), config.feed().technology(), config.feed().sourceTimezone(), !config.adapterVersion().equals("oss-snapshot-v1"));
             if (parsed.validation().rejectedRows() > 0) {
                 fail(id, token, "Source validation failed. No observations committed.", encode(parsed.validation())); return true;
             }
@@ -228,7 +228,7 @@ public class AlarmWorkflowService {
     public List<Map<String, Object>> observations(long company, long run, long after, int limit) {
         access.require(company, false); completed(company, run); limit(limit);
         if (after < 0) throw invalid("afterId must be nonnegative.");
-        return jdbc.queryForList("SELECT id,identity_key,circle_id,circle_name,zone_name,site_code,oem,technology,resource_name,alarm_code,alarm_text,source_severity,classification,included,service_affecting,site_down,raised_at,JSON_UNQUOTE(JSON_EXTRACT(row_json,'$.supplementaryInformation')) supplementary_information FROM alarm_observations WHERE company_id=? AND run_id=? AND id>? ORDER BY id LIMIT ?", company, run, after, limit);
+        return jdbc.queryForList("SELECT id,identity_key,circle_id,circle_name,zone_name,site_code,oem,technology,resource_name,alarm_code,alarm_text,source_severity,classification,included,service_affecting,site_down,raised_at,JSON_UNQUOTE(JSON_EXTRACT(row_json,'$.supplementaryInformation')) supplementary_information,JSON_EXTRACT(row_json,'$.sourceAnnotations') source_annotations FROM alarm_observations WHERE company_id=? AND run_id=? AND id>? ORDER BY id LIMIT ?", company, run, after, limit);
     }
     public Map<String, Object> history(long company, long feed, String key) {
         access.require(company, false); identity(key);

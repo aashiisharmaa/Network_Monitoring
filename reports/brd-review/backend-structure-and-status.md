@@ -1,5 +1,9 @@
 # Backend structure and customer BRD status
 
+Latest requirement-level audit and applied functionality:
+[17 November 2026 BRD/code review](brd-code-audit-2026-11-17.md).
+The dated review below describes the earlier structure baseline.
+
 Review: 16 November 2026. Scope: current Java source and customer alarm BRD.
 
 Source: `C:\Users\Vinfocom\Downloads\Alarm Monitoring BRD_Document.docx`.

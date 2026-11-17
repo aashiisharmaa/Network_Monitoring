@@ -35,7 +35,7 @@ public class AlarmWorkflowController {
     @GetMapping("/imports/{id}/observations") public Map<String, Object> observations(@PathVariable("companyId") long company, @PathVariable("id") long id,
             @RequestParam(value = "afterId", defaultValue = "0") long after, @RequestParam(value = "limit", defaultValue = "100") int limit) { return ok(service.observations(company, id, after, limit)); }
     @GetMapping("/dashboard") public Map<String, Object> dashboard(@PathVariable("companyId") long company,
-            @RequestParam(value = "asOf", required = false) String at) { return ok(service.dashboard(company, at == null ? Instant.now().toString() : at)); }
+            @RequestParam(value = "asOf", required = false) String at) { return ok(reports.dashboard(company, at == null ? Instant.now().toString() : at)); }
     @GetMapping("/catalogue") public Map<String, Object> catalog(@PathVariable("companyId") long company) { return ok(service.catalogs(company)); }
     @PostMapping("/catalogue") public ResponseEntity<?> catalog(@PathVariable("companyId") long company, @RequestBody AlarmModels.Catalog rule) { return ResponseEntity.status(201).body(ok(service.addCatalog(company, rule))); }
     @DeleteMapping("/catalogue/{id}") public ResponseEntity<Void> removeCatalog(@PathVariable("companyId") long company, @PathVariable("id") long id) { service.removeCatalog(company, id); return ResponseEntity.noContent().build(); }
@@ -43,13 +43,13 @@ public class AlarmWorkflowController {
     @PostMapping("/feeds/{id}/sites") public ResponseEntity<?> site(@PathVariable("companyId") long company, @PathVariable("id") long id, @RequestBody AlarmModels.Site site) { return ResponseEntity.status(201).body(ok(service.addSite(company, id, site))); }
     @DeleteMapping("/feeds/{id}/sites/{siteId}") public ResponseEntity<Void> removeSite(@PathVariable("companyId") long company, @PathVariable("id") long id, @PathVariable("siteId") long site) { service.removeSite(company, id, site); return ResponseEntity.noContent().build(); }
     @GetMapping("/imports/{id}/report/{format}") public ResponseEntity<byte[]> report(@PathVariable("companyId") long company,@PathVariable("id") long id,@PathVariable("format") String format,@RequestParam(value="circleId",required=false) Long circle) {
-        if(!java.util.Set.of("csv","pdf").contains(format)) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.invalid("Report format must be csv or pdf.");
+        if(!java.util.Set.of("csv","pdf","xlsx").contains(format)) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.invalid("Report format must be csv, pdf or xlsx.");
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=alarm-report-"+id+"."+format)
-                .contentType(format.equals("pdf")?MediaType.APPLICATION_PDF:MediaType.parseMediaType("text/csv; charset=UTF-8")).body(reports.download(company,id,circle,format));
+                .contentType(format.equals("pdf")?MediaType.APPLICATION_PDF:MediaType.parseMediaType(format.equals("xlsx")?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"text/csv; charset=UTF-8")).body(reports.download(company,id,circle,format));
     }
     @GetMapping("/dashboard/report/{format}") public ResponseEntity<byte[]> national(@PathVariable("companyId") long company,@PathVariable("format") String format,@RequestParam(value="asOf") String at,@RequestParam(value="circleId",required=false) Long circle) {
-        if(!java.util.Set.of("csv","pdf").contains(format)) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.invalid("Report format must be csv or pdf.");
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=alarm-national-report."+format).contentType(format.equals("pdf")?MediaType.APPLICATION_PDF:MediaType.parseMediaType("text/csv; charset=UTF-8")).body(reports.nationalDownload(company,at,circle,format));
+        if(!java.util.Set.of("csv","pdf","xlsx").contains(format)) throw com.network.monitoring.alarm.exception.AlarmConfigurationException.invalid("Report format must be csv, pdf or xlsx.");
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=alarm-national-report."+format).contentType(format.equals("pdf")?MediaType.APPLICATION_PDF:MediaType.parseMediaType(format.equals("xlsx")?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"text/csv; charset=UTF-8")).body(reports.nationalDownload(company,at,circle,format));
     }
     @GetMapping("/feeds/{id}/alarms/{key}/history") public Map<String,Object> history(@PathVariable("companyId") long company,@PathVariable("id") long id,@PathVariable("key") String key) {return ok(service.history(company,id,key));}
     @PostMapping("/feeds/{id}/alarms/{key}/events") public Map<String,Object> event(@PathVariable("companyId") long company,@PathVariable("id") long id,@PathVariable("key") String key,@RequestBody Map<String,String> body) {service.operatorEvent(company,id,key,body.get("action"),body.get("note"));return ok(Map.of("recorded",true));}

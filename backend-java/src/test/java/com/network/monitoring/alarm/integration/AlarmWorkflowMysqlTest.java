@@ -61,7 +61,7 @@ class AlarmWorkflowMysqlTest {
         var draft=config.createFeed(100,new FeedCreate("TEST","Test feed","NOKIA","4G","CSV",null,"Asia/Kolkata","SNAPSHOT",circle));
         feed=config.updateFeed(100,draft.id(),new FeedUpdate(draft.name(),draft.oem(),draft.technology(),draft.fileFormat(),null,draft.sourceTimezone(),draft.dumpType(),circle,true,1)).id();
         workflow=new AlarmWorkflowService(jdbc,access,master,new AlarmImportPreviewService(),new ObjectMapper().findAndRegisterModules(),new DataSourceTransactionManager(datasource),new AlarmSourceStorage(files.toString()),new AlarmDefinitionService(access,master,new AlarmDefinitionRepository(jdbc),new DataSourceTransactionManager(datasource)),new AlarmObservationNormalizer(new ObjectMapper().findAndRegisterModules()),true);
-        reports=new AlarmReportService(workflow,access,jdbc);
+        reports=new AlarmReportService(workflow,access,new com.network.monitoring.alarm.repository.AlarmReportRepository(jdbc));
         var mail=new com.network.monitoring.platform.mail.config.ReportMailSettings();
         automation=newAutomation(mail,new com.network.monitoring.platform.mail.ReportMailTransport(mail),"");
     }
@@ -213,9 +213,35 @@ class AlarmWorkflowMysqlTest {
         assertTrue(national.contains("ERICSSON"));assertTrue(national.contains("NOKIA"));
         String scoped=new String(reports.nationalDownload(100,"2026-11-02T00:00:00Z",circle,"csv"),StandardCharsets.UTF_8);
         assertFalse(scoped.contains("Synthetic Delhi"));assertFalse(scoped.contains("ERICSSON"));
+        try(var book=org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(reports.nationalDownload(100,"2026-11-02T00:00:00Z",circle,"xlsx")))) {
+            assertEquals(2,book.getSheet("Circle Summary").getPhysicalNumberOfRows());
+            assertEquals("Mumbai",book.getSheet("Circle Summary").getRow(1).getCell(1).getStringCellValue());
+            assertEquals(2,book.getSheet("Alarm Evidence").getPhysicalNumberOfRows());
+        }
+        var summary=(com.network.monitoring.alarm.dto.AlarmReport.Summary)reports.dashboard(100,"2026-11-02T00:00:00Z").get("reportSummary");
+        assertEquals(2,summary.observedRecords());assertEquals(2,summary.circles().size());
+        assertThrows(AlarmConfigurationException.class,()->reports.nationalDownload(200,"2026-11-02T00:00:00Z",circle,"xlsx"));
         try(var doc=org.apache.pdfbox.Loader.loadPDF(pdf)) {String text=new org.apache.pdfbox.text.PDFTextStripper().getText(doc);assertTrue(text.contains("NATIONAL / CIRCLE"));assertTrue(text.contains("Synthetic Delhi"));}
         String preview=System.getenv("ALARM_REPORT_PREVIEW_DIR");
-        if(preview!=null) {Files.createDirectories(Path.of(preview));Files.write(Path.of(preview,"sample-oss-national-report.pdf"),pdf);Files.writeString(Path.of(preview,"sample-oss-national-report.csv"),national,StandardCharsets.UTF_8);}
+        if(preview!=null) {Files.createDirectories(Path.of(preview));Files.write(Path.of(preview,"sample-oss-national-report.pdf"),pdf);Files.writeString(Path.of(preview,"sample-oss-national-report.csv"),national,StandardCharsets.UTF_8);Files.write(Path.of(preview,"sample-oss-national-report.xlsx"),reports.nationalDownload(100,"2026-11-02T00:00:00Z",null,"xlsx"));}
+    }
+    @Test void operationalNotesAreCapturedInV2EvidenceWhileV1ReplayKeepsOriginalPolicy() throws Exception {
+        String header=HEADER.stripTrailing()+",Remarks,L2 Remarks,Circle Update\n";
+        String a="MU,node,100,Alarm,Major,2026-11-01 09:30:00,Remote Doable-NOC,Resolved,Power issue\n";
+        String b="MU,node,100,Alarm,Major,2026-11-01 09:30:00,Field Doable,WIP,Fiber issue\n";
+        long current=submit("2026-11-01T05:00:00Z",header+a);workflow.process(current);
+        assertTrue(workflow.observations(100,current,0,100).get(0).get("source_annotations").toString().contains("Resolved"));
+        String csv=new String(reports.download(100,current,null,"csv"),StandardCharsets.UTF_8);
+        assertTrue(csv.contains("Remote Doable-NOC"));assertTrue(csv.contains("Power issue"));
+        try(var book=org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(reports.download(100,current,null,"xlsx")))) {
+            assertEquals("Resolved",book.getSheet("Alarm Evidence").getRow(1).getCell(19).getStringCellValue());
+        }
+        long legacy=submit("2026-11-01T05:01:00Z",header+a+b);
+        jdbc.update("UPDATE alarm_ingestion_runs SET config_json=REPLACE(config_json,'oss-snapshot-v2','oss-snapshot-v1') WHERE id=?",legacy);
+        workflow.process(legacy);assertEquals("SUCCEEDED",workflow.run(100,legacy).get("status"));
+        assertTrue(workflow.observations(100,legacy,0,100).get(0).get("source_annotations").toString().equals("{}"));
+        long conflict=submit("2026-11-01T05:02:00Z",header+a+b);workflow.process(conflict);
+        assertEquals("FAILED",workflow.run(100,conflict).get("status"));
     }
     @Test void deltaChangesAreNeverPresentedAsACompleteSourceSnapshot() {
         var source=master.feed(100,feed).orElseThrow();

@@ -1,5 +1,10 @@
 # Backend optimization and nightly reporting plan
 
+17 November 2026: [full customer BRD/code audit](reports/brd-review/brd-code-audit-2026-11-17.md)
+records the existing-Alarms summary tab, structured XLSX/PDF output, preserved source
+annotations, compatible v1/v2 replay, authenticated public reads and remaining
+customer-input/template/deployment acceptance work.
+
 Customer alarm architecture/status update (16 November 2026): see
 [backend structure and BRD status](reports/brd-review/backend-structure-and-status.md).
 The alarm feature now owns its API/DTO/service/repository/ingestion/storage/security/

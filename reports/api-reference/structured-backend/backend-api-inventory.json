@@ -5,7 +5,7 @@
   "sourceHashes": {
     "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmConfigurationController.java": "fac75fda04a10e71296f8015481ec93ff6d3863b428f99f7937ce8281aa3977d",
     "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmImportPreviewController.java": "f461d6f98a85585f60ace8a8eb7701ff81fd11e8c52772610adbfaa85b400f64",
-    "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java": "14d3a475067eccd7f2db25ea5bb84e6e69295125fb4d122bd6fde99aa6aab179",
+    "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java": "2703e876b9f27ccf50526174b892cabda815182a8276f0867f8089662025995e",
     "backend-java/src/main/java/com/network/monitoring/identity/api/AuthController.java": "33ba12ba188afaddcaefc9c8d8b15e743b206056ca71c40a07c6875ce02033cc",
     "backend-java/src/main/java/com/network/monitoring/identity/api/CompanyController.java": "830aee5465d538a39e373965bc92c668349644a8302e70f35bdf285118b7a71b",
     "backend-java/src/main/java/com/network/monitoring/identity/api/UserController.java": "0ba3be0fe3a1779992f56ed44b223b8dbbf98972bab01ca55cbe50690e4c34b6",
@@ -1550,6 +1550,22 @@
             "sources": [],
             "circles": [],
             "configuredActiveFeeds": 0,
+            "reportSummary": {
+              "contractVersion": "alarm-summary-v1",
+              "zones": [],
+              "circles": [],
+              "observedRecords": 0,
+              "includedRecords": 0,
+              "unmappedCatalogue": 0,
+              "knownDownSites": 0,
+              "pendingOperationalInputs": [
+                "MS2 pending 2G/4G",
+                "LR pending status/count"
+              ],
+              "notes": [
+                "Counts are source observations; missing observations do not confirm clearance."
+              ]
+            },
             "warning": "Inspect source timestamps; missing alarms are not confirmed cleared."
           }
         },
@@ -2563,7 +2579,7 @@
       "sourceLine": 35,
       "purpose": "Register. Module: Authentication.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "JWT filter bypass; controller/service checks still apply",
         "license": "License-filter exempt",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -2619,7 +2635,7 @@
       "sourceLine": 51,
       "purpose": "Login. Module: Authentication.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "JWT filter bypass; controller/service checks still apply",
         "license": "License-filter exempt",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -2683,7 +2699,7 @@
       "sourceLine": 65,
       "purpose": "Logout. Module: Authentication.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "JWT filter bypass; controller/service checks still apply",
         "license": "License-filter exempt",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -2715,7 +2731,7 @@
       "sourceLine": 26,
       "purpose": "List Companies. Module: Companies.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "License-filter exempt",
         "authorization": "Legacy requireSuperAdmin check (blank legacy roles are treated as super admin by that helper)."
       },
@@ -3522,7 +3538,7 @@
       "sourceLine": 63,
       "purpose": "Get Upload Job. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -3569,7 +3585,7 @@
       "sourceLine": 74,
       "purpose": "List Upload Jobs. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -3814,7 +3830,7 @@
       "sourceLine": 117,
       "purpose": "Get Upload History. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -3909,7 +3925,7 @@
       "sourceLine": 134,
       "purpose": "Get Network Data. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -3942,7 +3958,7 @@
       "sourceLine": 140,
       "purpose": "Get Upload History Slim. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -3975,7 +3991,7 @@
       "sourceLine": 145,
       "purpose": "Get Upload History Slim Alias. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4036,7 +4052,7 @@
       "sourceLine": 150,
       "purpose": "Get Site Data. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4142,7 +4158,7 @@
       "sourceLine": 157,
       "purpose": "Get Alarm Data. Module: Uploads and parsing.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4196,7 +4212,7 @@
       "sourceLine": 24,
       "purpose": "Get Dashboard Stats. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4235,7 +4251,7 @@
       "sourceLine": 45,
       "purpose": "Get Total Cells. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4271,7 +4287,7 @@
       "sourceLine": 61,
       "purpose": "Get Total Sites. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4307,7 +4323,7 @@
       "sourceLine": 77,
       "purpose": "Get Total Bands. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4343,7 +4359,7 @@
       "sourceLine": 93,
       "purpose": "Get Total Tech. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4379,7 +4395,7 @@
       "sourceLine": 109,
       "purpose": "Get Total Sectors. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4415,7 +4431,7 @@
       "sourceLine": 125,
       "purpose": "Get Total Groups. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4451,7 +4467,7 @@
       "sourceLine": 141,
       "purpose": "Get Detailed Stats. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -4505,7 +4521,7 @@
       "sourceLine": 158,
       "purpose": "Get Performance Metrics. Module: Dashboard.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5017,7 +5033,7 @@
       "sourceLine": 35,
       "purpose": "Get Available Metrics. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5063,7 +5079,7 @@
       "sourceLine": 62,
       "purpose": "Get All KPIs. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5107,7 +5123,7 @@
       "sourceLine": 74,
       "purpose": "Get Ul Prb Utilization. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5152,7 +5168,7 @@
       "sourceLine": 80,
       "purpose": "Get Dl Prb Utilization. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5197,7 +5213,7 @@
       "sourceLine": 86,
       "purpose": "Get Data Volume. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5242,7 +5258,7 @@
       "sourceLine": 92,
       "purpose": "Get Ul Throughput. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5287,7 +5303,7 @@
       "sourceLine": 98,
       "purpose": "Get Dl Throughput. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5332,7 +5348,7 @@
       "sourceLine": 104,
       "purpose": "Get Erab Drop Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5377,7 +5393,7 @@
       "sourceLine": 110,
       "purpose": "Get Erab Success Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5422,7 +5438,7 @@
       "sourceLine": 116,
       "purpose": "Get RRC Success Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5467,7 +5483,7 @@
       "sourceLine": 122,
       "purpose": "Get Mean RRC Users. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5512,7 +5528,7 @@
       "sourceLine": 128,
       "purpose": "Get Max RRC Users. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5557,7 +5573,7 @@
       "sourceLine": 134,
       "purpose": "Get Erab Setup Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5602,7 +5618,7 @@
       "sourceLine": 140,
       "purpose": "Get RRC Drop Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5647,7 +5663,7 @@
       "sourceLine": 146,
       "purpose": "Get Volte Cssr. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5692,7 +5708,7 @@
       "sourceLine": 152,
       "purpose": "Get Volte Dcr. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5737,7 +5753,7 @@
       "sourceLine": 158,
       "purpose": "Get Inter Freq Hosr. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5782,7 +5798,7 @@
       "sourceLine": 164,
       "purpose": "Get Intra Freq Hosr. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5827,7 +5843,7 @@
       "sourceLine": 170,
       "purpose": "Get Csfb Success Rate. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5872,7 +5888,7 @@
       "sourceLine": 176,
       "purpose": "Get Dynamic Metrics. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5916,7 +5932,7 @@
       "sourceLine": 193,
       "purpose": "Get Dynamic Summary. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -5960,7 +5976,7 @@
       "sourceLine": 210,
       "purpose": "Get Dynamic Columns. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -6015,7 +6031,7 @@
       "sourceLine": 257,
       "purpose": "Get Dynamic Data. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -6068,7 +6084,7 @@
       "sourceLine": 325,
       "purpose": "Get Dynamic Batch Data. Module: KPI data and exports.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -6740,7 +6756,7 @@
       "sourceLine": 22,
       "purpose": "Get Validation Report. Module: KPI validation.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -6784,7 +6800,7 @@
       "sourceLine": 25,
       "purpose": "Get Settings. Module: Dashboard threshold settings.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -6999,7 +7015,7 @@
       "sourceLine": 22,
       "purpose": "Worst Cells. Module: Worst-performance analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -7061,7 +7077,7 @@
       "sourceLine": 30,
       "purpose": "Worst Sites. Module: Worst-performance analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -7123,7 +7139,7 @@
       "sourceLine": 38,
       "purpose": "Worst Cell Detail. Module: Worst-performance analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -7864,7 +7880,7 @@
       "sourceLine": 15,
       "purpose": "Health. Module: Service health.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "JWT filter bypass; controller/service checks still apply",
         "license": "License-filter exempt",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -7992,7 +8008,7 @@
       "sourceLine": 54,
       "purpose": "Get Recommendation Job. Module: Root cause analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -8179,7 +8195,7 @@
       "sourceLine": 104,
       "purpose": "List Presets. Module: Root cause analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -8292,7 +8308,7 @@
       "sourceLine": 132,
       "purpose": "Load Preset. Module: Root cause analysis.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -9698,7 +9714,7 @@
       "sourceLine": 22,
       "purpose": "Summary. Module: Site analytics and map intelligence.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -9751,7 +9767,7 @@
       "sourceLine": 27,
       "purpose": "Worst. Module: Site analytics and map intelligence.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -9804,7 +9820,7 @@
       "sourceLine": 33,
       "purpose": "Details. Module: Site analytics and map intelligence.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
@@ -9868,7 +9884,7 @@
       "sourceLine": 39,
       "purpose": "Intelligence. Module: Site analytics and map intelligence.",
       "security": {
-        "jwt": "JWT filter bypass for this route; service checks may still reject it",
+        "jwt": "Anonymous GET bypasses parsing only without Authorization; supplied tokens are validated",
         "license": "Valid installed license required (otherwise HTTP 402)",
         "authorization": "No additional role assertion is declared in this controller; do not infer frontend route guards as backend checks. Service/data-scope checks still apply where implemented."
       },
