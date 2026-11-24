@@ -115,8 +115,8 @@ public class UploadController {
     }
 
     @GetMapping("/uploads")
-    public ResponseEntity<Map<String, Object>> getUploadHistory() {
-        return ResponseEntity.ok(uploadService.getUploadHistory());
+    public ResponseEntity<Map<String, Object>> getUploadHistory(@RequestParam(value = "companyId", required = false) Long companyId) {
+        return ResponseEntity.ok(uploadService.getUploadHistory(companyId));
     }
 
     @DeleteMapping("/uploads/{id}")
@@ -138,13 +138,13 @@ public class UploadController {
     }
 
     @GetMapping("/uploads/history")
-    public ResponseEntity<Map<String, Object>> getUploadHistorySlim() {
-        return ResponseEntity.ok(uploadService.getUploadHistorySlim());
+    public ResponseEntity<Map<String, Object>> getUploadHistorySlim(@RequestParam(value = "companyId", required = false) Long companyId) {
+        return ResponseEntity.ok(uploadService.getUploadHistorySlim(companyId));
     }
 
     @GetMapping("/history")
-    public ResponseEntity<Map<String, Object>> getUploadHistorySlimAlias() {
-        return ResponseEntity.ok(uploadService.getUploadHistorySlim());
+    public ResponseEntity<Map<String, Object>> getUploadHistorySlimAlias(@RequestParam(value = "companyId", required = false) Long companyId) {
+        return ResponseEntity.ok(uploadService.getUploadHistorySlim(companyId));
     }
 
     @GetMapping("/site-data")

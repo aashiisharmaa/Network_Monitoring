@@ -1,11 +1,11 @@
 {
   "source": "current Java controller source; not a live-response recording",
   "controllers": 28,
-  "logicalOperations": 186,
+  "logicalOperations": 190,
   "sourceHashes": {
     "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmConfigurationController.java": "fac75fda04a10e71296f8015481ec93ff6d3863b428f99f7937ce8281aa3977d",
     "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmImportPreviewController.java": "f461d6f98a85585f60ace8a8eb7701ff81fd11e8c52772610adbfaa85b400f64",
-    "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java": "2703e876b9f27ccf50526174b892cabda815182a8276f0867f8089662025995e",
+    "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java": "cc46f1ffabed69c01e695d22eb7e78e6febc712ee030b27196def822c19943ef",
     "backend-java/src/main/java/com/network/monitoring/identity/api/AuthController.java": "33ba12ba188afaddcaefc9c8d8b15e743b206056ca71c40a07c6875ce02033cc",
     "backend-java/src/main/java/com/network/monitoring/identity/api/CompanyController.java": "830aee5465d538a39e373965bc92c668349644a8302e70f35bdf285118b7a71b",
     "backend-java/src/main/java/com/network/monitoring/identity/api/UserController.java": "0ba3be0fe3a1779992f56ed44b223b8dbbf98972bab01ca55cbe50690e4c34b6",
@@ -1096,6 +1096,249 @@
     {
       "id": "API-016",
       "controller": "AlarmWorkflowController",
+      "handler": "readiness",
+      "method": "GET",
+      "path": "/api/v1/alarm-workflow/companies/{companyId}/readiness",
+      "aliases": [],
+      "parameters": [
+        {
+          "name": "companyId",
+          "variable": "company",
+          "javaType": "long",
+          "location": "path",
+          "required": true,
+          "default": null,
+          "validation": []
+        }
+      ],
+      "returnType": "Map<String,Object>",
+      "requestContentType": null,
+      "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
+      "sourceLine": 29,
+      "purpose": "Readiness. Module: Native OSS snapshot workflow.",
+      "security": {
+        "jwt": "Bearer JWT and active session required",
+        "license": "Valid installed license required (otherwise HTTP 402)",
+        "authorization": "Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+      },
+      "requestExample": null,
+      "response": {
+        "status": 200,
+        "kind": "json",
+        "example": {
+          "success": true,
+          "data": {
+            "schema": {
+              "008": false,
+              "009": false,
+              "010": false
+            },
+            "workflowEnabled": false,
+            "operationalInputsEnabled": false,
+            "activeFeeds": null,
+            "catalogueRules": null,
+            "mappedSiteObjects": null,
+            "smtpOutboundEnabled": false,
+            "inputFolderConfigured": false,
+            "automaticClearingEnabled": false,
+            "deltaProcessingSupported": false
+          }
+        },
+        "description": "Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state."
+      },
+      "liveOpenApiListed": false,
+      "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
+    },
+    {
+      "id": "API-017",
+      "controller": "AlarmWorkflowController",
+      "handler": "operationalInputs",
+      "method": "GET",
+      "path": "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs",
+      "aliases": [],
+      "parameters": [
+        {
+          "name": "companyId",
+          "variable": "company",
+          "javaType": "long",
+          "location": "path",
+          "required": true,
+          "default": null,
+          "validation": []
+        },
+        {
+          "name": "asOf",
+          "variable": "at",
+          "javaType": "String",
+          "location": "query",
+          "required": true,
+          "default": null,
+          "validation": []
+        }
+      ],
+      "returnType": "Map<String,Object>",
+      "requestContentType": null,
+      "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
+      "sourceLine": 30,
+      "purpose": "Operational Inputs. Module: Native OSS snapshot workflow.",
+      "security": {
+        "jwt": "Bearer JWT and active session required",
+        "license": "Valid installed license required (otherwise HTTP 402)",
+        "authorization": "Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+      },
+      "requestExample": null,
+      "response": {
+        "status": 200,
+        "kind": "json",
+        "example": {
+          "success": true,
+          "data": {
+            "enabled": false,
+            "snapshot": {
+              "id": null,
+              "revision": 0,
+              "circles": []
+            }
+          }
+        },
+        "description": "Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state."
+      },
+      "liveOpenApiListed": false,
+      "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
+    },
+    {
+      "id": "API-018",
+      "controller": "AlarmWorkflowController",
+      "handler": "captureOperationalInputs",
+      "method": "POST",
+      "path": "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs",
+      "aliases": [],
+      "parameters": [
+        {
+          "name": "companyId",
+          "variable": "company",
+          "javaType": "long",
+          "location": "path",
+          "required": true,
+          "default": null,
+          "validation": []
+        },
+        {
+          "name": "body",
+          "variable": "body",
+          "javaType": "AlarmOperational.Capture",
+          "location": "body",
+          "required": true,
+          "default": null,
+          "validation": []
+        }
+      ],
+      "returnType": "ResponseEntity<?>",
+      "requestContentType": "application/json",
+      "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
+      "sourceLine": 31,
+      "purpose": "Capture Operational Inputs. Module: Native OSS snapshot workflow.",
+      "security": {
+        "jwt": "Bearer JWT and active session required",
+        "license": "Valid installed license required (otherwise HTTP 402)",
+        "authorization": "Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+      },
+      "requestExample": {
+        "effectiveAt": "2026-11-17T00:00:00Z",
+        "expectedRevision": 0,
+        "expectedBaseSnapshotId": null,
+        "sourceReference": "Synthetic approved NOC register",
+        "circles": [
+          {
+            "circleId": 10,
+            "technology": "4G",
+            "ms2Pending": 0,
+            "lrPending": null,
+            "siteInventoryTotal": 10,
+            "siteUp": 8,
+            "gpsAlarms": null,
+            "vswrAlarms": 0,
+            "zoneOwner": "Example zone owner",
+            "circleOwner": "Example circle owner",
+            "majorReason": null,
+            "sites": []
+          }
+        ]
+      },
+      "response": {
+        "status": 201,
+        "kind": "json",
+        "example": {
+          "success": true,
+          "data": {
+            "id": 1,
+            "effectiveAt": "2026-11-17T00:00:00Z",
+            "revision": 1,
+            "basedOnId": null,
+            "sourceReference": "Synthetic approved NOC register",
+            "checksum": "PAYLOAD_SHA256",
+            "createdBy": 1,
+            "circles": []
+          }
+        },
+        "description": "Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state."
+      },
+      "liveOpenApiListed": false,
+      "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
+    },
+    {
+      "id": "API-019",
+      "controller": "AlarmWorkflowController",
+      "handler": "operationalHistory",
+      "method": "GET",
+      "path": "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs/history",
+      "aliases": [],
+      "parameters": [
+        {
+          "name": "companyId",
+          "variable": "company",
+          "javaType": "long",
+          "location": "path",
+          "required": true,
+          "default": null,
+          "validation": []
+        },
+        {
+          "name": "limit",
+          "variable": "limit",
+          "javaType": "int",
+          "location": "query",
+          "required": false,
+          "default": "50",
+          "validation": []
+        }
+      ],
+      "returnType": "Map<String,Object>",
+      "requestContentType": null,
+      "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
+      "sourceLine": 32,
+      "purpose": "Operational History. Module: Native OSS snapshot workflow.",
+      "security": {
+        "jwt": "Bearer JWT and active session required",
+        "license": "Valid installed license required (otherwise HTTP 402)",
+        "authorization": "Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+      },
+      "requestExample": null,
+      "response": {
+        "status": 200,
+        "kind": "json",
+        "example": {
+          "success": true,
+          "data": []
+        },
+        "description": "Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state."
+      },
+      "liveOpenApiListed": false,
+      "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
+    },
+    {
+      "id": "API-020",
+      "controller": "AlarmWorkflowController",
       "handler": "submit",
       "method": "POST",
       "path": "/api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports",
@@ -1141,7 +1384,7 @@
       "returnType": "ResponseEntity<?>",
       "requestContentType": "multipart/form-data",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 25,
+      "sourceLine": 34,
       "purpose": "Submit. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1172,7 +1415,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-017",
+      "id": "API-021",
       "controller": "AlarmWorkflowController",
       "handler": "runs",
       "method": "GET",
@@ -1201,7 +1444,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 30,
+      "sourceLine": 39,
       "purpose": "Runs. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1234,7 +1477,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-018",
+      "id": "API-022",
       "controller": "AlarmWorkflowController",
       "handler": "run",
       "method": "GET",
@@ -1263,7 +1506,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 32,
+      "sourceLine": 41,
       "purpose": "Run. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1294,7 +1537,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-019",
+      "id": "API-023",
       "controller": "AlarmWorkflowController",
       "handler": "retry",
       "method": "POST",
@@ -1323,7 +1566,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 33,
+      "sourceLine": 42,
       "purpose": "Requeue a FAILED run using exactly its staged source and frozen configuration.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1354,7 +1597,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-020",
+      "id": "API-024",
       "controller": "AlarmWorkflowController",
       "handler": "replace",
       "method": "POST",
@@ -1392,7 +1635,7 @@
       "returnType": "ResponseEntity<?>",
       "requestContentType": "multipart/form-data",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 34,
+      "sourceLine": 43,
       "purpose": "Create a corrected revision of the latest FAILED snapshot using a replacement file and current configuration; successful history cannot be overwritten.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1423,7 +1666,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-021",
+      "id": "API-025",
       "controller": "AlarmWorkflowController",
       "handler": "observations",
       "method": "GET",
@@ -1470,7 +1713,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 35,
+      "sourceLine": 44,
       "purpose": "Observations. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1503,7 +1746,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-022",
+      "id": "API-026",
       "controller": "AlarmWorkflowController",
       "handler": "dashboard",
       "method": "GET",
@@ -1532,7 +1775,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 37,
+      "sourceLine": 46,
       "purpose": "Dashboard. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1575,7 +1818,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-023",
+      "id": "API-027",
       "controller": "AlarmWorkflowController",
       "handler": "catalog",
       "method": "GET",
@@ -1595,7 +1838,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 39,
+      "sourceLine": 48,
       "purpose": "Catalog. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1616,7 +1859,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-024",
+      "id": "API-028",
       "controller": "AlarmWorkflowController",
       "handler": "catalog",
       "method": "POST",
@@ -1645,7 +1888,7 @@
       "returnType": "ResponseEntity<?>",
       "requestContentType": "application/json",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 40,
+      "sourceLine": 49,
       "purpose": "Catalog. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1685,7 +1928,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-025",
+      "id": "API-029",
       "controller": "AlarmWorkflowController",
       "handler": "removeCatalog",
       "method": "DELETE",
@@ -1714,7 +1957,7 @@
       "returnType": "ResponseEntity<Void>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 41,
+      "sourceLine": 50,
       "purpose": "Remove Catalog. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1732,7 +1975,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-026",
+      "id": "API-030",
       "controller": "AlarmWorkflowController",
       "handler": "sites",
       "method": "GET",
@@ -1761,7 +2004,7 @@
       "returnType": "Map<String, Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 42,
+      "sourceLine": 51,
       "purpose": "Sites. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1782,7 +2025,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-027",
+      "id": "API-031",
       "controller": "AlarmWorkflowController",
       "handler": "site",
       "method": "POST",
@@ -1820,7 +2063,7 @@
       "returnType": "ResponseEntity<?>",
       "requestContentType": "application/json",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 43,
+      "sourceLine": 52,
       "purpose": "Site. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1850,7 +2093,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-028",
+      "id": "API-032",
       "controller": "AlarmWorkflowController",
       "handler": "removeSite",
       "method": "DELETE",
@@ -1888,7 +2131,7 @@
       "returnType": "ResponseEntity<Void>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 44,
+      "sourceLine": 53,
       "purpose": "Remove Site. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1906,7 +2149,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-029",
+      "id": "API-033",
       "controller": "AlarmWorkflowController",
       "handler": "report",
       "method": "GET",
@@ -1953,7 +2196,7 @@
       "returnType": "ResponseEntity<byte[]>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 45,
+      "sourceLine": 54,
       "purpose": "Report. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -1971,7 +2214,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-030",
+      "id": "API-034",
       "controller": "AlarmWorkflowController",
       "handler": "national",
       "method": "GET",
@@ -2018,7 +2261,7 @@
       "returnType": "ResponseEntity<byte[]>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 50,
+      "sourceLine": 59,
       "purpose": "Download national/circle PDF or CSV for the active-feed cohort at the requested asOf time.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2036,7 +2279,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-031",
+      "id": "API-035",
       "controller": "AlarmWorkflowController",
       "handler": "history",
       "method": "GET",
@@ -2074,7 +2317,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 54,
+      "sourceLine": 63,
       "purpose": "History. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2099,7 +2342,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-032",
+      "id": "API-036",
       "controller": "AlarmWorkflowController",
       "handler": "event",
       "method": "POST",
@@ -2146,7 +2389,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": "application/json",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 55,
+      "sourceLine": 64,
       "purpose": "Record a NOTE/ACKNOWLEDGED/RESOLVED operator action without inventing an OSS state transition.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2172,7 +2415,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-033",
+      "id": "API-037",
       "controller": "AlarmWorkflowController",
       "handler": "settings",
       "method": "GET",
@@ -2192,7 +2435,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 56,
+      "sourceLine": 65,
       "purpose": "Settings. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2220,7 +2463,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-034",
+      "id": "API-038",
       "controller": "AlarmWorkflowController",
       "handler": "settings",
       "method": "PUT",
@@ -2249,7 +2492,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": "application/json",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 57,
+      "sourceLine": 66,
       "purpose": "Settings. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2302,7 +2545,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-035",
+      "id": "API-039",
       "controller": "AlarmWorkflowController",
       "handler": "status",
       "method": "GET",
@@ -2322,7 +2565,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 58,
+      "sourceLine": 67,
       "purpose": "Status. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2350,7 +2593,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-036",
+      "id": "API-040",
       "controller": "AlarmWorkflowController",
       "handler": "deliveries",
       "method": "GET",
@@ -2370,7 +2613,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 59,
+      "sourceLine": 68,
       "purpose": "Deliveries. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2391,7 +2634,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-037",
+      "id": "API-041",
       "controller": "AlarmWorkflowController",
       "handler": "retryDelivery",
       "method": "POST",
@@ -2420,7 +2663,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 60,
+      "sourceLine": 69,
       "purpose": "Retry Delivery. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2443,7 +2686,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-038",
+      "id": "API-042",
       "controller": "AlarmWorkflowController",
       "handler": "reconcile",
       "method": "POST",
@@ -2481,7 +2724,7 @@
       "returnType": "Map<String,Object>",
       "requestContentType": "application/json",
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 61,
+      "sourceLine": 70,
       "purpose": "Resolve an UNKNOWN send result using confirmed provider evidence.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2507,7 +2750,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-039",
+      "id": "API-043",
       "controller": "AlarmWorkflowController",
       "handler": "capture",
       "method": "GET",
@@ -2536,7 +2779,7 @@
       "returnType": "ResponseEntity<byte[]>",
       "requestContentType": null,
       "source": "backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java",
-      "sourceLine": 62,
+      "sourceLine": 71,
       "purpose": "Capture. Module: Native OSS snapshot workflow.",
       "security": {
         "jwt": "Bearer JWT and active session required",
@@ -2554,7 +2797,7 @@
       "notes": "Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity."
     },
     {
-      "id": "API-040",
+      "id": "API-044",
       "controller": "AuthController",
       "handler": "register",
       "method": "POST",
@@ -2610,7 +2853,7 @@
       "notes": ""
     },
     {
-      "id": "API-041",
+      "id": "API-045",
       "controller": "AuthController",
       "handler": "login",
       "method": "POST",
@@ -2666,7 +2909,7 @@
       "notes": ""
     },
     {
-      "id": "API-042",
+      "id": "API-046",
       "controller": "AuthController",
       "handler": "logout",
       "method": "POST",
@@ -2716,7 +2959,7 @@
       "notes": ""
     },
     {
-      "id": "API-043",
+      "id": "API-047",
       "controller": "CompanyController",
       "handler": "listCompanies",
       "method": "GET",
@@ -2760,7 +3003,7 @@
       "notes": "Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization."
     },
     {
-      "id": "API-044",
+      "id": "API-048",
       "controller": "CompanyController",
       "handler": "getCompany",
       "method": "GET",
@@ -2812,7 +3055,7 @@
       "notes": "Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization."
     },
     {
-      "id": "API-045",
+      "id": "API-049",
       "controller": "CompanyController",
       "handler": "createCompany",
       "method": "POST",
@@ -2871,7 +3114,7 @@
       "notes": "Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization."
     },
     {
-      "id": "API-046",
+      "id": "API-050",
       "controller": "CompanyController",
       "handler": "updateCompany",
       "method": "PUT",
@@ -2939,7 +3182,7 @@
       "notes": "Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization."
     },
     {
-      "id": "API-047",
+      "id": "API-051",
       "controller": "CompanyController",
       "handler": "blockCompany",
       "method": "PATCH",
@@ -2991,7 +3234,7 @@
       "notes": "Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization."
     },
     {
-      "id": "API-048",
+      "id": "API-052",
       "controller": "UserController",
       "handler": "listUsers",
       "method": "GET",
@@ -3025,7 +3268,7 @@
       "notes": "Current service accepts USER or SUPER_ADMIN roles only. ADMIN is recognized by newer alarm authorization but is not accepted by this account-creation API. Invalid roles/statuses are rejected."
     },
     {
-      "id": "API-049",
+      "id": "API-053",
       "controller": "UserController",
       "handler": "createUser",
       "method": "POST",
@@ -3081,7 +3324,7 @@
       "notes": "Current service accepts USER or SUPER_ADMIN roles only. ADMIN is recognized by newer alarm authorization but is not accepted by this account-creation API. Invalid roles/statuses are rejected."
     },
     {
-      "id": "API-050",
+      "id": "API-054",
       "controller": "KpiIngestionController",
       "handler": "start",
       "method": "POST",
@@ -3162,7 +3405,7 @@
       "notes": "Targets an existing KPI fileId. identityFields is a JSON-encoded form string, not a JSON request body. Replays are namespaced by dataset/source identity."
     },
     {
-      "id": "API-051",
+      "id": "API-055",
       "controller": "KpiIngestionController",
       "handler": "list",
       "method": "GET",
@@ -3203,7 +3446,7 @@
       "notes": "Targets an existing KPI fileId. identityFields is a JSON-encoded form string, not a JSON request body. Replays are namespaced by dataset/source identity."
     },
     {
-      "id": "API-052",
+      "id": "API-056",
       "controller": "KpiIngestionController",
       "handler": "get",
       "method": "GET",
@@ -3248,7 +3491,7 @@
       "notes": "Targets an existing KPI fileId. identityFields is a JSON-encoded form string, not a JSON request body. Replays are namespaced by dataset/source identity."
     },
     {
-      "id": "API-053",
+      "id": "API-057",
       "controller": "KpiIngestionController",
       "handler": "retry",
       "method": "POST",
@@ -3293,7 +3536,7 @@
       "notes": "Targets an existing KPI fileId. identityFields is a JSON-encoded form string, not a JSON request body. Replays are namespaced by dataset/source identity."
     },
     {
-      "id": "API-054",
+      "id": "API-058",
       "controller": "UploadController",
       "handler": "uploadAndParseFile",
       "method": "POST",
@@ -3403,7 +3646,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-055",
+      "id": "API-059",
       "controller": "UploadController",
       "handler": "uploadKpiData",
       "method": "POST",
@@ -3513,7 +3756,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-056",
+      "id": "API-060",
       "controller": "UploadController",
       "handler": "getUploadJob",
       "method": "GET",
@@ -3560,7 +3803,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-057",
+      "id": "API-061",
       "controller": "UploadController",
       "handler": "listUploadJobs",
       "method": "GET",
@@ -3603,7 +3846,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-058",
+      "id": "API-062",
       "controller": "UploadController",
       "handler": "retryUploadJob",
       "method": "POST",
@@ -3650,7 +3893,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-059",
+      "id": "API-063",
       "controller": "UploadController",
       "handler": "previewKpiData",
       "method": "POST",
@@ -3693,7 +3936,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-060",
+      "id": "API-064",
       "controller": "UploadController",
       "handler": "uploadSiteData",
       "method": "POST",
@@ -3754,7 +3997,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-061",
+      "id": "API-065",
       "controller": "UploadController",
       "handler": "uploadAlarmData",
       "method": "POST",
@@ -3815,7 +4058,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-062",
+      "id": "API-066",
       "controller": "UploadController",
       "handler": "getUploadHistory",
       "method": "GET",
@@ -3848,7 +4091,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-063",
+      "id": "API-067",
       "controller": "UploadController",
       "handler": "deleteUpload",
       "method": "DELETE",
@@ -3891,7 +4134,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-064",
+      "id": "API-068",
       "controller": "UploadController",
       "handler": "getNetworkData",
       "method": "GET",
@@ -3943,7 +4186,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-065",
+      "id": "API-069",
       "controller": "UploadController",
       "handler": "getUploadHistorySlim",
       "method": "GET",
@@ -3976,7 +4219,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-066",
+      "id": "API-070",
       "controller": "UploadController",
       "handler": "getUploadHistorySlimAlias",
       "method": "GET",
@@ -4009,7 +4252,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-067",
+      "id": "API-071",
       "controller": "UploadController",
       "handler": "getSiteData",
       "method": "GET",
@@ -4070,7 +4313,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-068",
+      "id": "API-072",
       "controller": "UploadController",
       "handler": "getAlarmData",
       "method": "GET",
@@ -4176,7 +4419,7 @@
       "notes": "KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields."
     },
     {
-      "id": "API-069",
+      "id": "API-073",
       "controller": "DashboardController",
       "handler": "getDashboardStats",
       "method": "GET",
@@ -4236,7 +4479,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-070",
+      "id": "API-074",
       "controller": "DashboardController",
       "handler": "getTotalCells",
       "method": "GET",
@@ -4272,7 +4515,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-071",
+      "id": "API-075",
       "controller": "DashboardController",
       "handler": "getTotalSites",
       "method": "GET",
@@ -4308,7 +4551,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-072",
+      "id": "API-076",
       "controller": "DashboardController",
       "handler": "getTotalBands",
       "method": "GET",
@@ -4344,7 +4587,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-073",
+      "id": "API-077",
       "controller": "DashboardController",
       "handler": "getTotalTech",
       "method": "GET",
@@ -4380,7 +4623,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-074",
+      "id": "API-078",
       "controller": "DashboardController",
       "handler": "getTotalSectors",
       "method": "GET",
@@ -4416,7 +4659,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-075",
+      "id": "API-079",
       "controller": "DashboardController",
       "handler": "getTotalGroups",
       "method": "GET",
@@ -4452,7 +4695,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-076",
+      "id": "API-080",
       "controller": "DashboardController",
       "handler": "getDetailedStats",
       "method": "GET",
@@ -4485,7 +4728,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-077",
+      "id": "API-081",
       "controller": "DashboardController",
       "handler": "getPerformanceMetrics",
       "method": "GET",
@@ -4539,7 +4782,7 @@
       "notes": "Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies."
     },
     {
-      "id": "API-078",
+      "id": "API-082",
       "controller": "KpiAlarmController",
       "handler": "listRules",
       "method": "GET",
@@ -4573,7 +4816,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-079",
+      "id": "API-083",
       "controller": "KpiAlarmController",
       "handler": "createRule",
       "method": "POST",
@@ -4624,7 +4867,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-080",
+      "id": "API-084",
       "controller": "KpiAlarmController",
       "handler": "updateRule",
       "method": "PUT",
@@ -4684,7 +4927,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-081",
+      "id": "API-085",
       "controller": "KpiAlarmController",
       "handler": "deleteRule",
       "method": "DELETE",
@@ -4728,7 +4971,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-082",
+      "id": "API-086",
       "controller": "KpiAlarmController",
       "handler": "generate",
       "method": "POST",
@@ -4772,7 +5015,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-083",
+      "id": "API-087",
       "controller": "KpiAlarmController",
       "handler": "summary",
       "method": "GET",
@@ -4816,7 +5059,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-084",
+      "id": "API-088",
       "controller": "KpiAlarmController",
       "handler": "listAlarms",
       "method": "GET",
@@ -4896,7 +5139,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-085",
+      "id": "API-089",
       "controller": "KpiAlarmController",
       "handler": "acknowledge",
       "method": "POST",
@@ -4952,7 +5195,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-086",
+      "id": "API-090",
       "controller": "KpiAlarmController",
       "handler": "resolve",
       "method": "POST",
@@ -5008,7 +5251,7 @@
       "notes": "KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee."
     },
     {
-      "id": "API-087",
+      "id": "API-091",
       "controller": "KpiController",
       "handler": "getAvailableMetrics",
       "method": "GET",
@@ -5054,7 +5297,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-088",
+      "id": "API-092",
       "controller": "KpiController",
       "handler": "getAllKpis",
       "method": "GET",
@@ -5098,7 +5341,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-089",
+      "id": "API-093",
       "controller": "KpiController",
       "handler": "getUlPrbUtilization",
       "method": "GET",
@@ -5143,7 +5386,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-090",
+      "id": "API-094",
       "controller": "KpiController",
       "handler": "getDlPrbUtilization",
       "method": "GET",
@@ -5188,7 +5431,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-091",
+      "id": "API-095",
       "controller": "KpiController",
       "handler": "getDataVolume",
       "method": "GET",
@@ -5233,7 +5476,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-092",
+      "id": "API-096",
       "controller": "KpiController",
       "handler": "getUlThroughput",
       "method": "GET",
@@ -5278,7 +5521,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-093",
+      "id": "API-097",
       "controller": "KpiController",
       "handler": "getDlThroughput",
       "method": "GET",
@@ -5323,7 +5566,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-094",
+      "id": "API-098",
       "controller": "KpiController",
       "handler": "getErabDropRate",
       "method": "GET",
@@ -5368,7 +5611,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-095",
+      "id": "API-099",
       "controller": "KpiController",
       "handler": "getErabSuccessRate",
       "method": "GET",
@@ -5413,7 +5656,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-096",
+      "id": "API-100",
       "controller": "KpiController",
       "handler": "getRrcSuccessRate",
       "method": "GET",
@@ -5458,7 +5701,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-097",
+      "id": "API-101",
       "controller": "KpiController",
       "handler": "getMeanRrcUsers",
       "method": "GET",
@@ -5503,7 +5746,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-098",
+      "id": "API-102",
       "controller": "KpiController",
       "handler": "getMaxRrcUsers",
       "method": "GET",
@@ -5548,7 +5791,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-099",
+      "id": "API-103",
       "controller": "KpiController",
       "handler": "getErabSetupRate",
       "method": "GET",
@@ -5593,7 +5836,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-100",
+      "id": "API-104",
       "controller": "KpiController",
       "handler": "getRrcDropRate",
       "method": "GET",
@@ -5638,7 +5881,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-101",
+      "id": "API-105",
       "controller": "KpiController",
       "handler": "getVolteCssr",
       "method": "GET",
@@ -5683,7 +5926,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-102",
+      "id": "API-106",
       "controller": "KpiController",
       "handler": "getVolteDcr",
       "method": "GET",
@@ -5728,7 +5971,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-103",
+      "id": "API-107",
       "controller": "KpiController",
       "handler": "getInterFreqHosr",
       "method": "GET",
@@ -5773,7 +6016,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-104",
+      "id": "API-108",
       "controller": "KpiController",
       "handler": "getIntraFreqHosr",
       "method": "GET",
@@ -5818,7 +6061,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-105",
+      "id": "API-109",
       "controller": "KpiController",
       "handler": "getCsfbSuccessRate",
       "method": "GET",
@@ -5863,7 +6106,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-106",
+      "id": "API-110",
       "controller": "KpiController",
       "handler": "getDynamicMetrics",
       "method": "GET",
@@ -5907,7 +6150,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-107",
+      "id": "API-111",
       "controller": "KpiController",
       "handler": "getDynamicSummary",
       "method": "GET",
@@ -5951,7 +6194,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-108",
+      "id": "API-112",
       "controller": "KpiController",
       "handler": "getDynamicColumns",
       "method": "GET",
@@ -5997,7 +6240,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-109",
+      "id": "API-113",
       "controller": "KpiController",
       "handler": "getDynamicData",
       "method": "GET",
@@ -6059,7 +6302,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-110",
+      "id": "API-114",
       "controller": "KpiController",
       "handler": "getDynamicBatchData",
       "method": "GET",
@@ -6103,7 +6346,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-111",
+      "id": "API-115",
       "controller": "KpiController",
       "handler": "updateDynamicSelection",
       "method": "POST",
@@ -6170,7 +6413,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-112",
+      "id": "API-116",
       "controller": "KpiController",
       "handler": "getDynamicBadDays",
       "method": "POST",
@@ -6235,7 +6478,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-113",
+      "id": "API-117",
       "controller": "KpiController",
       "handler": "exportDynamicReport",
       "method": "POST",
@@ -6300,7 +6543,7 @@
       "notes": "Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply."
     },
     {
-      "id": "API-114",
+      "id": "API-118",
       "controller": "KpiThresholdRuleController",
       "handler": "listRules",
       "method": "GET",
@@ -6334,7 +6577,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-115",
+      "id": "API-119",
       "controller": "KpiThresholdRuleController",
       "handler": "createRule",
       "method": "POST",
@@ -6387,7 +6630,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-116",
+      "id": "API-120",
       "controller": "KpiThresholdRuleController",
       "handler": "updateRule",
       "method": "PUT",
@@ -6449,7 +6692,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-117",
+      "id": "API-121",
       "controller": "KpiThresholdRuleController",
       "handler": "deleteRule",
       "method": "DELETE",
@@ -6493,7 +6736,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-118",
+      "id": "API-122",
       "controller": "KpiThresholdRuleController",
       "handler": "evaluate",
       "method": "GET",
@@ -6555,7 +6798,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-119",
+      "id": "API-123",
       "controller": "KpiThresholdRuleController",
       "handler": "evaluateFile",
       "method": "GET",
@@ -6599,7 +6842,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-120",
+      "id": "API-124",
       "controller": "KpiThresholdRuleController",
       "handler": "ensureFileRules",
       "method": "POST",
@@ -6643,7 +6886,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-121",
+      "id": "API-125",
       "controller": "KpiThresholdRuleController",
       "handler": "listResults",
       "method": "GET",
@@ -6687,7 +6930,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-122",
+      "id": "API-126",
       "controller": "KpiThresholdRuleController",
       "handler": "getResult",
       "method": "GET",
@@ -6731,7 +6974,7 @@
       "notes": "Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary."
     },
     {
-      "id": "API-123",
+      "id": "API-127",
       "controller": "KpiValidationReportController",
       "handler": "getValidationReport",
       "method": "GET",
@@ -6775,7 +7018,7 @@
       "notes": ""
     },
     {
-      "id": "API-124",
+      "id": "API-128",
       "controller": "SettingController",
       "handler": "getSettings",
       "method": "GET",
@@ -6819,7 +7062,7 @@
       "notes": "updateSetting accepts flat numeric metric keys, not a nested thresholds object; thresholdOperators/operators and dynamicThresholds are separate maps. thresholds/export instead requires the nested thresholds/ operators export wrapper. Preserve endpoint capitalization: updateSetting."
     },
     {
-      "id": "API-125",
+      "id": "API-129",
       "controller": "SettingController",
       "handler": "updateSettings",
       "method": "POST",
@@ -6880,7 +7123,7 @@
       "notes": "updateSetting accepts flat numeric metric keys, not a nested thresholds object; thresholdOperators/operators and dynamicThresholds are separate maps. thresholds/export instead requires the nested thresholds/ operators export wrapper. Preserve endpoint capitalization: updateSetting."
     },
     {
-      "id": "API-126",
+      "id": "API-130",
       "controller": "SettingController",
       "handler": "exportThresholdWorkbook",
       "method": "POST",
@@ -6928,7 +7171,7 @@
       "notes": "updateSetting accepts flat numeric metric keys, not a nested thresholds object; thresholdOperators/operators and dynamicThresholds are separate maps. thresholds/export instead requires the nested thresholds/ operators export wrapper. Preserve endpoint capitalization: updateSetting."
     },
     {
-      "id": "API-127",
+      "id": "API-131",
       "controller": "SettingController",
       "handler": "importThresholdWorkbook",
       "method": "POST",
@@ -6972,7 +7215,7 @@
       "notes": "updateSetting accepts flat numeric metric keys, not a nested thresholds object; thresholdOperators/operators and dynamicThresholds are separate maps. thresholds/export instead requires the nested thresholds/ operators export wrapper. Preserve endpoint capitalization: updateSetting."
     },
     {
-      "id": "API-128",
+      "id": "API-132",
       "controller": "WorstPerformanceController",
       "handler": "worstCells",
       "method": "GET",
@@ -7034,7 +7277,7 @@
       "notes": ""
     },
     {
-      "id": "API-129",
+      "id": "API-133",
       "controller": "WorstPerformanceController",
       "handler": "worstSites",
       "method": "GET",
@@ -7096,7 +7339,7 @@
       "notes": ""
     },
     {
-      "id": "API-130",
+      "id": "API-134",
       "controller": "WorstPerformanceController",
       "handler": "worstCellDetail",
       "method": "GET",
@@ -7158,7 +7401,7 @@
       "notes": ""
     },
     {
-      "id": "API-131",
+      "id": "API-135",
       "controller": "LicenseController",
       "handler": "listLicenses",
       "method": "GET",
@@ -7192,7 +7435,7 @@
       "notes": ""
     },
     {
-      "id": "API-132",
+      "id": "API-136",
       "controller": "LicenseController",
       "handler": "getLicense",
       "method": "GET",
@@ -7236,7 +7479,7 @@
       "notes": ""
     },
     {
-      "id": "API-133",
+      "id": "API-137",
       "controller": "LicenseController",
       "handler": "createLicense",
       "method": "POST",
@@ -7288,7 +7531,7 @@
       "notes": ""
     },
     {
-      "id": "API-134",
+      "id": "API-138",
       "controller": "LicenseController",
       "handler": "renewLicense",
       "method": "PATCH",
@@ -7343,7 +7586,7 @@
       "notes": ""
     },
     {
-      "id": "API-135",
+      "id": "API-139",
       "controller": "LicenseController",
       "handler": "blockLicense",
       "method": "PATCH",
@@ -7387,7 +7630,7 @@
       "notes": ""
     },
     {
-      "id": "API-136",
+      "id": "API-140",
       "controller": "LicenseController",
       "handler": "downloadLicense",
       "method": "GET",
@@ -7427,7 +7670,7 @@
       "notes": ""
     },
     {
-      "id": "API-137",
+      "id": "API-141",
       "controller": "LocalLicenseController",
       "handler": "uploadLicense",
       "method": "POST",
@@ -7473,7 +7716,7 @@
       "notes": "License-filter exempt but still requires JWT/session authentication. Upload a real issued license.dat; no license contents, signing keys or actual device IDs are included in this handbook."
     },
     {
-      "id": "API-138",
+      "id": "API-142",
       "controller": "LocalLicenseController",
       "handler": "status",
       "method": "GET",
@@ -7509,7 +7752,7 @@
       "notes": "License-filter exempt but still requires JWT/session authentication. Upload a real issued license.dat; no license contents, signing keys or actual device IDs are included in this handbook."
     },
     {
-      "id": "API-139",
+      "id": "API-143",
       "controller": "LocalLicenseController",
       "handler": "deviceId",
       "method": "GET",
@@ -7545,7 +7788,7 @@
       "notes": "License-filter exempt but still requires JWT/session authentication. Upload a real issued license.dat; no license contents, signing keys or actual device IDs are included in this handbook."
     },
     {
-      "id": "API-140",
+      "id": "API-144",
       "controller": "NightlyWorkflowController",
       "handler": "profile",
       "method": "GET",
@@ -7586,7 +7829,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-141",
+      "id": "API-145",
       "controller": "NightlyWorkflowController",
       "handler": "configure",
       "method": "PUT",
@@ -7656,7 +7899,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-142",
+      "id": "API-146",
       "controller": "NightlyWorkflowController",
       "handler": "create",
       "method": "POST",
@@ -7715,7 +7958,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-143",
+      "id": "API-147",
       "controller": "NightlyWorkflowController",
       "handler": "list",
       "method": "GET",
@@ -7765,7 +8008,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-144",
+      "id": "API-148",
       "controller": "NightlyWorkflowController",
       "handler": "get",
       "method": "GET",
@@ -7806,7 +8049,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-145",
+      "id": "API-149",
       "controller": "NightlyWorkflowController",
       "handler": "retry",
       "method": "POST",
@@ -7865,7 +8108,7 @@
       "notes": "Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00\u201301:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee."
     },
     {
-      "id": "API-146",
+      "id": "API-150",
       "controller": "HealthController",
       "handler": "health",
       "method": "GET",
@@ -7902,7 +8145,7 @@
       "notes": ""
     },
     {
-      "id": "API-147",
+      "id": "API-151",
       "controller": "RecommendationController",
       "handler": "startRecommendationJob",
       "method": "POST",
@@ -7983,7 +8226,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-148",
+      "id": "API-152",
       "controller": "RecommendationController",
       "handler": "getRecommendationJob",
       "method": "GET",
@@ -8031,7 +8274,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-149",
+      "id": "API-153",
       "controller": "RecommendationController",
       "handler": "runRecommendation",
       "method": "POST",
@@ -8107,7 +8350,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-150",
+      "id": "API-154",
       "controller": "RecommendationController",
       "handler": "exportRecommendation",
       "method": "POST",
@@ -8180,7 +8423,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-151",
+      "id": "API-155",
       "controller": "RecommendationController",
       "handler": "listPresets",
       "method": "GET",
@@ -8213,7 +8456,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-152",
+      "id": "API-156",
       "controller": "RecommendationController",
       "handler": "savePreset",
       "method": "POST",
@@ -8283,7 +8526,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-153",
+      "id": "API-157",
       "controller": "RecommendationController",
       "handler": "loadPreset",
       "method": "GET",
@@ -8351,7 +8594,7 @@
       "notes": "Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export."
     },
     {
-      "id": "API-154",
+      "id": "API-158",
       "controller": "RecommendationExportController",
       "handler": "start",
       "method": "POST",
@@ -8429,7 +8672,7 @@
       "notes": "Uses the captured-result export path and persisted job status; download only once the export is ready. fileId is a dataset ID; export id is a different ID."
     },
     {
-      "id": "API-155",
+      "id": "API-159",
       "controller": "RecommendationExportController",
       "handler": "get",
       "method": "GET",
@@ -8474,7 +8717,7 @@
       "notes": "Uses the captured-result export path and persisted job status; download only once the export is ready. fileId is a dataset ID; export id is a different ID."
     },
     {
-      "id": "API-156",
+      "id": "API-160",
       "controller": "RecommendationExportController",
       "handler": "download",
       "method": "GET",
@@ -8512,7 +8755,7 @@
       "notes": "Uses the captured-result export path and persisted job status; download only once the export is ready. fileId is a dataset ID; export id is a different ID."
     },
     {
-      "id": "API-157",
+      "id": "API-161",
       "controller": "CommonReportController",
       "handler": "create",
       "method": "POST",
@@ -8575,7 +8818,7 @@
       "notes": "Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage."
     },
     {
-      "id": "API-158",
+      "id": "API-162",
       "controller": "CommonReportController",
       "handler": "list",
       "method": "GET",
@@ -8625,7 +8868,7 @@
       "notes": "Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage."
     },
     {
-      "id": "API-159",
+      "id": "API-163",
       "controller": "CommonReportController",
       "handler": "get",
       "method": "GET",
@@ -8671,7 +8914,7 @@
       "notes": "Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage."
     },
     {
-      "id": "API-160",
+      "id": "API-164",
       "controller": "CommonReportController",
       "handler": "retry",
       "method": "POST",
@@ -8717,7 +8960,7 @@
       "notes": "Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage."
     },
     {
-      "id": "API-161",
+      "id": "API-165",
       "controller": "CommonReportController",
       "handler": "download",
       "method": "GET",
@@ -8764,7 +9007,7 @@
       "notes": "Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage."
     },
     {
-      "id": "API-162",
+      "id": "API-166",
       "controller": "DailyAnalysisController",
       "handler": "configure",
       "method": "PUT",
@@ -8856,7 +9099,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-163",
+      "id": "API-167",
       "controller": "DailyAnalysisController",
       "handler": "profile",
       "method": "GET",
@@ -8900,7 +9143,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-164",
+      "id": "API-168",
       "controller": "DailyAnalysisController",
       "handler": "build",
       "method": "POST",
@@ -8954,7 +9197,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-165",
+      "id": "API-169",
       "controller": "DailyAnalysisController",
       "handler": "list",
       "method": "GET",
@@ -9004,7 +9247,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-166",
+      "id": "API-170",
       "controller": "DailyAnalysisController",
       "handler": "get",
       "method": "GET",
@@ -9049,7 +9292,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-167",
+      "id": "API-171",
       "controller": "DailyAnalysisController",
       "handler": "compare",
       "method": "GET",
@@ -9108,7 +9351,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-168",
+      "id": "API-172",
       "controller": "DailyAnalysisController",
       "handler": "retry",
       "method": "POST",
@@ -9153,7 +9396,7 @@
       "notes": "groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly."
     },
     {
-      "id": "API-169",
+      "id": "API-173",
       "controller": "ReportDatasetController",
       "handler": "list",
       "method": "GET",
@@ -9208,7 +9451,7 @@
       "notes": ""
     },
     {
-      "id": "API-170",
+      "id": "API-174",
       "controller": "ReportMailController",
       "handler": "configure",
       "method": "PUT",
@@ -9269,7 +9512,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-171",
+      "id": "API-175",
       "controller": "ReportMailController",
       "handler": "profile",
       "method": "GET",
@@ -9314,7 +9557,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-172",
+      "id": "API-176",
       "controller": "ReportMailController",
       "handler": "submit",
       "method": "POST",
@@ -9364,7 +9607,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-173",
+      "id": "API-177",
       "controller": "ReportMailController",
       "handler": "list",
       "method": "GET",
@@ -9414,7 +9657,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-174",
+      "id": "API-178",
       "controller": "ReportMailController",
       "handler": "get",
       "method": "GET",
@@ -9455,7 +9698,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-175",
+      "id": "API-179",
       "controller": "ReportMailController",
       "handler": "retry",
       "method": "POST",
@@ -9496,7 +9739,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-176",
+      "id": "API-180",
       "controller": "ReportMailController",
       "handler": "cancel",
       "method": "POST",
@@ -9537,7 +9780,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-177",
+      "id": "API-181",
       "controller": "ReportMailController",
       "handler": "reconcile",
       "method": "POST",
@@ -9590,7 +9833,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-178",
+      "id": "API-182",
       "controller": "ReportMailController",
       "handler": "captured",
       "method": "GET",
@@ -9628,7 +9871,7 @@
       "notes": "Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox."
     },
     {
-      "id": "API-179",
+      "id": "API-183",
       "controller": "PciAnalysisController",
       "handler": "analysis",
       "method": "GET",
@@ -9689,7 +9932,7 @@
       "notes": ""
     },
     {
-      "id": "API-180",
+      "id": "API-184",
       "controller": "SiteAnalyticsController",
       "handler": "summary",
       "method": "GET",
@@ -9733,7 +9976,7 @@
       "notes": ""
     },
     {
-      "id": "API-181",
+      "id": "API-185",
       "controller": "SiteAnalyticsController",
       "handler": "worst",
       "method": "GET",
@@ -9786,7 +10029,7 @@
       "notes": ""
     },
     {
-      "id": "API-182",
+      "id": "API-186",
       "controller": "SiteAnalyticsController",
       "handler": "details",
       "method": "GET",
@@ -9839,7 +10082,7 @@
       "notes": ""
     },
     {
-      "id": "API-183",
+      "id": "API-187",
       "controller": "SiteAnalyticsController",
       "handler": "intelligence",
       "method": "GET",
@@ -9903,7 +10146,7 @@
       "notes": ""
     },
     {
-      "id": "API-184",
+      "id": "API-188",
       "controller": "SitePredictionController",
       "handler": "recommendations",
       "method": "GET",
@@ -9965,7 +10208,7 @@
       "notes": "Recommendations are model/rule outputs, not observed network facts. LB-WCF accepts multipart/form parameters; optional method defaults to both, quantile to 0.10 and mlMode to 3 in its service."
     },
     {
-      "id": "API-185",
+      "id": "API-189",
       "controller": "SitePredictionController",
       "handler": "summary",
       "method": "GET",
@@ -10009,7 +10252,7 @@
       "notes": "Recommendations are model/rule outputs, not observed network facts. LB-WCF accepts multipart/form parameters; optional method defaults to both, quantile to 0.10 and mlMode to 3 in its service."
     },
     {
-      "id": "API-186",
+      "id": "API-190",
       "controller": "SitePredictionController",
       "handler": "lbWcfPrediction",
       "method": "POST",

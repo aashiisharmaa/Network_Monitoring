@@ -15,6 +15,9 @@ def contracts(entries):
 
 if __name__ == "__main__":
     baseline = json.loads((ROOT / "backend-java/src/test/resources/alarm/http-contract-baseline.json").read_text())
+    additions = ROOT / "backend-java/src/test/resources/alarm/operational-api-contracts.json"
+    if additions.exists():
+        baseline += json.loads(additions.read_text())
     current = contracts(inventory()[0])
     key = lambda item: (item["method"], item["paths"])
     if sorted(current, key=key) != sorted(baseline, key=key):

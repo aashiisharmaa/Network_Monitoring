@@ -1,5 +1,9 @@
 server:
   port: ${PORT:3000}
+  compression:
+    enabled: true
+    min-response-size: 2048
+    mime-types: application/json,text/plain,text/csv,text/html,text/css,application/javascript
 
 spring:
   servlet:
@@ -41,6 +45,8 @@ app:
     storage-path: ${ALARM_WORKFLOW_STORAGE:uploads/alarm-workflow}
     input-root: ${ALARM_INPUT_ROOT:}
     tick-millis: ${ALARM_WORKFLOW_TICK_MILLIS:3000}
+  alarm-operational:
+    enabled: ${ALARM_OPERATIONAL_ENABLED:false}
   nightly:
     enabled: ${NIGHTLY_ENABLED:false}
     tick-millis: ${NIGHTLY_TICK_MILLIS:30000}

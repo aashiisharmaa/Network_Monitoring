@@ -38,7 +38,7 @@ public class AlarmConfigurationAdvice {
     }
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<?> database(DataAccessException error) {
-        return error(503, "ALARM_CONFIGURATION_UNAVAILABLE", "Configuration storage is unavailable. Verify migration 008 and database health.");
+        return error(503, "ALARM_CONFIGURATION_UNAVAILABLE", "Configuration storage is unavailable. Verify migrations 008/009 and optional 010, and database health.");
     }
     private ResponseEntity<?> error(int status, String code, String message) {
         return ResponseEntity.status(status).body(Map.of("success", false, "code", code, "message", message));

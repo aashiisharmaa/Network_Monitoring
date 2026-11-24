@@ -5,13 +5,15 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports/performance"
+OUTPUT = ROOT / "reports/performance/project-review-2026-11-18"
+OUTPUT.mkdir(parents=True, exist_ok=True)
 calls = []
 BASE_URL = os.environ.get("PORTAL_TEST_BASE_URL", "http://localhost:4173").rstrip("/")
 
 def api(route):
     request = route.request
     path = request.url.split("localhost:3001/")[-1].split("?")[0]
+    path = path.removeprefix("api/v1/")
     headers = {"Access-Control-Allow-Origin": BASE_URL, "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS"}
     if request.method == "OPTIONS":
         route.fulfill(status=204, headers=headers)
@@ -40,13 +42,12 @@ with sync_playwright() as p:
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(BASE_URL + "/")
     expect(page.get_by_role("heading", name="Network Dashboard", exact=True)).to_be_visible()
-    expect(page.get_by_role("region", name="Performance overview")).to_be_visible()
-    expect(page.locator(".portal-overview")).to_have_css("display", "grid")
+    expect(page.get_by_role("heading", name="Performance Metrics", exact=True)).to_be_visible()
     expect(page.locator(".portal-heading-inner")).to_have_css("display", "flex")
     expect(page.locator(".portal-inventory-grid")).to_have_css("display", "grid")
-    assert "linear-gradient" in page.locator(".portal-overview-primary").evaluate("element => getComputedStyle(element).backgroundImage"), "Dashboard stylesheet did not load"
-    page.get_by_text("Checking...", exact=True).wait_for(state="hidden")
-    expect(page.get_by_role("link", name="Open daily comparisons", exact=False)).to_have_attribute("href", "/reports")
+    assert page.locator(".portal-inventory-card").count() >= 5, "Inventory cards are missing"
+    expect(page.get_by_text("Service online", exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name="Daily Reports", exact=True)).to_have_attribute("href", "/reports")
     expect(page.get_by_role("link", name="Worst Cell Analysis", exact=True)).to_be_visible()
     page.screenshot(path=str(OUTPUT / "portal-design-dashboard-desktop.png"))
     page.keyboard.press("Control+k")
@@ -70,7 +71,7 @@ with sync_playwright() as p:
     page.reload()
     expect(page.get_by_role("button", name="Expand sidebar", exact=True)).to_be_visible()
     expect(page.get_by_role("heading", name="Network Dashboard", exact=True)).to_be_visible()
-    expect(page.get_by_role("region", name="Performance overview")).to_be_visible()
+    expect(page.get_by_role("heading", name="Performance Metrics", exact=True)).to_be_visible()
     page.set_viewport_size({"width": 390, "height": 844})
     page.wait_for_timeout(250)
     expect(page.get_by_role("button", name="Open navigation", exact=True)).to_be_visible()
@@ -98,10 +99,12 @@ with sync_playwright() as p:
     client_page.goto(BASE_URL + "/")
     expect(client_page.get_by_role("link", name="Daily Reports", exact=True)).to_be_visible()
     expect(client_page.get_by_role("link", name="Admin Management", exact=True)).to_have_count(0)
-    expect(client_page.get_by_role("link", name="Worst Cell Analysis", exact=True)).to_have_count(0)
+    # Worst-cell analysis is a shared analysis route in the current application;
+    # administrative account management remains super-admin only.
+    expect(client_page.get_by_role("link", name="Worst Cell Analysis", exact=True)).to_be_visible()
     client_page.keyboard.press("Control+k")
     client_page.get_by_role("combobox", name="Search pages", exact=True).fill("Admin Management")
     expect(client_page.get_by_role("listbox", name="Pages", exact=True).get_by_role("option")).to_have_count(0)
     browser.close()
-    (OUTPUT / "portal-design-checks.json").write_text(json.dumps({"checks": ["dashboard overview and report shortcut", "desktop grouped navigation", "persisted sidebar preference", "mobile layout without horizontal overflow", "mobile Escape and focus restoration", "client role navigation", "Ctrl+K page search and keyboard selection", "empty search recovery", "mobile search modal and focus restoration", "role-filtered search results", "route document title"], "runtimeErrors": errors, "customerDatabaseWrites": 0}, indent=2))
+    (OUTPUT / "portal-design-checks.json").write_text(json.dumps({"checks": ["dashboard performance, inventory and report navigation", "desktop grouped navigation", "persisted sidebar preference", "mobile layout without horizontal overflow", "mobile Escape and focus restoration", "client role navigation", "Ctrl+K page search and keyboard selection", "empty search recovery", "mobile search modal and focus restoration", "role-filtered search results", "route document title"], "runtimeErrors": errors, "customerDatabaseWrites": 0}, indent=2))
     print("Portal design dashboard and navigation checks passed")

@@ -92,7 +92,16 @@ public final class DailyKpiCalculator {
     }
 
     private static LocalDate date(Map<String, Object> record) {
-        try { return LocalDate.parse(String.valueOf(record.get("date"))); }
+        try {
+            String value = String.valueOf(record.get("date")).trim();
+            if (value.length() == 10) return LocalDate.parse(value);
+            // Validate the full timestamp while retaining the source calendar day.
+            // Hourly uploads use a space separator; ISO uploads may include an offset.
+            if (value.length() > 10 && value.charAt(10) == ' ') {
+                value = value.substring(0, 10) + "T" + value.substring(11);
+            }
+            return LocalDate.from(java.time.format.DateTimeFormatter.ISO_DATE_TIME.parse(value));
+        }
         catch (java.time.DateTimeException ex) { throw new IllegalArgumentException("Analysis requires valid canonical data dates."); }
     }
 

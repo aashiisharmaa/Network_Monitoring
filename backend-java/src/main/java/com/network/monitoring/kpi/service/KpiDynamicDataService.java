@@ -29,6 +29,20 @@ public class KpiDynamicDataService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final ObjectWriter JSON_WRITER = MAPPER.writer();
     private static final int INSERT_BATCH_SIZE = 1000;
+    // Explicit null types avoid a JDBC parameter-metadata probe/exception for
+    // every null company/dimension in large global-workspace imports.
+    private static final int[] RECORD_SQL_TYPES = {
+            java.sql.Types.BIGINT,java.sql.Types.BIGINT,java.sql.Types.INTEGER,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,
+            java.sql.Types.LONGVARCHAR,java.sql.Types.LONGVARCHAR,java.sql.Types.TIMESTAMP};
+    private static final int[] METRIC_SQL_TYPES = {
+            java.sql.Types.BIGINT,java.sql.Types.BIGINT,java.sql.Types.INTEGER,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.DOUBLE,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,
+            java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,java.sql.Types.VARCHAR,
+            java.sql.Types.TIMESTAMP};
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -321,7 +335,7 @@ public class KpiDynamicDataService {
             appendMetricValues(metricArgs, fileId, companyId, index + offset, rowKey, record, createdAt);
 
             if (args.size() >= INSERT_BATCH_SIZE) {
-                jdbcTemplate.batchUpdate(sql, args);
+                jdbcTemplate.batchUpdate(sql, args, RECORD_SQL_TYPES);
                 args.clear();
             }
             if (metricArgs.size() >= INSERT_BATCH_SIZE) {
@@ -331,7 +345,7 @@ public class KpiDynamicDataService {
         }
 
         if (!args.isEmpty()) {
-            jdbcTemplate.batchUpdate(sql, args);
+            jdbcTemplate.batchUpdate(sql, args, RECORD_SQL_TYPES);
         }
         if (!metricArgs.isEmpty()) {
             insertMetricValues(metricArgs);
@@ -471,7 +485,7 @@ public class KpiDynamicDataService {
                 INSERT INTO `kpi_metric_values`
                 (`fileId`, `companyId`, `rowIndex`, `rowKey`, `metricKey`, `metricValue`, `cellName`, `site`, `band`, `tech`, `sectorId`, `dateValue`, `createdAt`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, metricArgs);
+                """, metricArgs, METRIC_SQL_TYPES);
     }
 
     private Double toDouble(Object value) {

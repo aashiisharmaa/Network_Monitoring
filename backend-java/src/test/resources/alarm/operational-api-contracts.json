@@ -1,0 +1,83 @@
+[
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/readiness"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "asOf",
+        "location": "query",
+        "required": true,
+        "default": null,
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "body",
+        "location": "body",
+        "required": true,
+        "default": null,
+        "type": "Capture"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "paths": [
+      "/api/v1/alarm-workflow/companies/{companyId}/operational-inputs/history"
+    ],
+    "parameters": [
+      {
+        "name": "companyId",
+        "location": "path",
+        "required": true,
+        "default": null,
+        "type": "long"
+      },
+      {
+        "name": "limit",
+        "location": "query",
+        "required": false,
+        "default": "50",
+        "type": "int"
+      }
+    ]
+  }
+]

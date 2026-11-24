@@ -1,8 +1,8 @@
 # Network Monitoring Backend API Handbook
 
-Source-verified developer reference | 17 November 2026 | Java / Spring Boot
+Source-verified developer reference | 18 November 2026 | Java / Spring Boot
 
-Coverage: 28 controllers, 186 logical operations and 304 expanded method/URL combinations including legacy aliases. All examples use synthetic identifiers and reserved example.invalid addresses. No actual credentials, customer data or license contents are included.
+Coverage: 28 controllers, 190 logical operations and 308 expanded method/URL combinations including legacy aliases. All examples use synthetic identifiers and reserved example.invalid addresses. No actual credentials, customer data or license contents are included.
 
 ## 1. How to use this document
 
@@ -21,7 +21,7 @@ API = a backend operation called by the frontend or another client. Request JSON
 }
 ```
 
-Read-only/live check: current source has 186 operations. At capture, 147 canonical method/URL pairs were listed in the running localhost OpenAPI and 39 were not listed. Presence in OpenAPI is not proof a request succeeds or its migration/configuration is ready. No POST/PUT/PATCH/DELETE business requests were executed to produce this handbook.
+Read-only/live check: current source has 190 operations. At capture, 147 canonical method/URL pairs were listed in the running localhost OpenAPI and 43 were not listed. Presence in OpenAPI is not proof a request succeeds or its migration/configuration is ready. No POST/PUT/PATCH/DELETE business requests were executed to produce this handbook.
 
 | Item | Value |
 | --- | --- |
@@ -39,7 +39,7 @@ Read-only/live check: current source has 186 operations. At capture, 147 canonic
 
 POST /api/v1/auth/login with email/password. Read data.token and send it in Authorization. Logout invalidates that token's session. First self-registration becomes SUPER_ADMIN; later self-registration becomes USER and does not automatically acquire a company assignment.
 
-Native alarm report formats are csv/pdf/xlsx. The dashboard adds reportSummary for zone/circle/RAT counts and source-snapshot age bands. Excel includes evidence and blank operational inputs; its structured layout is not a certification of customer-template parity. V2 imports retain sourceAnnotations; frozen v1 imports preserve their older parsing policy.
+Native alarm operational inputs use append-only effective-time revisions with expectedRevision and expectedBaseSnapshotId for concurrency. Migration 010 and ALARM_OPERATIONAL_ENABLED are required for capture. Null counts remain unknown; fractions/numeric strings are rejected. Report emails pin operationalSnapshotId; old envelopes without it retain no operational context. Readiness is read-only and checks schema presence without running migrations. Native alarm report formats are csv/pdf/xlsx. The dashboard adds reportSummary for zone/circle/RAT counts and source-snapshot age bands. Excel includes evidence and blank operational inputs; its structured layout is not a certification of customer-template parity. V2 imports retain sourceAnnotations; frozen v1 imports preserve their older parsing policy.
 
 Security is documented in layers: JWT filter, installed-license filter and controller/service authorization. Legacy public GET routes bypass JWT parsing only without an Authorization header; supplied tokens are verified and populate the authenticated principal. A bypass is not a declaration of tenant safety or successful service authorization. Native alarm APIs use strict persisted company/role checks.
 
@@ -123,7 +123,7 @@ Page/limit pagination is one-based where declared. Native afterId pagination is 
 | --- | --- | --- |
 | Native OSS master data | 14 | AlarmConfigurationController |
 | Native OSS preview | 1 | AlarmImportPreviewController |
-| Native OSS snapshot workflow | 24 | AlarmWorkflowController |
+| Native OSS snapshot workflow | 28 | AlarmWorkflowController |
 | Authentication | 3 | AuthController |
 | Common KPI reports | 5 | CommonReportController |
 | Companies | 5 | CompanyController |
@@ -167,177 +167,181 @@ Page/limit pagination is one-based where declared. Native afterId pagination is 
 | API-013 | POST | /api/v1/alarm-config/companies/{companyId}/feeds |
 | API-014 | PUT | /api/v1/alarm-config/companies/{companyId}/feeds/{id} |
 | API-015 | POST | /api/v1/alarm-ingestion/preview |
-| API-016 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports |
-| API-017 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports |
-| API-018 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id} |
-| API-019 | POST | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry |
-| API-020 | POST | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace |
-| API-021 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations |
-| API-022 | GET | /api/v1/alarm-workflow/companies/{companyId}/dashboard |
-| API-023 | GET | /api/v1/alarm-workflow/companies/{companyId}/catalogue |
-| API-024 | POST | /api/v1/alarm-workflow/companies/{companyId}/catalogue |
-| API-025 | DELETE | /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id} |
-| API-026 | GET | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites |
-| API-027 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites |
-| API-028 | DELETE | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId} |
-| API-029 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format} |
-| API-030 | GET | /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format} |
-| API-031 | GET | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history |
-| API-032 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events |
-| API-033 | GET | /api/v1/alarm-workflow/companies/{companyId}/automation |
-| API-034 | PUT | /api/v1/alarm-workflow/companies/{companyId}/automation |
-| API-035 | GET | /api/v1/alarm-workflow/companies/{companyId}/status |
-| API-036 | GET | /api/v1/alarm-workflow/companies/{companyId}/deliveries |
-| API-037 | POST | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry |
-| API-038 | POST | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile |
-| API-039 | GET | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture |
-| API-040 | POST | /api/v1/auth/register |
-| API-041 | POST | /api/v1/auth/login |
-| API-042 | POST | /api/v1/auth/logout |
-| API-043 | GET | /api/v1/companies |
-| API-044 | GET | /api/v1/companies/{id} |
-| API-045 | POST | /api/v1/companies |
-| API-046 | PUT | /api/v1/companies/{id} |
-| API-047 | PATCH | /api/v1/companies/{id}/block |
-| API-048 | GET | /api/v1/users |
-| API-049 | POST | /api/v1/users |
-| API-050 | POST | /api/v1/ingestion/kpi |
-| API-051 | GET | /api/v1/ingestion/runs |
-| API-052 | GET | /api/v1/ingestion/runs/{id} |
-| API-053 | POST | /api/v1/ingestion/runs/{id}/retry |
-| API-054 | POST | /api/v1/upload/upload |
-| API-055 | POST | /api/v1/upload/kpi |
-| API-056 | GET | /api/v1/upload/jobs/{jobId} |
-| API-057 | GET | /api/v1/upload/jobs |
-| API-058 | POST | /api/v1/upload/jobs/{jobId}/retry |
-| API-059 | POST | /api/v1/upload/kpi/preview |
-| API-060 | POST | /api/v1/upload/site |
-| API-061 | POST | /api/v1/upload/alarm |
-| API-062 | GET | /api/v1/upload/uploads |
-| API-063 | DELETE | /api/v1/upload/uploads/{id} |
-| API-064 | GET | /api/v1/upload/network-data |
-| API-065 | GET | /api/v1/upload/uploads/history |
-| API-066 | GET | /api/v1/upload/history |
-| API-067 | GET | /api/v1/upload/site-data |
-| API-068 | GET | /api/v1/upload/alarm-data |
-| API-069 | GET | /api/v1/dashboard/stats |
-| API-070 | GET | /api/v1/dashboard/stats/cells |
-| API-071 | GET | /api/v1/dashboard/stats/sites |
-| API-072 | GET | /api/v1/dashboard/stats/bands |
-| API-073 | GET | /api/v1/dashboard/stats/tech |
-| API-074 | GET | /api/v1/dashboard/stats/sectors |
-| API-075 | GET | /api/v1/dashboard/stats/groups |
-| API-076 | GET | /api/v1/dashboard/stats/detailed |
-| API-077 | GET | /api/v1/dashboard/performance |
-| API-078 | GET | /api/v1/alarms/rules |
-| API-079 | POST | /api/v1/alarms/rules |
-| API-080 | PUT | /api/v1/alarms/rules/{id} |
-| API-081 | DELETE | /api/v1/alarms/rules/{id} |
-| API-082 | POST | /api/v1/alarms/generate |
-| API-083 | GET | /api/v1/alarms/summary |
-| API-084 | GET | /api/v1/alarms |
-| API-085 | POST | /api/v1/alarms/{id}/acknowledge |
-| API-086 | POST | /api/v1/alarms/{id}/resolve |
-| API-087 | GET | /api/v1/kpi/available-metrics |
-| API-088 | GET | /api/v1/kpi/all |
-| API-089 | GET | /api/v1/kpi/ul-prb-utilization |
-| API-090 | GET | /api/v1/kpi/dl-prb-utilization |
-| API-091 | GET | /api/v1/kpi/data-volume |
-| API-092 | GET | /api/v1/kpi/ul-throughput |
-| API-093 | GET | /api/v1/kpi/dl-throughput |
-| API-094 | GET | /api/v1/kpi/erab-drop-rate |
-| API-095 | GET | /api/v1/kpi/erab-success-rate |
-| API-096 | GET | /api/v1/kpi/rrc-success-rate |
-| API-097 | GET | /api/v1/kpi/mean-rrc-users |
-| API-098 | GET | /api/v1/kpi/max-rrc-users |
-| API-099 | GET | /api/v1/kpi/erab-setup-rate |
-| API-100 | GET | /api/v1/kpi/rrc-drop-rate |
-| API-101 | GET | /api/v1/kpi/volte-cssr |
-| API-102 | GET | /api/v1/kpi/volte-dcr |
-| API-103 | GET | /api/v1/kpi/inter-freq-hosr |
-| API-104 | GET | /api/v1/kpi/intra-freq-hosr |
-| API-105 | GET | /api/v1/kpi/csfb-success-rate |
-| API-106 | GET | /api/v1/kpi/dynamic/metrics |
-| API-107 | GET | /api/v1/kpi/dynamic/summary |
-| API-108 | GET | /api/v1/kpi/dynamic/columns |
-| API-109 | GET | /api/v1/kpi/dynamic/data |
-| API-110 | GET | /api/v1/kpi/dynamic/batch-data |
-| API-111 | POST | /api/v1/kpi/dynamic/selection |
-| API-112 | POST | /api/v1/kpi/dynamic/bad-days |
-| API-113 | POST | /api/v1/kpi/dynamic/export |
-| API-114 | GET | /api/v1/threshold-rules |
-| API-115 | POST | /api/v1/threshold-rules |
-| API-116 | PUT | /api/v1/threshold-rules/{id} |
-| API-117 | DELETE | /api/v1/threshold-rules/{id} |
-| API-118 | GET | /api/v1/threshold-rules/evaluate |
-| API-119 | GET | /api/v1/threshold-rules/evaluate-file |
-| API-120 | POST | /api/v1/threshold-rules/ensure-file |
-| API-121 | GET | /api/v1/threshold-rules/results |
-| API-122 | GET | /api/v1/threshold-rules/results/{fileId} |
-| API-123 | GET | /api/v1/kpi/validation-report/{fileId} |
-| API-124 | GET | /api/v1/setting/getsettings |
-| API-125 | POST | /api/v1/setting/updateSetting |
-| API-126 | POST | /api/v1/setting/thresholds/export |
-| API-127 | POST | /api/v1/setting/thresholds/import |
-| API-128 | GET | /api/v1/kpi/worst-cells |
-| API-129 | GET | /api/v1/kpi/worst-sites |
-| API-130 | GET | /api/v1/kpi/worst-cells/detail |
-| API-131 | GET | /api/v1/licenses |
-| API-132 | GET | /api/v1/licenses/{id} |
-| API-133 | POST | /api/v1/licenses |
-| API-134 | PATCH | /api/v1/licenses/{id}/renew |
-| API-135 | PATCH | /api/v1/licenses/{id}/block |
-| API-136 | GET | /api/v1/licenses/{id}/download |
-| API-137 | POST | /api/v1/local-license/upload |
-| API-138 | GET | /api/v1/local-license/status |
-| API-139 | GET | /api/v1/local-license/device-id |
-| API-140 | GET | /api/v1/nightly/profile |
-| API-141 | PUT | /api/v1/nightly/profile |
-| API-142 | POST | /api/v1/nightly/runs |
-| API-143 | GET | /api/v1/nightly/runs |
-| API-144 | GET | /api/v1/nightly/runs/{id} |
-| API-145 | POST | /api/v1/nightly/runs/{id}/retry |
-| API-146 | GET | /api/v1/health |
-| API-147 | POST | /api/v1/kpi/recommendation/jobs |
-| API-148 | GET | /api/v1/kpi/recommendation/jobs/{jobId} |
-| API-149 | POST | /api/v1/kpi/recommendation/run |
-| API-150 | POST | /api/v1/kpi/recommendation/export |
-| API-151 | GET | /api/v1/kpi/recommendation/presets |
-| API-152 | POST | /api/v1/kpi/recommendation/presets |
-| API-153 | GET | /api/v1/kpi/recommendation/presets/{name} |
-| API-154 | POST | /api/v1/rca-exports |
-| API-155 | GET | /api/v1/rca-exports/{id} |
-| API-156 | GET | /api/v1/rca-exports/{id}/download |
-| API-157 | POST | /api/v1/reports |
-| API-158 | GET | /api/v1/reports |
-| API-159 | GET | /api/v1/reports/{id} |
-| API-160 | POST | /api/v1/reports/{id}/retry |
-| API-161 | GET | /api/v1/reports/{id}/download/{format} |
-| API-162 | PUT | /api/v1/daily-analysis/profile |
-| API-163 | GET | /api/v1/daily-analysis/profile |
-| API-164 | POST | /api/v1/daily-analysis/snapshots |
-| API-165 | GET | /api/v1/daily-analysis/snapshots |
-| API-166 | GET | /api/v1/daily-analysis/snapshots/{id} |
-| API-167 | GET | /api/v1/daily-analysis/snapshots/{id}/comparisons |
-| API-168 | POST | /api/v1/daily-analysis/snapshots/{id}/retry |
-| API-169 | GET | /api/v1/report-datasets |
-| API-170 | PUT | /api/v1/report-mail/profile |
-| API-171 | GET | /api/v1/report-mail/profile |
-| API-172 | POST | /api/v1/report-mail/deliveries |
-| API-173 | GET | /api/v1/report-mail/deliveries |
-| API-174 | GET | /api/v1/report-mail/deliveries/{id} |
-| API-175 | POST | /api/v1/report-mail/deliveries/{id}/retry |
-| API-176 | POST | /api/v1/report-mail/deliveries/{id}/cancel |
-| API-177 | POST | /api/v1/report-mail/deliveries/{id}/reconcile |
-| API-178 | GET | /api/v1/report-mail/deliveries/{id}/message.eml |
-| API-179 | GET | /api/v1/pci/analysis |
-| API-180 | GET | /api/v1/sites/summary |
-| API-181 | GET | /api/v1/sites/worst |
-| API-182 | GET | /api/v1/sites/details |
-| API-183 | GET | /api/v1/sites/intelligence |
-| API-184 | GET | /api/v1/site-prediction/recommendations |
-| API-185 | GET | /api/v1/site-prediction/summary |
-| API-186 | POST | /api/v1/site-prediction/lb-wcf |
+| API-016 | GET | /api/v1/alarm-workflow/companies/{companyId}/readiness |
+| API-017 | GET | /api/v1/alarm-workflow/companies/{companyId}/operational-inputs |
+| API-018 | POST | /api/v1/alarm-workflow/companies/{companyId}/operational-inputs |
+| API-019 | GET | /api/v1/alarm-workflow/companies/{companyId}/operational-inputs/history |
+| API-020 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports |
+| API-021 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports |
+| API-022 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id} |
+| API-023 | POST | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry |
+| API-024 | POST | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace |
+| API-025 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations |
+| API-026 | GET | /api/v1/alarm-workflow/companies/{companyId}/dashboard |
+| API-027 | GET | /api/v1/alarm-workflow/companies/{companyId}/catalogue |
+| API-028 | POST | /api/v1/alarm-workflow/companies/{companyId}/catalogue |
+| API-029 | DELETE | /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id} |
+| API-030 | GET | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites |
+| API-031 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites |
+| API-032 | DELETE | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId} |
+| API-033 | GET | /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format} |
+| API-034 | GET | /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format} |
+| API-035 | GET | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history |
+| API-036 | POST | /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events |
+| API-037 | GET | /api/v1/alarm-workflow/companies/{companyId}/automation |
+| API-038 | PUT | /api/v1/alarm-workflow/companies/{companyId}/automation |
+| API-039 | GET | /api/v1/alarm-workflow/companies/{companyId}/status |
+| API-040 | GET | /api/v1/alarm-workflow/companies/{companyId}/deliveries |
+| API-041 | POST | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry |
+| API-042 | POST | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile |
+| API-043 | GET | /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture |
+| API-044 | POST | /api/v1/auth/register |
+| API-045 | POST | /api/v1/auth/login |
+| API-046 | POST | /api/v1/auth/logout |
+| API-047 | GET | /api/v1/companies |
+| API-048 | GET | /api/v1/companies/{id} |
+| API-049 | POST | /api/v1/companies |
+| API-050 | PUT | /api/v1/companies/{id} |
+| API-051 | PATCH | /api/v1/companies/{id}/block |
+| API-052 | GET | /api/v1/users |
+| API-053 | POST | /api/v1/users |
+| API-054 | POST | /api/v1/ingestion/kpi |
+| API-055 | GET | /api/v1/ingestion/runs |
+| API-056 | GET | /api/v1/ingestion/runs/{id} |
+| API-057 | POST | /api/v1/ingestion/runs/{id}/retry |
+| API-058 | POST | /api/v1/upload/upload |
+| API-059 | POST | /api/v1/upload/kpi |
+| API-060 | GET | /api/v1/upload/jobs/{jobId} |
+| API-061 | GET | /api/v1/upload/jobs |
+| API-062 | POST | /api/v1/upload/jobs/{jobId}/retry |
+| API-063 | POST | /api/v1/upload/kpi/preview |
+| API-064 | POST | /api/v1/upload/site |
+| API-065 | POST | /api/v1/upload/alarm |
+| API-066 | GET | /api/v1/upload/uploads |
+| API-067 | DELETE | /api/v1/upload/uploads/{id} |
+| API-068 | GET | /api/v1/upload/network-data |
+| API-069 | GET | /api/v1/upload/uploads/history |
+| API-070 | GET | /api/v1/upload/history |
+| API-071 | GET | /api/v1/upload/site-data |
+| API-072 | GET | /api/v1/upload/alarm-data |
+| API-073 | GET | /api/v1/dashboard/stats |
+| API-074 | GET | /api/v1/dashboard/stats/cells |
+| API-075 | GET | /api/v1/dashboard/stats/sites |
+| API-076 | GET | /api/v1/dashboard/stats/bands |
+| API-077 | GET | /api/v1/dashboard/stats/tech |
+| API-078 | GET | /api/v1/dashboard/stats/sectors |
+| API-079 | GET | /api/v1/dashboard/stats/groups |
+| API-080 | GET | /api/v1/dashboard/stats/detailed |
+| API-081 | GET | /api/v1/dashboard/performance |
+| API-082 | GET | /api/v1/alarms/rules |
+| API-083 | POST | /api/v1/alarms/rules |
+| API-084 | PUT | /api/v1/alarms/rules/{id} |
+| API-085 | DELETE | /api/v1/alarms/rules/{id} |
+| API-086 | POST | /api/v1/alarms/generate |
+| API-087 | GET | /api/v1/alarms/summary |
+| API-088 | GET | /api/v1/alarms |
+| API-089 | POST | /api/v1/alarms/{id}/acknowledge |
+| API-090 | POST | /api/v1/alarms/{id}/resolve |
+| API-091 | GET | /api/v1/kpi/available-metrics |
+| API-092 | GET | /api/v1/kpi/all |
+| API-093 | GET | /api/v1/kpi/ul-prb-utilization |
+| API-094 | GET | /api/v1/kpi/dl-prb-utilization |
+| API-095 | GET | /api/v1/kpi/data-volume |
+| API-096 | GET | /api/v1/kpi/ul-throughput |
+| API-097 | GET | /api/v1/kpi/dl-throughput |
+| API-098 | GET | /api/v1/kpi/erab-drop-rate |
+| API-099 | GET | /api/v1/kpi/erab-success-rate |
+| API-100 | GET | /api/v1/kpi/rrc-success-rate |
+| API-101 | GET | /api/v1/kpi/mean-rrc-users |
+| API-102 | GET | /api/v1/kpi/max-rrc-users |
+| API-103 | GET | /api/v1/kpi/erab-setup-rate |
+| API-104 | GET | /api/v1/kpi/rrc-drop-rate |
+| API-105 | GET | /api/v1/kpi/volte-cssr |
+| API-106 | GET | /api/v1/kpi/volte-dcr |
+| API-107 | GET | /api/v1/kpi/inter-freq-hosr |
+| API-108 | GET | /api/v1/kpi/intra-freq-hosr |
+| API-109 | GET | /api/v1/kpi/csfb-success-rate |
+| API-110 | GET | /api/v1/kpi/dynamic/metrics |
+| API-111 | GET | /api/v1/kpi/dynamic/summary |
+| API-112 | GET | /api/v1/kpi/dynamic/columns |
+| API-113 | GET | /api/v1/kpi/dynamic/data |
+| API-114 | GET | /api/v1/kpi/dynamic/batch-data |
+| API-115 | POST | /api/v1/kpi/dynamic/selection |
+| API-116 | POST | /api/v1/kpi/dynamic/bad-days |
+| API-117 | POST | /api/v1/kpi/dynamic/export |
+| API-118 | GET | /api/v1/threshold-rules |
+| API-119 | POST | /api/v1/threshold-rules |
+| API-120 | PUT | /api/v1/threshold-rules/{id} |
+| API-121 | DELETE | /api/v1/threshold-rules/{id} |
+| API-122 | GET | /api/v1/threshold-rules/evaluate |
+| API-123 | GET | /api/v1/threshold-rules/evaluate-file |
+| API-124 | POST | /api/v1/threshold-rules/ensure-file |
+| API-125 | GET | /api/v1/threshold-rules/results |
+| API-126 | GET | /api/v1/threshold-rules/results/{fileId} |
+| API-127 | GET | /api/v1/kpi/validation-report/{fileId} |
+| API-128 | GET | /api/v1/setting/getsettings |
+| API-129 | POST | /api/v1/setting/updateSetting |
+| API-130 | POST | /api/v1/setting/thresholds/export |
+| API-131 | POST | /api/v1/setting/thresholds/import |
+| API-132 | GET | /api/v1/kpi/worst-cells |
+| API-133 | GET | /api/v1/kpi/worst-sites |
+| API-134 | GET | /api/v1/kpi/worst-cells/detail |
+| API-135 | GET | /api/v1/licenses |
+| API-136 | GET | /api/v1/licenses/{id} |
+| API-137 | POST | /api/v1/licenses |
+| API-138 | PATCH | /api/v1/licenses/{id}/renew |
+| API-139 | PATCH | /api/v1/licenses/{id}/block |
+| API-140 | GET | /api/v1/licenses/{id}/download |
+| API-141 | POST | /api/v1/local-license/upload |
+| API-142 | GET | /api/v1/local-license/status |
+| API-143 | GET | /api/v1/local-license/device-id |
+| API-144 | GET | /api/v1/nightly/profile |
+| API-145 | PUT | /api/v1/nightly/profile |
+| API-146 | POST | /api/v1/nightly/runs |
+| API-147 | GET | /api/v1/nightly/runs |
+| API-148 | GET | /api/v1/nightly/runs/{id} |
+| API-149 | POST | /api/v1/nightly/runs/{id}/retry |
+| API-150 | GET | /api/v1/health |
+| API-151 | POST | /api/v1/kpi/recommendation/jobs |
+| API-152 | GET | /api/v1/kpi/recommendation/jobs/{jobId} |
+| API-153 | POST | /api/v1/kpi/recommendation/run |
+| API-154 | POST | /api/v1/kpi/recommendation/export |
+| API-155 | GET | /api/v1/kpi/recommendation/presets |
+| API-156 | POST | /api/v1/kpi/recommendation/presets |
+| API-157 | GET | /api/v1/kpi/recommendation/presets/{name} |
+| API-158 | POST | /api/v1/rca-exports |
+| API-159 | GET | /api/v1/rca-exports/{id} |
+| API-160 | GET | /api/v1/rca-exports/{id}/download |
+| API-161 | POST | /api/v1/reports |
+| API-162 | GET | /api/v1/reports |
+| API-163 | GET | /api/v1/reports/{id} |
+| API-164 | POST | /api/v1/reports/{id}/retry |
+| API-165 | GET | /api/v1/reports/{id}/download/{format} |
+| API-166 | PUT | /api/v1/daily-analysis/profile |
+| API-167 | GET | /api/v1/daily-analysis/profile |
+| API-168 | POST | /api/v1/daily-analysis/snapshots |
+| API-169 | GET | /api/v1/daily-analysis/snapshots |
+| API-170 | GET | /api/v1/daily-analysis/snapshots/{id} |
+| API-171 | GET | /api/v1/daily-analysis/snapshots/{id}/comparisons |
+| API-172 | POST | /api/v1/daily-analysis/snapshots/{id}/retry |
+| API-173 | GET | /api/v1/report-datasets |
+| API-174 | PUT | /api/v1/report-mail/profile |
+| API-175 | GET | /api/v1/report-mail/profile |
+| API-176 | POST | /api/v1/report-mail/deliveries |
+| API-177 | GET | /api/v1/report-mail/deliveries |
+| API-178 | GET | /api/v1/report-mail/deliveries/{id} |
+| API-179 | POST | /api/v1/report-mail/deliveries/{id}/retry |
+| API-180 | POST | /api/v1/report-mail/deliveries/{id}/cancel |
+| API-181 | POST | /api/v1/report-mail/deliveries/{id}/reconcile |
+| API-182 | GET | /api/v1/report-mail/deliveries/{id}/message.eml |
+| API-183 | GET | /api/v1/pci/analysis |
+| API-184 | GET | /api/v1/sites/summary |
+| API-185 | GET | /api/v1/sites/worst |
+| API-186 | GET | /api/v1/sites/details |
+| API-187 | GET | /api/v1/sites/intelligence |
+| API-188 | GET | /api/v1/site-prediction/recommendations |
+| API-189 | GET | /api/v1/site-prediction/summary |
+| API-190 | POST | /api/v1/site-prediction/lb-wcf |
 
 ## 5. Native OSS master data
 
@@ -1055,11 +1059,186 @@ Frozen-source ingestion, corrections, catalogue/site mapping, source comparisons
 
 > Requires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity.
 
-### API-016 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports
+### API-016 | GET /api/v1/alarm-workflow/companies/{companyId}/readiness
+
+Readiness. Module: Native OSS snapshot workflow.
+
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:29 -> readiness().
+
+Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
+
+| Field | Where / Java type | Required / default | Meaning |
+| --- | --- | --- | --- |
+| companyId | path / long | Yes | Explicit persisted company/tenant ID; does not grant access by itself. |
+
+Example URL (synthetic IDs; required query fields shown):
+
+```text
+GET http://localhost:3001/api/v1/alarm-workflow/companies/100/readiness
+```
+
+Request JSON: none. Send path/query parameters or an empty body as declared above.
+
+Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state.
+
+```json
+{
+  "success": true,
+  "data": {
+    "schema": {
+      "008": false,
+      "009": false,
+      "010": false
+    },
+    "workflowEnabled": false,
+    "operationalInputsEnabled": false,
+    "activeFeeds": null,
+    "catalogueRules": null,
+    "mappedSiteObjects": null,
+    "smtpOutboundEnabled": false,
+    "inputFolderConfigured": false,
+    "automaticClearingEnabled": false,
+    "deltaProcessingSupported": false
+  }
+}
+```
+
+### API-017 | GET /api/v1/alarm-workflow/companies/{companyId}/operational-inputs
+
+Operational Inputs. Module: Native OSS snapshot workflow.
+
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:30 -> operationalInputs().
+
+Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
+
+| Field | Where / Java type | Required / default | Meaning |
+| --- | --- | --- | --- |
+| companyId | path / long | Yes | Explicit persisted company/tenant ID; does not grant access by itself. |
+| asOf | query / String | Yes | ISO timestamp with explicit offset; select snapshots at/before this time. |
+
+Example URL (synthetic IDs; required query fields shown):
+
+```text
+GET http://localhost:3001/api/v1/alarm-workflow/companies/100/operational-inputs?asOf=2026-11-16T00%3A00%3A00Z
+```
+
+Request JSON: none. Send path/query parameters or an empty body as declared above.
+
+Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state.
+
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": false,
+    "snapshot": {
+      "id": null,
+      "revision": 0,
+      "circles": []
+    }
+  }
+}
+```
+
+### API-018 | POST /api/v1/alarm-workflow/companies/{companyId}/operational-inputs
+
+Capture Operational Inputs. Module: Native OSS snapshot workflow.
+
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:31 -> captureOperationalInputs().
+
+Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
+
+| Field | Where / Java type | Required / default | Meaning |
+| --- | --- | --- | --- |
+| companyId | path / long | Yes | Explicit persisted company/tenant ID; does not grant access by itself. |
+| body | body / AlarmOperational.Capture | Yes | See the module contract and controller/service validation for accepted values. |
+
+Example URL (synthetic IDs; required query fields shown):
+
+```text
+POST http://localhost:3001/api/v1/alarm-workflow/companies/100/operational-inputs
+```
+
+Request JSON example (synthetic; dataset-specific mappings and business thresholds must be replaced):
+
+```json
+{
+  "effectiveAt": "2026-11-17T00:00:00Z",
+  "expectedRevision": 0,
+  "expectedBaseSnapshotId": null,
+  "sourceReference": "Synthetic approved NOC register",
+  "circles": [
+    {
+      "circleId": 10,
+      "technology": "4G",
+      "ms2Pending": 0,
+      "lrPending": null,
+      "siteInventoryTotal": 10,
+      "siteUp": 8,
+      "gpsAlarms": null,
+      "vswrAlarms": 0,
+      "zoneOwner": "Example zone owner",
+      "circleOwner": "Example circle owner",
+      "majorReason": null,
+      "sites": []
+    }
+  ]
+}
+```
+
+Success response: HTTP 201. Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state.
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "effectiveAt": "2026-11-17T00:00:00Z",
+    "revision": 1,
+    "basedOnId": null,
+    "sourceReference": "Synthetic approved NOC register",
+    "checksum": "PAYLOAD_SHA256",
+    "createdBy": 1,
+    "circles": []
+  }
+}
+```
+
+### API-019 | GET /api/v1/alarm-workflow/companies/{companyId}/operational-inputs/history
+
+Operational History. Module: Native OSS snapshot workflow.
+
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:32 -> operationalHistory().
+
+Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
+
+| Field | Where / Java type | Required / default | Meaning |
+| --- | --- | --- | --- |
+| companyId | path / long | Yes | Explicit persisted company/tenant ID; does not grant access by itself. |
+| limit | query / int | No; default=50 | Requested page/result size; service-specific bounds apply. |
+
+Example URL (synthetic IDs; required query fields shown):
+
+```text
+GET http://localhost:3001/api/v1/alarm-workflow/companies/100/operational-inputs/history
+```
+
+Request JSON: none. Send path/query parameters or an empty body as declared above.
+
+Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key fields only; dynamic data may add fields and depend on job state.
+
+```json
+{
+  "success": true,
+  "data": []
+}
+```
+
+### API-020 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports
 
 Submit. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:25 -> submit().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:34 -> submit().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1102,11 +1281,11 @@ Success response: HTTP 202. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-017 | GET /api/v1/alarm-workflow/companies/{companyId}/imports
+### API-021 | GET /api/v1/alarm-workflow/companies/{companyId}/imports
 
 Runs. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:30 -> runs().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:39 -> runs().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1144,11 +1323,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-018 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}
+### API-022 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}
 
 Run. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:32 -> run().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:41 -> run().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1184,11 +1363,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-019 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry
+### API-023 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry
 
 Requeue a FAILED run using exactly its staged source and frozen configuration.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:33 -> retry().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:42 -> retry().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1224,11 +1403,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-020 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace
+### API-024 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace
 
 Create a corrected revision of the latest FAILED snapshot using a replacement file and current configuration; successful history cannot be overwritten.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:34 -> replace().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:43 -> replace().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1269,11 +1448,11 @@ Success response: HTTP 202. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-021 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations
+### API-025 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations
 
 Observations. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:35 -> observations().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:44 -> observations().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1313,11 +1492,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-022 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard
+### API-026 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard
 
 Dashboard. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:37 -> dashboard().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:46 -> dashboard().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1365,11 +1544,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-023 | GET /api/v1/alarm-workflow/companies/{companyId}/catalogue
+### API-027 | GET /api/v1/alarm-workflow/companies/{companyId}/catalogue
 
 Catalog. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:39 -> catalog().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:48 -> catalog().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1394,11 +1573,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-024 | POST /api/v1/alarm-workflow/companies/{companyId}/catalogue
+### API-028 | POST /api/v1/alarm-workflow/companies/{companyId}/catalogue
 
 Catalog. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:40 -> catalog().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:49 -> catalog().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1447,11 +1626,11 @@ Success response: HTTP 201. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-025 | DELETE /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id}
+### API-029 | DELETE /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id}
 
 Remove Catalog. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:41 -> removeCatalog().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:50 -> removeCatalog().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1470,11 +1649,11 @@ Request JSON: none. Send path/query parameters or an empty body as declared abov
 
 Success response: HTTP 204. No response body.
 
-### API-026 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites
+### API-030 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites
 
 Sites. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:42 -> sites().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:51 -> sites().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1500,11 +1679,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-027 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites
+### API-031 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites
 
 Site. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:43 -> site().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:52 -> site().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1544,11 +1723,11 @@ Success response: HTTP 201. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-028 | DELETE /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId}
+### API-032 | DELETE /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId}
 
 Remove Site. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:44 -> removeSite().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:53 -> removeSite().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1568,11 +1747,11 @@ Request JSON: none. Send path/query parameters or an empty body as declared abov
 
 Success response: HTTP 204. No response body.
 
-### API-029 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format}
+### API-033 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format}
 
 Report. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:45 -> report().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:54 -> report().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1593,11 +1772,11 @@ Request JSON: none. Send path/query parameters or an empty body as declared abov
 
 Success response: HTTP 200. Binary/artifact response with Content-Type and Content-Disposition; save bytes rather than parsing JSON. Common JSON/configuration downloads are files too.
 
-### API-030 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format}
+### API-034 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format}
 
 Download national/circle PDF or CSV for the active-feed cohort at the requested asOf time.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:50 -> national().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:59 -> national().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1618,11 +1797,11 @@ Request JSON: none. Send path/query parameters or an empty body as declared abov
 
 Success response: HTTP 200. Binary/artifact response with Content-Type and Content-Disposition; save bytes rather than parsing JSON. Common JSON/configuration downloads are files too.
 
-### API-031 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history
+### API-035 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history
 
 History. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:54 -> history().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:63 -> history().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1653,11 +1832,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-032 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events
+### API-036 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events
 
 Record a NOTE/ACKNOWLEDGED/RESOLVED operator action without inventing an OSS state transition.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:55 -> event().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:64 -> event().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1694,11 +1873,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-033 | GET /api/v1/alarm-workflow/companies/{companyId}/automation
+### API-037 | GET /api/v1/alarm-workflow/companies/{companyId}/automation
 
 Settings. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:56 -> settings().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:65 -> settings().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1730,11 +1909,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-034 | PUT /api/v1/alarm-workflow/companies/{companyId}/automation
+### API-038 | PUT /api/v1/alarm-workflow/companies/{companyId}/automation
 
 Settings. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:57 -> settings().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:66 -> settings().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1796,11 +1975,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-035 | GET /api/v1/alarm-workflow/companies/{companyId}/status
+### API-039 | GET /api/v1/alarm-workflow/companies/{companyId}/status
 
 Status. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:58 -> status().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:67 -> status().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1832,11 +2011,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-036 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries
+### API-040 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries
 
 Deliveries. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:59 -> deliveries().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:68 -> deliveries().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1861,11 +2040,11 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-037 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry
+### API-041 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry
 
 Retry Delivery. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:60 -> retryDelivery().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:69 -> retryDelivery().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1893,11 +2072,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-038 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile
+### API-042 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile
 
 Resolve an UNKNOWN send result using confirmed provider evidence.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:61 -> reconcile().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:70 -> reconcile().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1933,11 +2112,11 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-039 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture
+### API-043 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture
 
 Capture. Module: Native OSS snapshot workflow.
 
-Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:62 -> capture().
+Declaration: current source only; not listed in running OpenAPI at capture. Source: backend-java/src/main/java/com/network/monitoring/alarm/api/AlarmWorkflowController.java:71 -> capture().
 
 Access: Bearer JWT and active session required. Valid installed license required (otherwise HTTP 402). Strict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.
 
@@ -1960,7 +2139,7 @@ Success response: HTTP 200. Binary/artifact response with Content-Type and Conte
 
 Register, log in and invalidate a session token. The first registered account becomes SUPER_ADMIN; later self-registered accounts are USER.
 
-### API-040 | POST /api/v1/auth/register
+### API-044 | POST /api/v1/auth/register
 
 Register. Module: Authentication.
 
@@ -2008,7 +2187,7 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-041 | POST /api/v1/auth/login
+### API-045 | POST /api/v1/auth/login
 
 Login. Module: Authentication.
 
@@ -2056,7 +2235,7 @@ Success response: HTTP 200. Synthetic shape example; replace identifiers/values 
 }
 ```
 
-### API-042 | POST /api/v1/auth/logout
+### API-046 | POST /api/v1/auth/logout
 
 Logout. Module: Authentication.
 
@@ -2096,7 +2275,7 @@ Generate persisted common reports from daily snapshots, inspect status and downl
 
 > Requires a ready daily snapshot. Optional modules: thresholds, alarmCandidates, worstCells, rca, prediction. RCA requires actual reviewed mapping/config. Artifact format is pdf/xlsx/json/configuration as supported by report storage.
 
-### API-157 | POST /api/v1/reports
+### API-161 | POST /api/v1/reports
 
 Create. Module: Common KPI reports.
 
@@ -2143,7 +2322,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-158 | GET /api/v1/reports
+### API-162 | GET /api/v1/reports
 
 List. Module: Common KPI reports.
 
@@ -2173,7 +2352,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-159 | GET /api/v1/reports/{id}
+### API-163 | GET /api/v1/reports/{id}
 
 Get. Module: Common KPI reports.
 
@@ -2207,7 +2386,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-160 | POST /api/v1/reports/{id}/retry
+### API-164 | POST /api/v1/reports/{id}/retry
 
 Retry. Module: Common KPI reports.
 
@@ -2241,7 +2420,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-161 | GET /api/v1/reports/{id}/download/{format}
+### API-165 | GET /api/v1/reports/{id}/download/{format}
 
 Download. Module: Common KPI reports.
 
@@ -2270,7 +2449,7 @@ Customer/tenant master records, contact details and blocking. Company is not a g
 
 > Service calls requireSuperAdmin. GET list is nevertheless in the legacy JWT-filter bypass set; a supplied Bearer header may not populate the security context on that path. Do not mistake filter bypass for successful administrator authorization.
 
-### API-043 | GET /api/v1/companies
+### API-047 | GET /api/v1/companies
 
 List Companies. Module: Companies.
 
@@ -2310,7 +2489,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-044 | GET /api/v1/companies/{id}
+### API-048 | GET /api/v1/companies/{id}
 
 Get Company. Module: Companies.
 
@@ -2350,7 +2529,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-045 | POST /api/v1/companies
+### API-049 | POST /api/v1/companies
 
 Create Company. Module: Companies.
 
@@ -2401,7 +2580,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-046 | PUT /api/v1/companies/{id}
+### API-050 | PUT /api/v1/companies/{id}
 
 Update Company. Module: Companies.
 
@@ -2453,7 +2632,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-047 | PATCH /api/v1/companies/{id}/block
+### API-051 | PATCH /api/v1/companies/{id}/block
 
 Block Company. Module: Companies.
 
@@ -2499,7 +2678,7 @@ Configure aggregation, create daily snapshots and compare with observed prior-da
 
 > groupBy must contain cellName. Aggregations MEAN/SUM/RATIO and directions HIGHER_IS_BETTER/LOWER_IS_BETTER/NEUTRAL are explicit. RATIO requires numeratorKey/denominatorKey; percentages must not be summed. Missing baseline/sample information is reported explicitly.
 
-### API-162 | PUT /api/v1/daily-analysis/profile
+### API-166 | PUT /api/v1/daily-analysis/profile
 
 Configure. Module: Daily KPI comparison.
 
@@ -2575,7 +2754,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-163 | GET /api/v1/daily-analysis/profile
+### API-167 | GET /api/v1/daily-analysis/profile
 
 Profile. Module: Daily KPI comparison.
 
@@ -2607,7 +2786,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-164 | POST /api/v1/daily-analysis/snapshots
+### API-168 | POST /api/v1/daily-analysis/snapshots
 
 Build. Module: Daily KPI comparison.
 
@@ -2641,7 +2820,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-165 | GET /api/v1/daily-analysis/snapshots
+### API-169 | GET /api/v1/daily-analysis/snapshots
 
 List. Module: Daily KPI comparison.
 
@@ -2671,7 +2850,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-166 | GET /api/v1/daily-analysis/snapshots/{id}
+### API-170 | GET /api/v1/daily-analysis/snapshots/{id}
 
 Get. Module: Daily KPI comparison.
 
@@ -2704,7 +2883,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-167 | GET /api/v1/daily-analysis/snapshots/{id}/comparisons
+### API-171 | GET /api/v1/daily-analysis/snapshots/{id}/comparisons
 
 Compare. Module: Daily KPI comparison.
 
@@ -2735,7 +2914,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-168 | POST /api/v1/daily-analysis/snapshots/{id}/retry
+### API-172 | POST /api/v1/daily-analysis/snapshots/{id}/retry
 
 Retry. Module: Daily KPI comparison.
 
@@ -2774,7 +2953,7 @@ Network inventory counts, distinct dimensions and aggregated KPI performance.
 
 > Only stats/performance methods accept explicit fileId/companyId here; distinct count endpoints have no such parameters. GET is in the legacy public-read JWT bypass, while the license guard still applies.
 
-### API-069 | GET /api/v1/dashboard/stats
+### API-073 | GET /api/v1/dashboard/stats
 
 Get Dashboard Stats. Module: Dashboard.
 
@@ -2812,7 +2991,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-070 | GET /api/v1/dashboard/stats/cells
+### API-074 | GET /api/v1/dashboard/stats/cells
 
 Get Total Cells. Module: Dashboard.
 
@@ -2844,7 +3023,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-071 | GET /api/v1/dashboard/stats/sites
+### API-075 | GET /api/v1/dashboard/stats/sites
 
 Get Total Sites. Module: Dashboard.
 
@@ -2876,7 +3055,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-072 | GET /api/v1/dashboard/stats/bands
+### API-076 | GET /api/v1/dashboard/stats/bands
 
 Get Total Bands. Module: Dashboard.
 
@@ -2908,7 +3087,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-073 | GET /api/v1/dashboard/stats/tech
+### API-077 | GET /api/v1/dashboard/stats/tech
 
 Get Total Tech. Module: Dashboard.
 
@@ -2940,7 +3119,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-074 | GET /api/v1/dashboard/stats/sectors
+### API-078 | GET /api/v1/dashboard/stats/sectors
 
 Get Total Sectors. Module: Dashboard.
 
@@ -2972,7 +3151,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-075 | GET /api/v1/dashboard/stats/groups
+### API-079 | GET /api/v1/dashboard/stats/groups
 
 Get Total Groups. Module: Dashboard.
 
@@ -3004,7 +3183,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-076 | GET /api/v1/dashboard/stats/detailed
+### API-080 | GET /api/v1/dashboard/stats/detailed
 
 Get Detailed Stats. Module: Dashboard.
 
@@ -3033,7 +3212,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-077 | GET /api/v1/dashboard/performance
+### API-081 | GET /api/v1/dashboard/performance
 
 Get Performance Metrics. Module: Dashboard.
 
@@ -3069,7 +3248,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Liveness of the Java process. UP does not establish database, scheduler, mail or source-file health.
 
-### API-146 | GET /api/v1/health
+### API-150 | GET /api/v1/health
 
 Health. Module: Service health.
 
@@ -3108,7 +3287,7 @@ Alarm rules, generation, summary, paging, acknowledgement and resolution based o
 
 > KPI-generated alarm state is distinct from native OSS observation/operator history. Controller-level role checks are not declared here; frontend admin visibility is not an API authorization guarantee.
 
-### API-078 | GET /api/v1/alarms/rules
+### API-082 | GET /api/v1/alarms/rules
 
 List Rules. Module: KPI-generated alarms.
 
@@ -3138,7 +3317,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-079 | POST /api/v1/alarms/rules
+### API-083 | POST /api/v1/alarms/rules
 
 Create Rule. Module: KPI-generated alarms.
 
@@ -3181,7 +3360,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-080 | PUT /api/v1/alarms/rules/{id}
+### API-084 | PUT /api/v1/alarms/rules/{id}
 
 Update Rule. Module: KPI-generated alarms.
 
@@ -3225,7 +3404,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-081 | DELETE /api/v1/alarms/rules/{id}
+### API-085 | DELETE /api/v1/alarms/rules/{id}
 
 Delete Rule. Module: KPI-generated alarms.
 
@@ -3257,7 +3436,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-082 | POST /api/v1/alarms/generate
+### API-086 | POST /api/v1/alarms/generate
 
 Generate. Module: KPI-generated alarms.
 
@@ -3289,7 +3468,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-083 | GET /api/v1/alarms/summary
+### API-087 | GET /api/v1/alarms/summary
 
 Summary. Module: KPI-generated alarms.
 
@@ -3321,7 +3500,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-084 | GET /api/v1/alarms
+### API-088 | GET /api/v1/alarms
 
 List Alarms. Module: KPI-generated alarms.
 
@@ -3357,7 +3536,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-085 | POST /api/v1/alarms/{id}/acknowledge
+### API-089 | POST /api/v1/alarms/{id}/acknowledge
 
 Acknowledge. Module: KPI-generated alarms.
 
@@ -3397,7 +3576,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-086 | POST /api/v1/alarms/{id}/resolve
+### API-090 | POST /api/v1/alarms/{id}/resolve
 
 Resolve. Module: KPI-generated alarms.
 
@@ -3443,7 +3622,7 @@ Uploaded fixed-schema KPI samples, dynamic metric discovery/selection, statistic
 
 > Discover actual dynamic metricKeys/filterKeys before selection. GET metricKey is declared optional but blank is rejected by getDynamicData. Legacy fixed-metric responses and dynamic-metric responses have different shapes. Excel export supports standard/date_matrix; row budgets apply.
 
-### API-087 | GET /api/v1/kpi/available-metrics
+### API-091 | GET /api/v1/kpi/available-metrics
 
 Get Available Metrics. Module: KPI data and exports.
 
@@ -3477,7 +3656,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-088 | GET /api/v1/kpi/all
+### API-092 | GET /api/v1/kpi/all
 
 Get All KPIs. Module: KPI data and exports.
 
@@ -3509,7 +3688,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-089 | GET /api/v1/kpi/ul-prb-utilization
+### API-093 | GET /api/v1/kpi/ul-prb-utilization
 
 Get Ul Prb Utilization. Module: KPI data and exports.
 
@@ -3542,7 +3721,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-090 | GET /api/v1/kpi/dl-prb-utilization
+### API-094 | GET /api/v1/kpi/dl-prb-utilization
 
 Get Dl Prb Utilization. Module: KPI data and exports.
 
@@ -3575,7 +3754,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-091 | GET /api/v1/kpi/data-volume
+### API-095 | GET /api/v1/kpi/data-volume
 
 Get Data Volume. Module: KPI data and exports.
 
@@ -3608,7 +3787,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-092 | GET /api/v1/kpi/ul-throughput
+### API-096 | GET /api/v1/kpi/ul-throughput
 
 Get Ul Throughput. Module: KPI data and exports.
 
@@ -3641,7 +3820,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-093 | GET /api/v1/kpi/dl-throughput
+### API-097 | GET /api/v1/kpi/dl-throughput
 
 Get Dl Throughput. Module: KPI data and exports.
 
@@ -3674,7 +3853,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-094 | GET /api/v1/kpi/erab-drop-rate
+### API-098 | GET /api/v1/kpi/erab-drop-rate
 
 Get Erab Drop Rate. Module: KPI data and exports.
 
@@ -3707,7 +3886,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-095 | GET /api/v1/kpi/erab-success-rate
+### API-099 | GET /api/v1/kpi/erab-success-rate
 
 Get Erab Success Rate. Module: KPI data and exports.
 
@@ -3740,7 +3919,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-096 | GET /api/v1/kpi/rrc-success-rate
+### API-100 | GET /api/v1/kpi/rrc-success-rate
 
 Get RRC Success Rate. Module: KPI data and exports.
 
@@ -3773,7 +3952,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-097 | GET /api/v1/kpi/mean-rrc-users
+### API-101 | GET /api/v1/kpi/mean-rrc-users
 
 Get Mean RRC Users. Module: KPI data and exports.
 
@@ -3806,7 +3985,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-098 | GET /api/v1/kpi/max-rrc-users
+### API-102 | GET /api/v1/kpi/max-rrc-users
 
 Get Max RRC Users. Module: KPI data and exports.
 
@@ -3839,7 +4018,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-099 | GET /api/v1/kpi/erab-setup-rate
+### API-103 | GET /api/v1/kpi/erab-setup-rate
 
 Get Erab Setup Rate. Module: KPI data and exports.
 
@@ -3872,7 +4051,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-100 | GET /api/v1/kpi/rrc-drop-rate
+### API-104 | GET /api/v1/kpi/rrc-drop-rate
 
 Get RRC Drop Rate. Module: KPI data and exports.
 
@@ -3905,7 +4084,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-101 | GET /api/v1/kpi/volte-cssr
+### API-105 | GET /api/v1/kpi/volte-cssr
 
 Get Volte Cssr. Module: KPI data and exports.
 
@@ -3938,7 +4117,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-102 | GET /api/v1/kpi/volte-dcr
+### API-106 | GET /api/v1/kpi/volte-dcr
 
 Get Volte Dcr. Module: KPI data and exports.
 
@@ -3971,7 +4150,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-103 | GET /api/v1/kpi/inter-freq-hosr
+### API-107 | GET /api/v1/kpi/inter-freq-hosr
 
 Get Inter Freq Hosr. Module: KPI data and exports.
 
@@ -4004,7 +4183,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-104 | GET /api/v1/kpi/intra-freq-hosr
+### API-108 | GET /api/v1/kpi/intra-freq-hosr
 
 Get Intra Freq Hosr. Module: KPI data and exports.
 
@@ -4037,7 +4216,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-105 | GET /api/v1/kpi/csfb-success-rate
+### API-109 | GET /api/v1/kpi/csfb-success-rate
 
 Get Csfb Success Rate. Module: KPI data and exports.
 
@@ -4070,7 +4249,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-106 | GET /api/v1/kpi/dynamic/metrics
+### API-110 | GET /api/v1/kpi/dynamic/metrics
 
 Get Dynamic Metrics. Module: KPI data and exports.
 
@@ -4102,7 +4281,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-107 | GET /api/v1/kpi/dynamic/summary
+### API-111 | GET /api/v1/kpi/dynamic/summary
 
 Get Dynamic Summary. Module: KPI data and exports.
 
@@ -4134,7 +4313,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-108 | GET /api/v1/kpi/dynamic/columns
+### API-112 | GET /api/v1/kpi/dynamic/columns
 
 Get Dynamic Columns. Module: KPI data and exports.
 
@@ -4168,7 +4347,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-109 | GET /api/v1/kpi/dynamic/data
+### API-113 | GET /api/v1/kpi/dynamic/data
 
 Get Dynamic Data. Module: KPI data and exports.
 
@@ -4210,7 +4389,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-110 | GET /api/v1/kpi/dynamic/batch-data
+### API-114 | GET /api/v1/kpi/dynamic/batch-data
 
 Get Dynamic Batch Data. Module: KPI data and exports.
 
@@ -4242,7 +4421,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-111 | POST /api/v1/kpi/dynamic/selection
+### API-115 | POST /api/v1/kpi/dynamic/selection
 
 Update Dynamic Selection. Module: KPI data and exports.
 
@@ -4293,7 +4472,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-112 | POST /api/v1/kpi/dynamic/bad-days
+### API-116 | POST /api/v1/kpi/dynamic/bad-days
 
 Count bad days for an explicit grouping dimension using the supplied threshold contexts.
 
@@ -4342,7 +4521,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-113 | POST /api/v1/kpi/dynamic/export
+### API-117 | POST /api/v1/kpi/dynamic/export
 
 Download a dynamic KPI Excel workbook with selected metrics, grouping, filters and comparison ranges.
 
@@ -4393,7 +4572,7 @@ Append/replay-safe KPI import into an existing dataset with explicit identity fi
 
 > Targets an existing KPI fileId. identityFields is a JSON-encoded form string, not a JSON request body. Replays are namespaced by dataset/source identity.
 
-### API-050 | POST /api/v1/ingestion/kpi
+### API-054 | POST /api/v1/ingestion/kpi
 
 Start. Module: Durable KPI ingestion.
 
@@ -4438,7 +4617,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-051 | GET /api/v1/ingestion/runs
+### API-055 | GET /api/v1/ingestion/runs
 
 List. Module: Durable KPI ingestion.
 
@@ -4467,7 +4646,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-052 | GET /api/v1/ingestion/runs/{id}
+### API-056 | GET /api/v1/ingestion/runs/{id}
 
 Get. Module: Durable KPI ingestion.
 
@@ -4500,7 +4679,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-053 | POST /api/v1/ingestion/runs/{id}/retry
+### API-057 | POST /api/v1/ingestion/runs/{id}/retry
 
 Retry. Module: Durable KPI ingestion.
 
@@ -4539,7 +4718,7 @@ Configure per-metric severity bands and evaluate individual values or a complete
 
 > Rule directions are LOWER_IS_BAD/HIGHER_IS_BAD. These are not DailyKpiCalculator's direction values. Severity matching is inclusive at the configured band boundary.
 
-### API-114 | GET /api/v1/threshold-rules
+### API-118 | GET /api/v1/threshold-rules
 
 List Rules. Module: KPI severity thresholds.
 
@@ -4569,7 +4748,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-115 | POST /api/v1/threshold-rules
+### API-119 | POST /api/v1/threshold-rules
 
 Create Rule. Module: KPI severity thresholds.
 
@@ -4614,7 +4793,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-116 | PUT /api/v1/threshold-rules/{id}
+### API-120 | PUT /api/v1/threshold-rules/{id}
 
 Update Rule. Module: KPI severity thresholds.
 
@@ -4660,7 +4839,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-117 | DELETE /api/v1/threshold-rules/{id}
+### API-121 | DELETE /api/v1/threshold-rules/{id}
 
 Delete Rule. Module: KPI severity thresholds.
 
@@ -4692,7 +4871,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-118 | GET /api/v1/threshold-rules/evaluate
+### API-122 | GET /api/v1/threshold-rules/evaluate
 
 Evaluate. Module: KPI severity thresholds.
 
@@ -4726,7 +4905,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-119 | GET /api/v1/threshold-rules/evaluate-file
+### API-123 | GET /api/v1/threshold-rules/evaluate-file
 
 Evaluate File. Module: KPI severity thresholds.
 
@@ -4758,7 +4937,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-120 | POST /api/v1/threshold-rules/ensure-file
+### API-124 | POST /api/v1/threshold-rules/ensure-file
 
 Ensure File Rules. Module: KPI severity thresholds.
 
@@ -4790,7 +4969,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-121 | GET /api/v1/threshold-rules/results
+### API-125 | GET /api/v1/threshold-rules/results
 
 List Results. Module: KPI severity thresholds.
 
@@ -4822,7 +5001,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-122 | GET /api/v1/threshold-rules/results/{fileId}
+### API-126 | GET /api/v1/threshold-rules/results/{fileId}
 
 Get Result. Module: KPI severity thresholds.
 
@@ -4858,7 +5037,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Uploaded-file validation report and data-quality results.
 
-### API-123 | GET /api/v1/kpi/validation-report/{fileId}
+### API-127 | GET /api/v1/kpi/validation-report/{fileId}
 
 Get Validation Report. Module: KPI validation.
 
@@ -4894,7 +5073,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Issue, renew, block and download company/device-bound license records.
 
-### API-131 | GET /api/v1/licenses
+### API-135 | GET /api/v1/licenses
 
 List Licenses. Module: License administration.
 
@@ -4924,7 +5103,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-132 | GET /api/v1/licenses/{id}
+### API-136 | GET /api/v1/licenses/{id}
 
 Get License. Module: License administration.
 
@@ -4956,7 +5135,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-133 | POST /api/v1/licenses
+### API-137 | POST /api/v1/licenses
 
 Create License. Module: License administration.
 
@@ -5000,7 +5179,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-134 | PATCH /api/v1/licenses/{id}/renew
+### API-138 | PATCH /api/v1/licenses/{id}/renew
 
 Renew License. Module: License administration.
 
@@ -5039,7 +5218,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-135 | PATCH /api/v1/licenses/{id}/block
+### API-139 | PATCH /api/v1/licenses/{id}/block
 
 Block License. Module: License administration.
 
@@ -5071,7 +5250,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-136 | GET /api/v1/licenses/{id}/download
+### API-140 | GET /api/v1/licenses/{id}/download
 
 Download License. Module: License administration.
 
@@ -5101,7 +5280,7 @@ Upload the signed license file, inspect validity and obtain this installation's 
 
 > License-filter exempt but still requires JWT/session authentication. Upload a real issued license.dat; no license contents, signing keys or actual device IDs are included in this handbook.
 
-### API-137 | POST /api/v1/local-license/upload
+### API-141 | POST /api/v1/local-license/upload
 
 Upload License. Module: Installed license.
 
@@ -5139,7 +5318,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-138 | GET /api/v1/local-license/status
+### API-142 | GET /api/v1/local-license/status
 
 Status. Module: Installed license.
 
@@ -5171,7 +5350,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-139 | GET /api/v1/local-license/device-id
+### API-143 | GET /api/v1/local-license/device-id
 
 Device Id. Module: Installed license.
 
@@ -5209,7 +5388,7 @@ Configure daily folder discovery, import, analysis, report and delivery stages w
 
 > Uses Asia/Kolkata. Pattern must contain {date}; enabled profiles need an accessible absolute folder. Input cutoff is 01:00–01:59 IST; report target is 02:00 next day. Running backend/service and configuration are required; this is not an inbox-delivery guarantee.
 
-### API-140 | GET /api/v1/nightly/profile
+### API-144 | GET /api/v1/nightly/profile
 
 Profile. Module: Nightly KPI automation.
 
@@ -5238,7 +5417,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-141 | PUT /api/v1/nightly/profile
+### API-145 | PUT /api/v1/nightly/profile
 
 Configure. Module: Nightly KPI automation.
 
@@ -5292,7 +5471,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-142 | POST /api/v1/nightly/runs
+### API-146 | POST /api/v1/nightly/runs
 
 Create. Module: Nightly KPI automation.
 
@@ -5323,7 +5502,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-143 | GET /api/v1/nightly/runs
+### API-147 | GET /api/v1/nightly/runs
 
 List. Module: Nightly KPI automation.
 
@@ -5353,7 +5532,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-144 | GET /api/v1/nightly/runs/{id}
+### API-148 | GET /api/v1/nightly/runs/{id}
 
 Get. Module: Nightly KPI automation.
 
@@ -5382,7 +5561,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-145 | POST /api/v1/nightly/runs/{id}/retry
+### API-149 | POST /api/v1/nightly/runs/{id}/retry
 
 Retry. Module: Nightly KPI automation.
 
@@ -5417,7 +5596,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Inspect a selected PCI and optionally a source site in an uploaded site dataset.
 
-### API-179 | GET /api/v1/pci/analysis
+### API-183 | GET /api/v1/pci/analysis
 
 Analysis. Module: PCI analysis.
 
@@ -5456,7 +5635,7 @@ Run the Python RCA engine, submit/poll jobs, manage presets and use the older bl
 
 > Dataset-specific columns/KPI keys must match the source; the illustrative mappings are not universal. dateMode single or pre_post. Java-facing fields are camelCase, unlike the Python engine's internal snake_case. Prefer jobs + polling for analysis and /rca-exports for export.
 
-### API-147 | POST /api/v1/kpi/recommendation/jobs
+### API-151 | POST /api/v1/kpi/recommendation/jobs
 
 Start Recommendation Job. Module: Root cause analysis.
 
@@ -5521,7 +5700,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-148 | GET /api/v1/kpi/recommendation/jobs/{jobId}
+### API-152 | GET /api/v1/kpi/recommendation/jobs/{jobId}
 
 Get Recommendation Job. Module: Root cause analysis.
 
@@ -5557,7 +5736,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-149 | POST /api/v1/kpi/recommendation/run
+### API-153 | POST /api/v1/kpi/recommendation/run
 
 Run Recommendation. Module: Root cause analysis.
 
@@ -5617,7 +5796,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-150 | POST /api/v1/kpi/recommendation/export
+### API-154 | POST /api/v1/kpi/recommendation/export
 
 Export Recommendation. Module: Root cause analysis.
 
@@ -5670,7 +5849,7 @@ Request JSON example (synthetic; dataset-specific mappings and business threshol
 
 Success response: HTTP 200. Binary/artifact response with Content-Type and Content-Disposition; save bytes rather than parsing JSON. Common JSON/configuration downloads are files too.
 
-### API-151 | GET /api/v1/kpi/recommendation/presets
+### API-155 | GET /api/v1/kpi/recommendation/presets
 
 List Presets. Module: Root cause analysis.
 
@@ -5699,7 +5878,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-152 | POST /api/v1/kpi/recommendation/presets
+### API-156 | POST /api/v1/kpi/recommendation/presets
 
 Save Preset. Module: Root cause analysis.
 
@@ -5761,7 +5940,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-153 | GET /api/v1/kpi/recommendation/presets/{name}
+### API-157 | GET /api/v1/kpi/recommendation/presets/{name}
 
 Load Preset. Module: Root cause analysis.
 
@@ -5823,7 +6002,7 @@ Queue and poll captured-result Excel export, then download its artifact. Prefer 
 
 > Uses the captured-result export path and persisted job status; download only once the export is ready. fileId is a dataset ID; export id is a different ID.
 
-### API-154 | POST /api/v1/rca-exports
+### API-158 | POST /api/v1/rca-exports
 
 Start. Module: Durable RCA export.
 
@@ -5885,7 +6064,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-155 | GET /api/v1/rca-exports/{id}
+### API-159 | GET /api/v1/rca-exports/{id}
 
 Get. Module: Durable RCA export.
 
@@ -5918,7 +6097,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-156 | GET /api/v1/rca-exports/{id}/download
+### API-160 | GET /api/v1/rca-exports/{id}/download
 
 Download. Module: Durable RCA export.
 
@@ -5944,7 +6123,7 @@ Success response: HTTP 200. Binary/artifact response with Content-Type and Conte
 
 Bounded, company-scoped dataset picker for the reporting workspace.
 
-### API-169 | GET /api/v1/report-datasets
+### API-173 | GET /api/v1/report-datasets
 
 List. Module: Report dataset discovery.
 
@@ -5985,7 +6164,7 @@ Configure reviewed recipients, queue mail, inspect/cancel/retry/reconcile delive
 
 > Default examples are disabled CAPTURE previews. Sending requires an enabled reviewed profile. UNKNOWN must be reconciled; ACCEPTED is SMTP-provider acceptance, not inbox delivery. Reconciliation outcome vocabulary differs from the native OSS outbox.
 
-### API-170 | PUT /api/v1/report-mail/profile
+### API-174 | PUT /api/v1/report-mail/profile
 
 Configure. Module: Common-report email outbox.
 
@@ -6030,7 +6209,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-171 | GET /api/v1/report-mail/profile
+### API-175 | GET /api/v1/report-mail/profile
 
 Profile. Module: Common-report email outbox.
 
@@ -6063,7 +6242,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-172 | POST /api/v1/report-mail/deliveries
+### API-176 | POST /api/v1/report-mail/deliveries
 
 Submit. Module: Common-report email outbox.
 
@@ -6093,7 +6272,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-173 | GET /api/v1/report-mail/deliveries
+### API-177 | GET /api/v1/report-mail/deliveries
 
 List. Module: Common-report email outbox.
 
@@ -6123,7 +6302,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-174 | GET /api/v1/report-mail/deliveries/{id}
+### API-178 | GET /api/v1/report-mail/deliveries/{id}
 
 Get. Module: Common-report email outbox.
 
@@ -6152,7 +6331,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-175 | POST /api/v1/report-mail/deliveries/{id}/retry
+### API-179 | POST /api/v1/report-mail/deliveries/{id}/retry
 
 Retry. Module: Common-report email outbox.
 
@@ -6181,7 +6360,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-176 | POST /api/v1/report-mail/deliveries/{id}/cancel
+### API-180 | POST /api/v1/report-mail/deliveries/{id}/cancel
 
 Cancel. Module: Common-report email outbox.
 
@@ -6210,7 +6389,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-177 | POST /api/v1/report-mail/deliveries/{id}/reconcile
+### API-181 | POST /api/v1/report-mail/deliveries/{id}/reconcile
 
 Reconcile. Module: Common-report email outbox.
 
@@ -6247,7 +6426,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-178 | GET /api/v1/report-mail/deliveries/{id}/message.eml
+### API-182 | GET /api/v1/report-mail/deliveries/{id}/message.eml
 
 Captured. Module: Common-report email outbox.
 
@@ -6275,7 +6454,7 @@ Global/file-scoped threshold values/operators and threshold workbook import/expo
 
 > updateSetting accepts flat numeric metric keys, not a nested thresholds object; thresholdOperators/operators and dynamicThresholds are separate maps. thresholds/export instead requires the nested thresholds/ operators export wrapper. Preserve endpoint capitalization: updateSetting.
 
-### API-124 | GET /api/v1/setting/getsettings
+### API-128 | GET /api/v1/setting/getsettings
 
 Get Settings. Module: Dashboard threshold settings.
 
@@ -6307,7 +6486,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-125 | POST /api/v1/setting/updateSetting
+### API-129 | POST /api/v1/setting/updateSetting
 
 Update Settings. Module: Dashboard threshold settings.
 
@@ -6352,7 +6531,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-126 | POST /api/v1/setting/thresholds/export
+### API-130 | POST /api/v1/setting/thresholds/export
 
 Export Threshold Workbook. Module: Dashboard threshold settings.
 
@@ -6388,7 +6567,7 @@ Request JSON example (synthetic; dataset-specific mappings and business threshol
 
 Success response: HTTP 200. Binary/artifact response with Content-Type and Content-Disposition; save bytes rather than parsing JSON. Common JSON/configuration downloads are files too.
 
-### API-127 | POST /api/v1/setting/thresholds/import
+### API-131 | POST /api/v1/setting/thresholds/import
 
 Parse a threshold workbook and return its values; do not confuse parsing with saving updateSetting.
 
@@ -6428,7 +6607,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Site summary, worst sites, detail and PCI/handover/overshoot/neighbour intelligence for map and site views.
 
-### API-180 | GET /api/v1/sites/summary
+### API-184 | GET /api/v1/sites/summary
 
 Summary. Module: Site analytics and map intelligence.
 
@@ -6460,7 +6639,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-181 | GET /api/v1/sites/worst
+### API-185 | GET /api/v1/sites/worst
 
 Worst. Module: Site analytics and map intelligence.
 
@@ -6493,7 +6672,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-182 | GET /api/v1/sites/details
+### API-186 | GET /api/v1/sites/details
 
 Details. Module: Site analytics and map intelligence.
 
@@ -6526,7 +6705,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-183 | GET /api/v1/sites/intelligence
+### API-187 | GET /api/v1/sites/intelligence
 
 Intelligence. Module: Site analytics and map intelligence.
 
@@ -6566,7 +6745,7 @@ Site recommendations/summary and the LB worst-cell prediction workflow, optional
 
 > Recommendations are model/rule outputs, not observed network facts. LB-WCF accepts multipart/form parameters; optional method defaults to both, quantile to 0.10 and mlMode to 3 in its service.
 
-### API-184 | GET /api/v1/site-prediction/recommendations
+### API-188 | GET /api/v1/site-prediction/recommendations
 
 Recommendations. Module: Predictions.
 
@@ -6600,7 +6779,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-185 | GET /api/v1/site-prediction/summary
+### API-189 | GET /api/v1/site-prediction/summary
 
 Summary. Module: Predictions.
 
@@ -6632,7 +6811,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-186 | POST /api/v1/site-prediction/lb-wcf
+### API-190 | POST /api/v1/site-prediction/lb-wcf
 
 Lb Wcf Prediction. Module: Predictions.
 
@@ -6682,7 +6861,7 @@ KPI upload jobs, source preview, site/alarm imports, upload history and paged up
 
 > KPI uploads return a job to poll even when the HTTP status is 200. Site/alarm uploads use the legacy upload path. targetFileId takes precedence over fileId. Read paging/filter query fields are separate from multipart upload fields.
 
-### API-054 | POST /api/v1/upload/upload
+### API-058 | POST /api/v1/upload/upload
 
 Upload And Parse File. Module: Uploads and parsing.
 
@@ -6735,7 +6914,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-055 | POST /api/v1/upload/kpi
+### API-059 | POST /api/v1/upload/kpi
 
 Upload KPI Data. Module: Uploads and parsing.
 
@@ -6788,7 +6967,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-056 | GET /api/v1/upload/jobs/{jobId}
+### API-060 | GET /api/v1/upload/jobs/{jobId}
 
 Get Upload Job. Module: Uploads and parsing.
 
@@ -6823,7 +7002,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-057 | GET /api/v1/upload/jobs
+### API-061 | GET /api/v1/upload/jobs
 
 List Upload Jobs. Module: Uploads and parsing.
 
@@ -6854,7 +7033,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-058 | POST /api/v1/upload/jobs/{jobId}/retry
+### API-062 | POST /api/v1/upload/jobs/{jobId}/retry
 
 Retry Upload Job. Module: Uploads and parsing.
 
@@ -6889,7 +7068,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-059 | POST /api/v1/upload/kpi/preview
+### API-063 | POST /api/v1/upload/kpi/preview
 
 Preview KPI Data. Module: Uploads and parsing.
 
@@ -6924,7 +7103,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-060 | POST /api/v1/upload/site
+### API-064 | POST /api/v1/upload/site
 
 Upload Site Data. Module: Uploads and parsing.
 
@@ -6963,7 +7142,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-061 | POST /api/v1/upload/alarm
+### API-065 | POST /api/v1/upload/alarm
 
 Upload Alarm Data. Module: Uploads and parsing.
 
@@ -7002,7 +7181,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-062 | GET /api/v1/upload/uploads
+### API-066 | GET /api/v1/upload/uploads
 
 Get Upload History. Module: Uploads and parsing.
 
@@ -7031,7 +7210,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-063 | DELETE /api/v1/upload/uploads/{id}
+### API-067 | DELETE /api/v1/upload/uploads/{id}
 
 Delete Upload. Module: Uploads and parsing.
 
@@ -7062,7 +7241,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-064 | GET /api/v1/upload/network-data
+### API-068 | GET /api/v1/upload/network-data
 
 Get Network Data. Module: Uploads and parsing.
 
@@ -7094,7 +7273,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-065 | GET /api/v1/upload/uploads/history
+### API-069 | GET /api/v1/upload/uploads/history
 
 Get Upload History Slim. Module: Uploads and parsing.
 
@@ -7123,7 +7302,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-066 | GET /api/v1/upload/history
+### API-070 | GET /api/v1/upload/history
 
 Get Upload History Slim Alias. Module: Uploads and parsing.
 
@@ -7152,7 +7331,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-067 | GET /api/v1/upload/site-data
+### API-071 | GET /api/v1/upload/site-data
 
 Get Site Data. Module: Uploads and parsing.
 
@@ -7185,7 +7364,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-068 | GET /api/v1/upload/alarm-data
+### API-072 | GET /api/v1/upload/alarm-data
 
 Get Alarm Data. Module: Uploads and parsing.
 
@@ -7229,7 +7408,7 @@ List accounts and create company-assigned users. Current create-user service acc
 
 > Current service accepts USER or SUPER_ADMIN roles only. ADMIN is recognized by newer alarm authorization but is not accepted by this account-creation API. Invalid roles/statuses are rejected.
 
-### API-048 | GET /api/v1/users
+### API-052 | GET /api/v1/users
 
 List Users. Module: User administration.
 
@@ -7259,7 +7438,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-049 | POST /api/v1/users
+### API-053 | POST /api/v1/users
 
 Create User. Module: User administration.
 
@@ -7311,7 +7490,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 
 Rank cells/sites by an explicit KPI metric and inspect cell-level bad-day evidence.
 
-### API-128 | GET /api/v1/kpi/worst-cells
+### API-132 | GET /api/v1/kpi/worst-cells
 
 Worst Cells. Module: Worst-performance analysis.
 
@@ -7345,7 +7524,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-129 | GET /api/v1/kpi/worst-sites
+### API-133 | GET /api/v1/kpi/worst-sites
 
 Worst Sites. Module: Worst-performance analysis.
 
@@ -7379,7 +7558,7 @@ Success response: HTTP 200. Synthetic partial example: demonstrates envelope/key
 }
 ```
 
-### API-130 | GET /api/v1/kpi/worst-cells/detail
+### API-134 | GET /api/v1/kpi/worst-cells/detail
 
 Worst Cell Detail. Module: Worst-performance analysis.
 
@@ -7585,6 +7764,68 @@ These fields are extracted from actual Java record declarations used by the publ
 | knownDownSites | long | No bean constraint on this field; see service validation |
 | pendingOperationalInputs | List<String> | No bean constraint on this field; see service validation |
 | notes | List<String> | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmOperational.java:SiteUpdate
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| siteCode | String | No bean constraint on this field; see service validation |
+| state | String | No bean constraint on this field; see service validation |
+| observedAt | String | No bean constraint on this field; see service validation |
+| lrPending | Boolean | No bean constraint on this field; see service validation |
+| owner | String | No bean constraint on this field; see service validation |
+| recoveryReason | String | No bean constraint on this field; see service validation |
+| responsibility | String | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmOperational.java:CircleInput
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| circleId | long | No bean constraint on this field; see service validation |
+| technology | String | No bean constraint on this field; see service validation |
+| ms2Pending | Integer | No bean constraint on this field; see service validation |
+| lrPending | Integer | No bean constraint on this field; see service validation |
+| siteInventoryTotal | Integer | No bean constraint on this field; see service validation |
+| siteUp | Integer | No bean constraint on this field; see service validation |
+| gpsAlarms | Integer | No bean constraint on this field; see service validation |
+| vswrAlarms | Integer | No bean constraint on this field; see service validation |
+| zoneOwner | String | No bean constraint on this field; see service validation |
+| circleOwner | String | No bean constraint on this field; see service validation |
+| majorReason | String | No bean constraint on this field; see service validation |
+| sites | List<SiteUpdate> | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmOperational.java:Capture
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| effectiveAt | String | No bean constraint on this field; see service validation |
+| expectedRevision | int | No bean constraint on this field; see service validation |
+| sourceReference | String | No bean constraint on this field; see service validation |
+| circles | List<CircleInput> | No bean constraint on this field; see service validation |
+| expectedBaseSnapshotId | Long | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmOperational.java:CircleContext
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| circleName | String | No bean constraint on this field; see service validation |
+| zoneName | String | No bean constraint on this field; see service validation |
+| input | CircleInput | No bean constraint on this field; see service validation |
+
+### alarm/dto/AlarmOperational.java:Snapshot
+
+| JSON property | Java type | Declared annotations |
+| --- | --- | --- |
+| id | Long | No bean constraint on this field; see service validation |
+| effectiveAt | String | No bean constraint on this field; see service validation |
+| revision | int | No bean constraint on this field; see service validation |
+| supersedesId | Long | No bean constraint on this field; see service validation |
+| sourceReference | String | No bean constraint on this field; see service validation |
+| checksum | String | No bean constraint on this field; see service validation |
+| createdBy | long | No bean constraint on this field; see service validation |
+| createdAt | String | No bean constraint on this field; see service validation |
+| circles | List<CircleContext> | No bean constraint on this field; see service validation |
+| basedOnId | Long | No bean constraint on this field; see service validation |
 
 ### alarm/dto/AlarmImport.java:AlarmRow
 

@@ -19,6 +19,10 @@ function Import-EnvFile {
         'LICENSE_FILE_PATH',
         'LICENSE_SIGNING_SECRET',
         'PORT',
+        'LOGGING_LEVEL_ROOT',
+        'LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC',
+        'LOGGING_LEVEL_ORG_HIBERNATE',
+        'LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB',
         'SPRING_DATASOURCE_URL',
         'SPRING_DATASOURCE_USERNAME',
         'SPRING_DATASOURCE_PASSWORD',
@@ -55,6 +59,11 @@ function Import-EnvFile {
         'REPORT_MAIL_WORKERS',
         'REPORT_MAIL_QUEUE_CAPACITY',
         'NIGHTLY_ENABLED',
+        'ALARM_WORKFLOW_ENABLED',
+        'ALARM_WORKFLOW_STORAGE',
+        'ALARM_INPUT_ROOT',
+        'ALARM_WORKFLOW_TICK_MILLIS',
+        'ALARM_OPERATIONAL_ENABLED',
         'NIGHTLY_TICK_MILLIS',
         'NIGHTLY_STABLE_SECONDS',
         'NIGHTLY_MAX_SOURCE_BYTES',
@@ -98,6 +107,13 @@ function Import-EnvFile {
 
 $projectRoot = Split-Path $root -Parent
 Import-EnvFile -Path (Join-Path $projectRoot '.env')
+
+# An environment URL replaces application.yml's optimized default URL. Preserve
+# explicit driver choices, but enable real MySQL batches when the option is absent.
+if ($env:SPRING_DATASOURCE_URL -like 'jdbc:mysql:*' -and $env:SPRING_DATASOURCE_URL -notmatch '(?i)(?:[?&])rewriteBatchedStatements=') {
+    $separator = if ($env:SPRING_DATASOURCE_URL.Contains('?')) { '&' } else { '?' }
+    $env:SPRING_DATASOURCE_URL += $separator + 'rewriteBatchedStatements=true'
+}
 
 $javaHomeCandidates = @()
 if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME)) {

@@ -53,11 +53,11 @@ with sync_playwright() as p:
     page.goto("http://localhost:5173/recommendation")
     page.get_by_role("option", name="Synthetic RCA KPI", exact=True).wait_for(state="attached")
     page.wait_for_timeout(500)
-    page.get_by_role("button", name="Export", exact=True).click()
-    expect(page.get_by_role("button", name="Run Recommendation", exact=True)).to_be_disabled()
-    page.get_by_role("status").filter(has_text="65%").wait_for()
-    page.screenshot(path=str(output / "rca-export-progress.png"), full_page=True)
     with page.expect_download() as event:
+        page.get_by_role("button", name="Export", exact=True).click()
+        expect(page.get_by_role("button", name="Run Recommendation", exact=True)).to_be_disabled()
+        page.get_by_role("status").filter(has_text="65%").wait_for()
+        page.screenshot(path=str(output / "rca-export-progress.png"), full_page=True)
         page.get_by_role("status").filter(has_text="Export downloaded.").wait_for()
     assert event.value.suggested_filename == "rca_recommendation_500_1.xlsx"
     polls = state["polls"]

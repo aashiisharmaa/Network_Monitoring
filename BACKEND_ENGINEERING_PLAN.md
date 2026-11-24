@@ -1586,3 +1586,73 @@ Deployment, contracts, limits and remaining BRD/acceptance gaps are recorded in
 Actual customer catalogue/routing values, native delta/clear lifecycle semantics,
 MS2/LR operational inputs, large-export streaming and final customer-template/volume
 UAT remain explicit work; the entire BRD is not marked complete by synthetic tests.
+
+## Operational inputs and project review (18 November 2026)
+
+The MS2/LR operational-input gap above now has an implemented, append-only,
+company-scoped model (optional migration 010), capture/history/readiness APIs,
+existing Alarms-tab input UI, Excel/PDF context and frozen operational revision
+IDs in queued report/escalation envelopes. Unknown values remain distinct from
+reported zero. Reported site updates cannot clear OSS alarms. The removed
+`/alarm-operations` page remains removed; the older section describes history.
+
+See `reports/brd-review/alarm-operational-inputs.md` for contracts/deployment and
+`reports/brd-review/project-review-2026-11-18.md` for the module-wide review,
+remaining customer acceptance gaps and optional UX suggestions (not implemented).
+Backend verification: 172 tests discovered, 141 passed, 31 skipped, no failures or
+errors. Runtime deployment/migration and real customer UAT remain pending.
+Legacy public-read/blank-role tenant policy requires hardening before customer
+deployment; new native endpoint guards do not solve that unrelated legacy risk.
+
+## Loading optimization (18 November 2026)
+
+Native alarm report source reads now batch metadata/evidence (2 queries rather
+than 2 per run), retain company/source/status validation and observation budgets,
+and omit raw JSON/detail sorting for summaries. Text/JSON compression is configured
+for responses >=2 KiB. Backend full suite: 176 discovered, 145 passed, 31 skipped,
+zero failures/errors. Deployment/restart is still pending on the running backend.
+
+Frontend startup removes unused Material UI runtime, shares concurrent equivalent
+GETs with independent cancellation and mutation generation boundaries, overlaps
+dashboard fetches with ordered threshold merging, and preloads intended navigation.
+Measured dashboard script bytes decreased 21%; the small synthetic wall-clock
+sample did not prove an overall latency improvement. See
+`reports/brd-review/loading-optimization-2026-11-18.md` for measurements and limits.
+
+## Connected portal self-testing — 19 November 2026
+
+The local portal has been activated on the current backend build with native alarm
+workflow/operational endpoints. Real Rwanda source files and separate labelled
+synthetic fixtures were uploaded through authenticated APIs. A dedicated company
+ADMIN account provides demo data without modifying the existing account's role or
+bypassing native tenant guards. See
+`reports/brd-review/portal-self-testing-2026-11-19.md` for file IDs and manual flows.
+
+Connected imports exposed per-row company lookups and JDBC null-parameter metadata
+probes. Upload mapping now resolves the destination company once per upload and
+dynamic record/metric batches supply explicit SQL types. The Windows runner enables
+MySQL batch rewriting when the URL does not already specify the option. User
+creation accepts the ADMIN role already supported by the UI and native authorization;
+creation still requires the existing Super Admin permission.
+
+Connected daily-report testing also exposed CSV timestamps with a space separator
+being parsed as null. The ingestion parser accepts this standard local timestamp
+form while retaining the hour in dimensions; canonical cache dates remain calendar
+dates. Daily aggregation additionally validates full ISO timestamps and retains the
+source calendar day. Focused tests cover cache/legacy parsing, hourly aggregation,
+offset calendar boundaries and malformed dates. Existing source values are retained;
+only this session's own KPI uploads are reprocessed through the overwrite API.
+
+The isolated regression run before the date fixes discovered 191 tests (190 passed,
+one bootstrap helper skipped, zero failures/errors). The subsequent date parser and
+daily calculator run passed all 14 focused tests. Real SMTP delivery, approved
+customer classifications and complete isolation of legacy global read endpoints are
+not established by this manual-test workspace.
+
+All six KPI uploads created for this setup were subsequently reprocessed and every
+canonical date validated against the prepared source period. Final demo snapshot 2
+contains 18 current metric values for 6 cells; two cells degrade in each of the three
+daily metrics. RCA job 24 flags 48 hourly observations from those two cells. Common
+report 2 completed with explicit PARTIAL module coverage and readable 8-page PDF /
+Excel artifacts. A fresh scoped ADMIN login verified report read/download and RCA
+export 1 through normal APIs. SMTP remains unconfigured and no real email was sent.

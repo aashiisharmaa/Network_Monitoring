@@ -7,6 +7,26 @@ import static com.network.monitoring.reporting.service.DailyKpiCalculator.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DailyKpiCalculatorTest {
+    @Test void hourlyTimestampsAggregateBySourceCalendarDay() {
+        var metric = metric("prb", Aggregation.MEAN, Direction.LOWER_IS_BETTER, "PERCENT");
+        var rows = List.of(
+                Map.<String, Object>of("date", "2026-11-08 00:00:00", "cellName", "A", "metrics", Map.of("prb", 10)),
+                Map.<String, Object>of("date", "2026-11-08T12:30:00.123", "cellName", "A", "metrics", Map.of("prb", 20)),
+                Map.<String, Object>of("date", "2026-11-08T23:30:00-05:00", "cellName", "A", "metrics", Map.of("prb", 30)));
+        var build = DailyKpiCalculator.build(rows, profile(metric), null, 100);
+        assertEquals(day, build.date());
+        assertEquals(1, build.days().size());
+        assertEquals(20.0, values(build, "prb").get(day).value());
+        assertEquals(3, values(build, "prb").get(day).validSamples());
+    }
+
+    @Test void malformedTimestampAndCalendarDatesAreRejected() {
+        var metric = metric("prb", Aggregation.MEAN, Direction.LOWER_IS_BETTER, "PERCENT");
+        for (String invalid : List.of("2026-02-30", "2026-02-30 12:00:00", "2026-11-08T25:00:00", "2026-11-08 garbage", "")) {
+            assertThrows(IllegalArgumentException.class, () -> DailyKpiCalculator.build(List.of(
+                    Map.of("date", invalid, "cellName", "A", "metrics", Map.of("prb", 1))), profile(metric), null, 100));
+        }
+    }
     private final LocalDate day = LocalDate.of(2026, 11, 8);
     private Metric metric(String key, Aggregation aggregation, Direction direction, String unit) {
         return new Metric(key, aggregation, direction, unit, null, null, null, true);

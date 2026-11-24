@@ -18,6 +18,7 @@ public class UserManagementService {
     private static final String BOOTSTRAP_SUPER_ADMIN_PASSWORD = "Adi@123";
     private static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
     private static final String ROLE_USER = "USER";
+    private static final String ROLE_ADMIN = "ADMIN";
     private static final String STATUS_ACTIVE = "ACTIVE";
     private static final String STATUS_BLOCKED = "BLOCKED";
 
@@ -89,10 +90,10 @@ public class UserManagementService {
             return ROLE_USER;
         }
         String normalized = value.trim().toUpperCase();
-        if (ROLE_SUPER_ADMIN.equals(normalized) || ROLE_USER.equals(normalized)) {
+        if (ROLE_SUPER_ADMIN.equals(normalized) || ROLE_ADMIN.equals(normalized) || ROLE_USER.equals(normalized)) {
             return normalized;
         }
-        throw new IllegalArgumentException("Role must be USER or SUPER_ADMIN.");
+        throw new IllegalArgumentException("Role must be USER, ADMIN or SUPER_ADMIN.");
     }
 
     private String normalizeStatus(String value) {

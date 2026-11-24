@@ -161,20 +161,31 @@ public class UploadService {
         return runUpload(file, remarks, uploadedBy, DatasetType.ALARM, AppendOption.APPEND, null, Map.of(), false);
     }
 
-    public Map<String, Object> getUploadHistory() {
-        List<Map<String, Object>> uploads = uploadHistoryRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+    public Map<String, Object> getUploadHistory(Long requestedCompanyId) {
+        List<Map<String, Object>> uploads = visibleUploadHistory(requestedCompanyId)
                 .stream()
                 .map(this::toUploadHistoryPayloadWithCounts)
                 .toList();
         return Map.of("success", true, "data", uploads);
     }
 
-    public Map<String, Object> getUploadHistorySlim() {
-        List<Map<String, Object>> uploads = uploadHistoryRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+    public Map<String, Object> getUploadHistorySlim(Long requestedCompanyId) {
+        List<Map<String, Object>> uploads = visibleUploadHistory(requestedCompanyId)
                 .stream()
                 .map(this::toUploadHistoryPayloadWithoutCounts)
                 .toList();
         return Map.of("success", true, "data", uploads);
+    }
+
+    private List<UploadHistory> visibleUploadHistory(Long requestedCompanyId) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        if (roleAuthorizationService.isCurrentUserSuperAdmin()) {
+            return requestedCompanyId == null
+                    ? uploadHistoryRepository.findAll(sort)
+                    : uploadHistoryRepository.findAllByCompanyId(requestedCompanyId, sort);
+        }
+        Long companyId = roleAuthorizationService.currentUserCompanyIdOrNull();
+        return companyId == null ? List.of() : uploadHistoryRepository.findAllByCompanyId(companyId, sort);
     }
 
     @Transactional
@@ -409,7 +420,7 @@ public class UploadService {
 
             if (datasetType == DatasetType.KPI) {
                 List<UploadData> uploadDataRows = normalizedRows.stream()
-                        .map(row -> mapKpiRow(row, uploadRecord.getId()))
+                        .map(row -> mapKpiRow(row, uploadRecord.getId(), uploadRecord.getCompanyId()))
                         .toList();
                 int replacedRows = 0;
                 int mergedSkippedRows = 0;
@@ -501,7 +512,7 @@ public class UploadService {
                 int duplicateRows = 0;
                 for (int rowIndex = 0; rowIndex < normalizedRows.size(); rowIndex++) {
                     Map<String, Object> row = normalizedRows.get(rowIndex);
-                    SiteData mapped = mapSiteRow(row, nextGeneratedSiteId, uploadRecord.getId());
+                    SiteData mapped = mapSiteRow(row, nextGeneratedSiteId, uploadRecord.getId(), uploadRecord.getCompanyId());
                     if (mapped == null || (isBlank(mapped.getSiteId()) && isBlank(mapped.getSiteName())
                             && isBlank(mapped.getCellName()) && isBlank(mapped.getCellId()))) {
                         validationErrors.add(validationRow(rowIndex + 2, "Missing site or cell identity"));
@@ -562,7 +573,7 @@ public class UploadService {
             List<Map<String, Object>> validationErrors = new ArrayList<>();
             int duplicateRows = 0;
             for (int rowIndex = 0; rowIndex < normalizedRows.size(); rowIndex++) {
-                AlarmData mapped = mapAlarmRow(normalizedRows.get(rowIndex), uploadRecord.getId());
+                AlarmData mapped = mapAlarmRow(normalizedRows.get(rowIndex), uploadRecord.getId(), uploadRecord.getCompanyId());
                 if (!hasAlarmRowContent(mapped)) {
                     validationErrors.add(validationRow(rowIndex + 2, "No alarm identity, text, or timestamp"));
                     continue;
@@ -1123,8 +1134,7 @@ public class UploadService {
     }
 
     int appendDailyLegacy(long fileId, Long companyId, List<Map<String, Object>> rawRows) {
-        List<UploadData> rows = rawRows.stream().map(this::normalizeRow).map(row -> mapKpiRow(row, fileId)).toList();
-        rows.forEach(row -> row.setCompanyId(companyId));
+        List<UploadData> rows = rawRows.stream().map(this::normalizeRow).map(row -> mapKpiRow(row, fileId, companyId)).toList();
         if (!hasLegacyKpiMetrics(rows)) return 0;
         int inserted = 0;
         for (int index = 0; index < rows.size(); index += INSERT_CHUNK_SIZE) {
@@ -1473,6 +1483,9 @@ public class UploadService {
         if (text.isEmpty()) {
             return null;
         }
+        if (text.length() > 10 && text.charAt(10) == ' ') {
+            text = text.substring(0, 10) + "T" + text.substring(11);
+        }
         try {
             return LocalDateTime.parse(text);
         } catch (Exception ignored) {
@@ -1718,10 +1731,10 @@ public class UploadService {
         );
     }
 
-    private UploadData mapKpiRow(Map<String, Object> row, Long fileId) {
+    private UploadData mapKpiRow(Map<String, Object> row, Long fileId, Long companyId) {
         UploadData data = new UploadData();
         data.setFileId(fileId);
-        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
+        data.setCompanyId(companyId);
         data.setDate(parseDateSafe(pickValue(row, "date", "datetime")));
         data.setCellName(safeString(pickValue(row, "cell_name", "cellname", "cell", "short_name", "shortname", "4g_cell_name", "4gcellname")));
         data.setSite(safeString(pickValue(row, "site")));
@@ -1755,7 +1768,7 @@ public class UploadService {
         return next == null || next < 1 ? 1L : next;
     }
 
-    private SiteData mapSiteRow(Map<String, Object> row, long generatedId, Long fileId) {
+    private SiteData mapSiteRow(Map<String, Object> row, long generatedId, Long fileId, Long companyId) {
         String cellName = safeString(pickValue(row, "4g_cell_name", "4gcellname", "lte_cell_name", "ltecellname", "cell_name", "cellname", "cell", "short_name", "shortname", "eutrancell", "eutrancellfdd", "eutrancelltdd", "localcellname", "local_cell_name", "cell_name_full"));
         String cellId = safeString(pickValue(row, "4g_cell_id", "4gcellid", "lte_cell_id", "ltecellid", "cell_id", "cellid"));
         CellNameParts cellParts = parseCellNameParts(cellName);
@@ -1769,7 +1782,7 @@ public class UploadService {
         SiteData data = new SiteData();
         data.setId(generatedId);
         data.setFileId(fileId);
-        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
+        data.setCompanyId(companyId);
         data.setCellName(cellName);
         data.setSiCi(safeString(pickValue(row, "si_ci", "sici")));
         data.setEgci(safeString(pickValue(row, "egci")));
@@ -1906,10 +1919,10 @@ public class UploadService {
         }
     }
 
-    private AlarmData mapAlarmRow(Map<String, Object> row, Long fileId) {
+    private AlarmData mapAlarmRow(Map<String, Object> row, Long fileId, Long companyId) {
         AlarmData data = new AlarmData();
         data.setFileId(fileId);
-        data.setCompanyId(roleAuthorizationService.currentUserCompanyIdOrNull());
+        data.setCompanyId(companyId);
         data.setFilename(safeString(pickValue(row, "filename", "file_name", "source_file", "sourcefile")));
         data.setDatetime(parseDateSafe(pickValue(row, "alarm_time", "alarmtime", "datetime", "date_time", "date", "date2", "time")));
         data.setConfigDataDnPrefix(safeString(pickValue(row, "configdata_dnprefix", "configdatadnprefix", "dn_prefix", "dnprefix")));

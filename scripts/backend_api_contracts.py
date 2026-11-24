@@ -61,7 +61,10 @@ def request_example(entry):
             "updateFeed": {**{k: v for k, v in FEED.items() if k != "sourceKey"}, "active": True, "version": 1}}
         return deepcopy(bodies[h])
     if c == "AlarmWorkflowController":
-        bodies = {"catalog": {"oem": "NOKIA", "technology": "4G", "matchField": "CODE", "matchValue": "SYNTHETIC-100", "classification": "CRITICAL", "included": True, "serviceAffecting": True, "siteDown": False},
+        bodies = {"captureOperationalInputs": {"effectiveAt": "2026-11-17T00:00:00Z", "expectedRevision": 0, "expectedBaseSnapshotId": None,
+                "sourceReference": "Synthetic approved NOC register", "circles": [{"circleId": 10, "technology": "4G", "ms2Pending": 0,
+                "lrPending": None, "siteInventoryTotal": 10, "siteUp": 8, "gpsAlarms": None, "vswrAlarms": 0,
+                "zoneOwner": "Example zone owner", "circleOwner": "Example circle owner", "majorReason": None, "sites": []}]}, "catalog": {"oem": "NOKIA", "technology": "4G", "matchField": "CODE", "matchValue": "SYNTHETIC-100", "classification": "CRITICAL", "included": True, "serviceAffecting": True, "siteDown": False},
             "site": {"circleId": 10, "objectKey": "PLMN/MRBTS-SYNTHETIC", "siteCode": "SYNTHETIC-SITE"},
             "event": {"action": "NOTE", "note": "Replace with the actual operator review evidence"},
             "settings": {"version": 0, "enabled": False, "freshnessMinutes": 60, "reports": [{"key": "national-preview", "circleId": None, "recipients": ["reviewer@example.invalid"], "mode": "CAPTURE"}], "escalations": [], "watches": []},

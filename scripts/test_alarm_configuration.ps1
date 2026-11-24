@@ -1,6 +1,7 @@
 param(
     [string]$MySqlBin = 'C:\Program Files\MySQL\MySQL Server 8.0\bin',
     [switch]$FullSuite,
+    [switch]$ProjectSuite,
     [string]$BuildDirectory = 'target'
 )
 
@@ -20,6 +21,8 @@ $testDataPath = Join-Path $backendPath ('target\alarm-config-mysql-' + [guid]::N
 New-Item -ItemType Directory -Path $testDataPath -Force | Out-Null
 $previousAlarmUrl = $env:ALARM_CONFIG_TEST_DB_URL
 $previousKpiUrl = $env:KPI_TEST_DB_URL
+$previousKpiUser = $env:KPI_TEST_DB_USER
+$previousKpiPassword = $env:KPI_TEST_DB_PASSWORD
 $serverProcess = $null
 $testExitCode = 1
 # On Windows, mysqld's monitor process can spawn the actual listening worker.
@@ -61,17 +64,31 @@ try {
     $env:ALARM_CONFIG_TEST_DB_URL = 'jdbc:mysql://127.0.0.1:13316/alarm_config_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
     # FullSuite must not inherit a separate database target for existing integration tests.
     Remove-Item Env:KPI_TEST_DB_URL -ErrorAction SilentlyContinue
+    if ($ProjectSuite) {
+        & $clientPath '--no-defaults' '--protocol=TCP' '--host=127.0.0.1' '--port=13316' '--user=root' `
+            '--execute=CREATE DATABASE kpi_project_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        if ($LASTEXITCODE -ne 0) { throw 'Disposable KPI database creation failed.' }
+        $env:KPI_TEST_DB_URL = 'jdbc:mysql://127.0.0.1:13316/kpi_project_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
+        $env:KPI_TEST_DB_USER = 'root'
+        $env:KPI_TEST_DB_PASSWORD = ''
+    }
     $buildArgument = '-Dbackend.build.directory=' + $BuildDirectory
     # On PowerShell 5, JVM warnings on stderr must not bypass Maven's exit code.
     $ErrorActionPreference = 'Continue'
     try {
-        if ($FullSuite) { & $mavenPath $buildArgument 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() } }
+        if ($ProjectSuite) {
+            & $mavenPath $buildArgument '-Dproject.fixture.bootstrap=true' '-Dtest=IsolatedProjectDatabaseTest' 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() }
+            if ($LASTEXITCODE -ne 0) { throw 'Disposable project schema bootstrap failed.' }
+        }
+        if ($FullSuite -or $ProjectSuite) { & $mavenPath $buildArgument 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() } }
         else { & $mavenPath $buildArgument '-Dtest=AlarmTenantAccessTest,AlarmConfigurationServiceTest,AlarmConfigurationControllerTest,AlarmConfigurationMysqlTest,AlarmWorkflowMysqlTest' 'test' '-q' 2>&1 | ForEach-Object { $_.ToString() } }
         $testExitCode = $LASTEXITCODE
     } finally { $ErrorActionPreference = 'Stop' }
 } finally {
     $env:ALARM_CONFIG_TEST_DB_URL = $previousAlarmUrl
     $env:KPI_TEST_DB_URL = $previousKpiUrl
+    $env:KPI_TEST_DB_USER = $previousKpiUser
+    $env:KPI_TEST_DB_PASSWORD = $previousKpiPassword
     if ($serverProcess -and !$serverProcess.HasExited) {
         $listener = Get-NetTCPConnection -State Listen -LocalPort 13316 -ErrorAction SilentlyContinue
         if ($listener -and (Test-OwnedAlarmListener $listener.OwningProcess)) {

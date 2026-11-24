@@ -43,6 +43,7 @@ class AlarmWorkflowMysqlTest {
     AlarmTenantAccess access;
     long circle, feed;
     AlarmAutomationService automation; AlarmReportService reports;
+    com.network.monitoring.alarm.service.AlarmOperationalService operational;
     static final String HEADER="Circle,Resource,Alarm Number,Alarm Text,Severity,Alarm Time\n";
     @BeforeAll void setup() throws Exception {
         String url=System.getenv("ALARM_CONFIG_TEST_DB_URL");
@@ -50,10 +51,10 @@ class AlarmWorkflowMysqlTest {
         datasource=new DriverManagerDataSource(url,"root",""); jdbc=new JdbcTemplate(datasource);
         jdbc.execute("CREATE TABLE IF NOT EXISTS companies (id BIGINT NOT NULL PRIMARY KEY,company_name VARCHAR(255) NOT NULL,status VARCHAR(32) NOT NULL) ENGINE=InnoDB");
         jdbc.update("INSERT IGNORE INTO companies VALUES(100,'Synthetic A','ACTIVE'),(200,'Synthetic B','ACTIVE')");
-        migrate("008_alarm_master_data.sql"); migrate("009_alarm_workflow.sql");
+        migrate("008_alarm_master_data.sql"); migrate("009_alarm_workflow.sql"); migrate("010_alarm_operational_inputs.sql");
     }
     @BeforeEach void fixture() {
-        for(String table:List.of("alarm_escalation_decisions","alarm_operator_events","alarm_delivery_outbox","alarm_observations","alarm_ingestion_runs","alarm_automation_settings","alarm_site_objects","alarm_catalog_rules","alarm_source_feed_profiles","alarm_circle_aliases","alarm_circles","alarm_zones")) jdbc.update("DELETE FROM "+table);
+        for(String table:List.of("alarm_operational_snapshots","alarm_escalation_decisions","alarm_operator_events","alarm_delivery_outbox","alarm_observations","alarm_ingestion_runs","alarm_automation_settings","alarm_site_objects","alarm_catalog_rules","alarm_source_feed_profiles","alarm_circle_aliases","alarm_circles","alarm_zones")) jdbc.update("DELETE FROM "+table+(table.equals("alarm_operational_snapshots")?" ORDER BY id DESC":""));
         access=mock(AlarmTenantAccess.class); when(access.require(anyLong(),anyBoolean())).thenReturn(9L);
         master=new AlarmConfigurationRepository(jdbc); config=new AlarmConfigurationService(access,master);
         var zone=config.createZone(100,new ZoneCreate("WEST","West"));
@@ -61,7 +62,8 @@ class AlarmWorkflowMysqlTest {
         var draft=config.createFeed(100,new FeedCreate("TEST","Test feed","NOKIA","4G","CSV",null,"Asia/Kolkata","SNAPSHOT",circle));
         feed=config.updateFeed(100,draft.id(),new FeedUpdate(draft.name(),draft.oem(),draft.technology(),draft.fileFormat(),null,draft.sourceTimezone(),draft.dumpType(),circle,true,1)).id();
         workflow=new AlarmWorkflowService(jdbc,access,master,new AlarmImportPreviewService(),new ObjectMapper().findAndRegisterModules(),new DataSourceTransactionManager(datasource),new AlarmSourceStorage(files.toString()),new AlarmDefinitionService(access,master,new AlarmDefinitionRepository(jdbc),new DataSourceTransactionManager(datasource)),new AlarmObservationNormalizer(new ObjectMapper().findAndRegisterModules()),true);
-        reports=new AlarmReportService(workflow,access,new com.network.monitoring.alarm.repository.AlarmReportRepository(jdbc));
+        operational=new com.network.monitoring.alarm.service.AlarmOperationalService(access,master,new com.network.monitoring.alarm.repository.AlarmOperationalRepository(jdbc),new ObjectMapper().findAndRegisterModules(),new DataSourceTransactionManager(datasource),true);
+        reports=new AlarmReportService(workflow,access,new com.network.monitoring.alarm.repository.AlarmReportRepository(jdbc),operational);
         var mail=new com.network.monitoring.platform.mail.config.ReportMailSettings();
         automation=newAutomation(mail,new com.network.monitoring.platform.mail.ReportMailTransport(mail),"");
     }
@@ -271,6 +273,71 @@ class AlarmWorkflowMysqlTest {
         jdbc.update("UPDATE alarm_source_feed_profiles SET active=FALSE WHERE id=?",feed);
         assertTrue(((List<?>)workflow.dashboard(100,"2026-11-02T00:00:00Z").get("sources")).isEmpty());
         assertEquals(1,workflow.observations(100,id,0,100).size());
+    }
+
+    private com.network.monitoring.alarm.dto.AlarmOperational.CircleInput operationalInput(Integer ms2,Integer lr,Integer up) {
+        return new com.network.monitoring.alarm.dto.AlarmOperational.CircleInput(circle,"4G",ms2,lr,10,up,0,null,"Zone owner","Circle owner","Synthetic reason",List.of(
+                new com.network.monitoring.alarm.dto.AlarmOperational.SiteUpdate("SITE-1","UP","2026-11-01T03:00:00Z",null,"Engineer","Power restored","Field Doable")));
+    }
+    @Test void operationalSnapshotsAreAppendOnlyScopedAndPreserveZeroUnknownAndReportHistory() throws Exception {
+        workflow.addCatalog(100,new AlarmModels.Catalog(0,"NOKIA","4G","CODE","100","CRITICAL",true,true,true));
+        workflow.addSite(100,feed,new AlarmModels.Site(0,circle,"node","SITE-1"));
+        var first=operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",0,"NOC register A",List.of(operationalInput(0,null,8))));
+        assertEquals(0,first.circles().get(0).input().ms2Pending());assertNull(first.circles().get(0).input().lrPending());
+        assertNull(((com.network.monitoring.alarm.dto.AlarmOperational.Snapshot)operational.current(200,"2026-11-02T00:00:00Z").get("snapshot")).id());
+        assertThrows(AlarmConfigurationException.class,()->operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",0,"Stale",List.of(operationalInput(9,1,8)))));
+        var second=operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",1,"Corrected register",List.of(operationalInput(17,2,9)),first.id()));
+        assertEquals(first.id(),second.supersedesId());assertEquals(2,second.revision());assertEquals(first.id(),second.basedOnId());
+        assertThrows(AlarmConfigurationException.class,()->operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:01:00Z",0,"Stale carry forward",List.of(operationalInput(3,2,9)),first.id())));
+        long run=submit("2026-11-01T05:00:00Z",row("MU","100"));workflow.process(run);
+        try(var book=org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(reports.download(100,run,null,"xlsx")))) {
+            assertEquals(7,book.getNumberOfSheets());assertEquals(17,book.getSheet("Circle Summary").getRow(1).getCell(16).getNumericCellValue());
+            assertEquals(9,book.getSheet("Operational Inputs").getRow(1).getCell(7).getNumericCellValue());
+            assertEquals("UP",book.getSheet("Reported Site Updates").getRow(1).getCell(4).getStringCellValue());
+        }
+        assertEquals(1,((com.network.monitoring.alarm.dto.AlarmReport.Summary)reports.dashboard(100,"2026-11-01T05:00:00Z").get("reportSummary")).knownDownSites());
+        assertEquals(2,operational.history(100,50).size());
+        assertTrue(jdbc.queryForObject("SELECT input_json FROM alarm_operational_snapshots WHERE id=?",String.class,first.id()).contains("\"ms2Pending\":0"));
+    }
+    @Test void invalidOperationalValuesAndForeignMappingsRollBackWithoutLosingSavedSnapshot() {
+        var first=operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",0,"Reference",List.of(operationalInput(1,0,8))));
+        assertThrows(AlarmConfigurationException.class,()->operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",1,"Invalid up count",List.of(operationalInput(2,0,11)),first.id())));
+        assertThrows(AlarmConfigurationException.class,()->operational.capture(200,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",0,"Foreign mapping",List.of(operationalInput(2,0,8)))));
+        assertEquals(1,count("alarm_operational_snapshots"));
+    }
+    @Test void queuedMailPinsOperationalRevisionAndLegacyEnvelopeDoesNotAdoptLaterInputs() throws Exception {
+        var first=operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",0,"Original MS2 register",List.of(operationalInput(17,2,9))));
+        automation.save(100,new AlarmAutomation.Settings(0,true,60,List.of(new AlarmAutomation.Route("national",null,List.of("qa@example.invalid"),"CAPTURE")),List.of(),List.of()));
+        long run=submit("2026-11-01T05:00:00Z",row("MU","100"));workflow.process(run);automation.plan();
+        assertTrue(jdbc.queryForObject("SELECT message_json FROM alarm_delivery_outbox LIMIT 1",String.class).contains("\"operationalSnapshotId\":"+first.id()));
+        operational.capture(100,new com.network.monitoring.alarm.dto.AlarmOperational.Capture("2026-11-01T04:00:00Z",1,"Later correction",List.of(operationalInput(99,3,9)),first.id()));
+        automation.deliverNext();
+        long delivery=jdbc.queryForObject("SELECT id FROM alarm_delivery_outbox LIMIT 1",Long.class);
+        var message=new jakarta.mail.internet.MimeMessage(jakarta.mail.Session.getInstance(new java.util.Properties()),new java.io.ByteArrayInputStream(automation.captured(100,delivery)));
+        var multipart=(jakarta.mail.Multipart)message.getContent();
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(multipart.getBodyPart(1).getInputStream().readAllBytes())) {
+            String text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+            assertTrue(text.contains("MS2 pending 17"));assertFalse(text.contains("MS2 pending 99"));assertTrue(text.contains("Original MS2 register"));
+        }
+    }
+
+    @Test void batchedReportReadsMatchSingleSourceEvidenceAndRemainTenantScoped() {
+        long first=submit("2026-11-01T04:00:00Z",row("MU","100"));workflow.process(first);
+        long second=submit("2026-11-01T05:00:00Z",row("MU","200"));workflow.process(second);
+        var repository=new com.network.monitoring.alarm.repository.AlarmReportRepository(jdbc);
+        var ids=List.of(first,second);
+        assertEquals(2,repository.sources(100,ids).size());assertTrue(repository.sources(200,ids).isEmpty());
+        for(boolean summary:List.of(true,false)) {
+            var batched=repository.observations(100,ids,null,summary);
+            assertEquals(2,batched.size());
+            for(long id:ids) {
+                var row=new LinkedHashMap<>(batched.stream().filter(r->((Number)r.get("run_id")).longValue()==id).findFirst().orElseThrow());
+                row.remove("run_id");
+                assertEquals(repository.observations(100,id,null,summary).get(0),row);
+            }
+            assertTrue(repository.observations(200,ids,null,summary).isEmpty());
+            assertTrue(repository.observations(100,ids,99999L,summary).isEmpty());
+        }
     }
 
     private AlarmAutomationService newAutomation(com.network.monitoring.platform.mail.config.ReportMailSettings mail,

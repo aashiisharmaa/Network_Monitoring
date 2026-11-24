@@ -2,7 +2,7 @@
   "info": {
     "name": "Network Monitoring - Source Verified Backend APIs",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "186 source-derived canonical operations. Examples are synthetic. Set baseUrl/token and real test-resource IDs. This file does not run requests. Check the handbook for runtime availability; native-alarm APIs need the matching build/migrations."
+    "description": "190 source-derived canonical operations. Examples are synthetic. Set baseUrl/token and real test-resource IDs. This file does not run requests. Check the handbook for runtime availability; native-alarm APIs need the matching build/migrations."
   },
   "auth": {
     "type": "bearer",
@@ -684,7 +684,130 @@
       "name": "Native OSS snapshot workflow",
       "item": [
         {
-          "name": "API-016 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports",
+          "name": "API-016 | GET /api/v1/alarm-workflow/companies/{companyId}/readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/alarm-workflow/companies/{{companyId}}/readiness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "alarm-workflow",
+                "companies",
+                "{{companyId}}",
+                "readiness"
+              ]
+            },
+            "description": "Readiness. Module: Native OSS snapshot workflow.\nRequires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity.\nStrict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+          },
+          "response": []
+        },
+        {
+          "name": "API-017 | GET /api/v1/alarm-workflow/companies/{companyId}/operational-inputs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/alarm-workflow/companies/{{companyId}}/operational-inputs?asOf={{asOf}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "alarm-workflow",
+                "companies",
+                "{{companyId}}",
+                "operational-inputs"
+              ],
+              "query": [
+                {
+                  "key": "asOf",
+                  "value": "{{asOf}}",
+                  "disabled": false,
+                  "description": "ISO timestamp with explicit offset; select snapshots at/before this time."
+                }
+              ]
+            },
+            "description": "Operational Inputs. Module: Native OSS snapshot workflow.\nRequires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity.\nStrict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+          },
+          "response": []
+        },
+        {
+          "name": "API-018 | POST /api/v1/alarm-workflow/companies/{companyId}/operational-inputs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/alarm-workflow/companies/{{companyId}}/operational-inputs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "alarm-workflow",
+                "companies",
+                "{{companyId}}",
+                "operational-inputs"
+              ]
+            },
+            "description": "Capture Operational Inputs. Module: Native OSS snapshot workflow.\nRequires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity.\nStrict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"effectiveAt\": \"2026-11-17T00:00:00Z\",\n  \"expectedRevision\": 0,\n  \"expectedBaseSnapshotId\": null,\n  \"sourceReference\": \"Synthetic approved NOC register\",\n  \"circles\": [\n    {\n      \"circleId\": 10,\n      \"technology\": \"4G\",\n      \"ms2Pending\": 0,\n      \"lrPending\": null,\n      \"siteInventoryTotal\": 10,\n      \"siteUp\": 8,\n      \"gpsAlarms\": null,\n      \"vswrAlarms\": 0,\n      \"zoneOwner\": \"Example zone owner\",\n      \"circleOwner\": \"Example circle owner\",\n      \"majorReason\": null,\n      \"sites\": []\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API-019 | GET /api/v1/alarm-workflow/companies/{companyId}/operational-inputs/history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/alarm-workflow/companies/{{companyId}}/operational-inputs/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "alarm-workflow",
+                "companies",
+                "{{companyId}}",
+                "operational-inputs",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "disabled": true,
+                  "description": "Requested page/result size; service-specific bounds apply."
+                }
+              ]
+            },
+            "description": "Operational History. Module: Native OSS snapshot workflow.\nRequires migrations 008/009 and a matching rebuilt backend; imports also require ALARM_WORKFLOW_ENABLED and an active feed. SNAPSHOT only: DELTA/OSS clearing is not implemented. Same-slot conflicts are 409. Unknown catalogue is UNMAPPED; unknown circle fails import. Native thresholds/severity are customer-defined, not inferred from source severity.\nStrict persisted user/company check: USER reads own company; ADMIN writes own company; SUPER_ADMIN selects an explicit company. Blank/blocked/unassigned access fails closed."
+          },
+          "response": []
+        },
+        {
+          "name": "API-020 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{feedId}/imports",
           "request": {
             "method": "POST",
             "header": [],
@@ -728,7 +851,7 @@
           "response": []
         },
         {
-          "name": "API-017 | GET /api/v1/alarm-workflow/companies/{companyId}/imports",
+          "name": "API-021 | GET /api/v1/alarm-workflow/companies/{companyId}/imports",
           "request": {
             "method": "GET",
             "header": [],
@@ -759,7 +882,7 @@
           "response": []
         },
         {
-          "name": "API-018 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}",
+          "name": "API-022 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -783,7 +906,7 @@
           "response": []
         },
         {
-          "name": "API-019 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry",
+          "name": "API-023 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -808,7 +931,7 @@
           "response": []
         },
         {
-          "name": "API-020 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace",
+          "name": "API-024 | POST /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/replace",
           "request": {
             "method": "POST",
             "header": [],
@@ -845,7 +968,7 @@
           "response": []
         },
         {
-          "name": "API-021 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations",
+          "name": "API-025 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/observations",
           "request": {
             "method": "GET",
             "header": [],
@@ -884,7 +1007,7 @@
           "response": []
         },
         {
-          "name": "API-022 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard",
+          "name": "API-026 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard",
           "request": {
             "method": "GET",
             "header": [],
@@ -915,7 +1038,7 @@
           "response": []
         },
         {
-          "name": "API-023 | GET /api/v1/alarm-workflow/companies/{companyId}/catalogue",
+          "name": "API-027 | GET /api/v1/alarm-workflow/companies/{companyId}/catalogue",
           "request": {
             "method": "GET",
             "header": [],
@@ -938,7 +1061,7 @@
           "response": []
         },
         {
-          "name": "API-024 | POST /api/v1/alarm-workflow/companies/{companyId}/catalogue",
+          "name": "API-028 | POST /api/v1/alarm-workflow/companies/{companyId}/catalogue",
           "request": {
             "method": "POST",
             "header": [
@@ -975,7 +1098,7 @@
           "response": []
         },
         {
-          "name": "API-025 | DELETE /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id}",
+          "name": "API-029 | DELETE /api/v1/alarm-workflow/companies/{companyId}/catalogue/{id}",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -999,7 +1122,7 @@
           "response": []
         },
         {
-          "name": "API-026 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites",
+          "name": "API-030 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites",
           "request": {
             "method": "GET",
             "header": [],
@@ -1024,7 +1147,7 @@
           "response": []
         },
         {
-          "name": "API-027 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites",
+          "name": "API-031 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites",
           "request": {
             "method": "POST",
             "header": [
@@ -1063,7 +1186,7 @@
           "response": []
         },
         {
-          "name": "API-028 | DELETE /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId}",
+          "name": "API-032 | DELETE /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/sites/{siteId}",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1089,7 +1212,7 @@
           "response": []
         },
         {
-          "name": "API-029 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format}",
+          "name": "API-033 | GET /api/v1/alarm-workflow/companies/{companyId}/imports/{id}/report/{format}",
           "request": {
             "method": "GET",
             "header": [],
@@ -1123,7 +1246,7 @@
           "response": []
         },
         {
-          "name": "API-030 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format}",
+          "name": "API-034 | GET /api/v1/alarm-workflow/companies/{companyId}/dashboard/report/{format}",
           "request": {
             "method": "GET",
             "header": [],
@@ -1162,7 +1285,7 @@
           "response": []
         },
         {
-          "name": "API-031 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history",
+          "name": "API-035 | GET /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/history",
           "request": {
             "method": "GET",
             "header": [],
@@ -1189,7 +1312,7 @@
           "response": []
         },
         {
-          "name": "API-032 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events",
+          "name": "API-036 | POST /api/v1/alarm-workflow/companies/{companyId}/feeds/{id}/alarms/{key}/events",
           "request": {
             "method": "POST",
             "header": [
@@ -1230,7 +1353,7 @@
           "response": []
         },
         {
-          "name": "API-033 | GET /api/v1/alarm-workflow/companies/{companyId}/automation",
+          "name": "API-037 | GET /api/v1/alarm-workflow/companies/{companyId}/automation",
           "request": {
             "method": "GET",
             "header": [],
@@ -1253,7 +1376,7 @@
           "response": []
         },
         {
-          "name": "API-034 | PUT /api/v1/alarm-workflow/companies/{companyId}/automation",
+          "name": "API-038 | PUT /api/v1/alarm-workflow/companies/{companyId}/automation",
           "request": {
             "method": "PUT",
             "header": [
@@ -1290,7 +1413,7 @@
           "response": []
         },
         {
-          "name": "API-035 | GET /api/v1/alarm-workflow/companies/{companyId}/status",
+          "name": "API-039 | GET /api/v1/alarm-workflow/companies/{companyId}/status",
           "request": {
             "method": "GET",
             "header": [],
@@ -1313,7 +1436,7 @@
           "response": []
         },
         {
-          "name": "API-036 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries",
+          "name": "API-040 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries",
           "request": {
             "method": "GET",
             "header": [],
@@ -1336,7 +1459,7 @@
           "response": []
         },
         {
-          "name": "API-037 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry",
+          "name": "API-041 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -1361,7 +1484,7 @@
           "response": []
         },
         {
-          "name": "API-038 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile",
+          "name": "API-042 | POST /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/reconcile",
           "request": {
             "method": "POST",
             "header": [
@@ -1400,7 +1523,7 @@
           "response": []
         },
         {
-          "name": "API-039 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture",
+          "name": "API-043 | GET /api/v1/alarm-workflow/companies/{companyId}/deliveries/{id}/capture",
           "request": {
             "method": "GET",
             "header": [],
@@ -1430,7 +1553,7 @@
       "name": "Authentication",
       "item": [
         {
-          "name": "API-040 | POST /api/v1/auth/register",
+          "name": "API-044 | POST /api/v1/auth/register",
           "request": {
             "method": "POST",
             "header": [
@@ -1468,7 +1591,7 @@
           "response": []
         },
         {
-          "name": "API-041 | POST /api/v1/auth/login",
+          "name": "API-045 | POST /api/v1/auth/login",
           "request": {
             "method": "POST",
             "header": [
@@ -1518,7 +1641,7 @@
           ]
         },
         {
-          "name": "API-042 | POST /api/v1/auth/logout",
+          "name": "API-046 | POST /api/v1/auth/logout",
           "request": {
             "method": "POST",
             "header": [
@@ -1558,7 +1681,7 @@
       "name": "Common KPI reports",
       "item": [
         {
-          "name": "API-157 | POST /api/v1/reports",
+          "name": "API-161 | POST /api/v1/reports",
           "request": {
             "method": "POST",
             "header": [
@@ -1600,7 +1723,7 @@
           "response": []
         },
         {
-          "name": "API-158 | GET /api/v1/reports",
+          "name": "API-162 | GET /api/v1/reports",
           "request": {
             "method": "GET",
             "header": [],
@@ -1634,7 +1757,7 @@
           "response": []
         },
         {
-          "name": "API-159 | GET /api/v1/reports/{id}",
+          "name": "API-163 | GET /api/v1/reports/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -1655,7 +1778,7 @@
           "response": []
         },
         {
-          "name": "API-160 | POST /api/v1/reports/{id}/retry",
+          "name": "API-164 | POST /api/v1/reports/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -1677,7 +1800,7 @@
           "response": []
         },
         {
-          "name": "API-161 | GET /api/v1/reports/{id}/download/{format}",
+          "name": "API-165 | GET /api/v1/reports/{id}/download/{format}",
           "request": {
             "method": "GET",
             "header": [],
@@ -1705,7 +1828,7 @@
       "name": "Companies",
       "item": [
         {
-          "name": "API-043 | GET /api/v1/companies",
+          "name": "API-047 | GET /api/v1/companies",
           "request": {
             "method": "GET",
             "header": [],
@@ -1725,7 +1848,7 @@
           "response": []
         },
         {
-          "name": "API-044 | GET /api/v1/companies/{id}",
+          "name": "API-048 | GET /api/v1/companies/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -1746,7 +1869,7 @@
           "response": []
         },
         {
-          "name": "API-045 | POST /api/v1/companies",
+          "name": "API-049 | POST /api/v1/companies",
           "request": {
             "method": "POST",
             "header": [
@@ -1780,7 +1903,7 @@
           "response": []
         },
         {
-          "name": "API-046 | PUT /api/v1/companies/{id}",
+          "name": "API-050 | PUT /api/v1/companies/{id}",
           "request": {
             "method": "PUT",
             "header": [
@@ -1815,7 +1938,7 @@
           "response": []
         },
         {
-          "name": "API-047 | PATCH /api/v1/companies/{id}/block",
+          "name": "API-051 | PATCH /api/v1/companies/{id}/block",
           "request": {
             "method": "PATCH",
             "header": [],
@@ -1842,7 +1965,7 @@
       "name": "Daily KPI comparison",
       "item": [
         {
-          "name": "API-162 | PUT /api/v1/daily-analysis/profile",
+          "name": "API-166 | PUT /api/v1/daily-analysis/profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -1885,7 +2008,7 @@
           "response": []
         },
         {
-          "name": "API-163 | GET /api/v1/daily-analysis/profile",
+          "name": "API-167 | GET /api/v1/daily-analysis/profile",
           "request": {
             "method": "GET",
             "header": [],
@@ -1914,7 +2037,7 @@
           "response": []
         },
         {
-          "name": "API-164 | POST /api/v1/daily-analysis/snapshots",
+          "name": "API-168 | POST /api/v1/daily-analysis/snapshots",
           "request": {
             "method": "POST",
             "header": [],
@@ -1949,7 +2072,7 @@
           "response": []
         },
         {
-          "name": "API-165 | GET /api/v1/daily-analysis/snapshots",
+          "name": "API-169 | GET /api/v1/daily-analysis/snapshots",
           "request": {
             "method": "GET",
             "header": [],
@@ -1984,7 +2107,7 @@
           "response": []
         },
         {
-          "name": "API-166 | GET /api/v1/daily-analysis/snapshots/{id}",
+          "name": "API-170 | GET /api/v1/daily-analysis/snapshots/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -2006,7 +2129,7 @@
           "response": []
         },
         {
-          "name": "API-167 | GET /api/v1/daily-analysis/snapshots/{id}/comparisons",
+          "name": "API-171 | GET /api/v1/daily-analysis/snapshots/{id}/comparisons",
           "request": {
             "method": "GET",
             "header": [],
@@ -2043,7 +2166,7 @@
           "response": []
         },
         {
-          "name": "API-168 | POST /api/v1/daily-analysis/snapshots/{id}/retry",
+          "name": "API-172 | POST /api/v1/daily-analysis/snapshots/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -2071,7 +2194,7 @@
       "name": "Dashboard",
       "item": [
         {
-          "name": "API-069 | GET /api/v1/dashboard/stats",
+          "name": "API-073 | GET /api/v1/dashboard/stats",
           "request": {
             "method": "GET",
             "header": [],
@@ -2106,7 +2229,7 @@
           "response": []
         },
         {
-          "name": "API-070 | GET /api/v1/dashboard/stats/cells",
+          "name": "API-074 | GET /api/v1/dashboard/stats/cells",
           "request": {
             "method": "GET",
             "header": [],
@@ -2128,7 +2251,7 @@
           "response": []
         },
         {
-          "name": "API-071 | GET /api/v1/dashboard/stats/sites",
+          "name": "API-075 | GET /api/v1/dashboard/stats/sites",
           "request": {
             "method": "GET",
             "header": [],
@@ -2150,7 +2273,7 @@
           "response": []
         },
         {
-          "name": "API-072 | GET /api/v1/dashboard/stats/bands",
+          "name": "API-076 | GET /api/v1/dashboard/stats/bands",
           "request": {
             "method": "GET",
             "header": [],
@@ -2172,7 +2295,7 @@
           "response": []
         },
         {
-          "name": "API-073 | GET /api/v1/dashboard/stats/tech",
+          "name": "API-077 | GET /api/v1/dashboard/stats/tech",
           "request": {
             "method": "GET",
             "header": [],
@@ -2194,7 +2317,7 @@
           "response": []
         },
         {
-          "name": "API-074 | GET /api/v1/dashboard/stats/sectors",
+          "name": "API-078 | GET /api/v1/dashboard/stats/sectors",
           "request": {
             "method": "GET",
             "header": [],
@@ -2216,7 +2339,7 @@
           "response": []
         },
         {
-          "name": "API-075 | GET /api/v1/dashboard/stats/groups",
+          "name": "API-079 | GET /api/v1/dashboard/stats/groups",
           "request": {
             "method": "GET",
             "header": [],
@@ -2238,7 +2361,7 @@
           "response": []
         },
         {
-          "name": "API-076 | GET /api/v1/dashboard/stats/detailed",
+          "name": "API-080 | GET /api/v1/dashboard/stats/detailed",
           "request": {
             "method": "GET",
             "header": [],
@@ -2260,7 +2383,7 @@
           "response": []
         },
         {
-          "name": "API-077 | GET /api/v1/dashboard/performance",
+          "name": "API-081 | GET /api/v1/dashboard/performance",
           "request": {
             "method": "GET",
             "header": [],
@@ -2300,7 +2423,7 @@
       "name": "Service health",
       "item": [
         {
-          "name": "API-146 | GET /api/v1/health",
+          "name": "API-150 | GET /api/v1/health",
           "request": {
             "method": "GET",
             "header": [],
@@ -2328,7 +2451,7 @@
       "name": "KPI-generated alarms",
       "item": [
         {
-          "name": "API-078 | GET /api/v1/alarms/rules",
+          "name": "API-082 | GET /api/v1/alarms/rules",
           "request": {
             "method": "GET",
             "header": [],
@@ -2349,7 +2472,7 @@
           "response": []
         },
         {
-          "name": "API-079 | POST /api/v1/alarms/rules",
+          "name": "API-083 | POST /api/v1/alarms/rules",
           "request": {
             "method": "POST",
             "header": [
@@ -2384,7 +2507,7 @@
           "response": []
         },
         {
-          "name": "API-080 | PUT /api/v1/alarms/rules/{id}",
+          "name": "API-084 | PUT /api/v1/alarms/rules/{id}",
           "request": {
             "method": "PUT",
             "header": [
@@ -2420,7 +2543,7 @@
           "response": []
         },
         {
-          "name": "API-081 | DELETE /api/v1/alarms/rules/{id}",
+          "name": "API-085 | DELETE /api/v1/alarms/rules/{id}",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -2442,7 +2565,7 @@
           "response": []
         },
         {
-          "name": "API-082 | POST /api/v1/alarms/generate",
+          "name": "API-086 | POST /api/v1/alarms/generate",
           "request": {
             "method": "POST",
             "header": [],
@@ -2471,7 +2594,7 @@
           "response": []
         },
         {
-          "name": "API-083 | GET /api/v1/alarms/summary",
+          "name": "API-087 | GET /api/v1/alarms/summary",
           "request": {
             "method": "GET",
             "header": [],
@@ -2500,7 +2623,7 @@
           "response": []
         },
         {
-          "name": "API-084 | GET /api/v1/alarms",
+          "name": "API-088 | GET /api/v1/alarms",
           "request": {
             "method": "GET",
             "header": [],
@@ -2552,7 +2675,7 @@
           "response": []
         },
         {
-          "name": "API-085 | POST /api/v1/alarms/{id}/acknowledge",
+          "name": "API-089 | POST /api/v1/alarms/{id}/acknowledge",
           "request": {
             "method": "POST",
             "header": [
@@ -2588,7 +2711,7 @@
           "response": []
         },
         {
-          "name": "API-086 | POST /api/v1/alarms/{id}/resolve",
+          "name": "API-090 | POST /api/v1/alarms/{id}/resolve",
           "request": {
             "method": "POST",
             "header": [
@@ -2629,7 +2752,7 @@
       "name": "KPI data and exports",
       "item": [
         {
-          "name": "API-087 | GET /api/v1/kpi/available-metrics",
+          "name": "API-091 | GET /api/v1/kpi/available-metrics",
           "request": {
             "method": "GET",
             "header": [],
@@ -2658,7 +2781,7 @@
           "response": []
         },
         {
-          "name": "API-088 | GET /api/v1/kpi/all",
+          "name": "API-092 | GET /api/v1/kpi/all",
           "request": {
             "method": "GET",
             "header": [],
@@ -2687,7 +2810,7 @@
           "response": []
         },
         {
-          "name": "API-089 | GET /api/v1/kpi/ul-prb-utilization",
+          "name": "API-093 | GET /api/v1/kpi/ul-prb-utilization",
           "request": {
             "method": "GET",
             "header": [],
@@ -2716,7 +2839,7 @@
           "response": []
         },
         {
-          "name": "API-090 | GET /api/v1/kpi/dl-prb-utilization",
+          "name": "API-094 | GET /api/v1/kpi/dl-prb-utilization",
           "request": {
             "method": "GET",
             "header": [],
@@ -2745,7 +2868,7 @@
           "response": []
         },
         {
-          "name": "API-091 | GET /api/v1/kpi/data-volume",
+          "name": "API-095 | GET /api/v1/kpi/data-volume",
           "request": {
             "method": "GET",
             "header": [],
@@ -2774,7 +2897,7 @@
           "response": []
         },
         {
-          "name": "API-092 | GET /api/v1/kpi/ul-throughput",
+          "name": "API-096 | GET /api/v1/kpi/ul-throughput",
           "request": {
             "method": "GET",
             "header": [],
@@ -2803,7 +2926,7 @@
           "response": []
         },
         {
-          "name": "API-093 | GET /api/v1/kpi/dl-throughput",
+          "name": "API-097 | GET /api/v1/kpi/dl-throughput",
           "request": {
             "method": "GET",
             "header": [],
@@ -2832,7 +2955,7 @@
           "response": []
         },
         {
-          "name": "API-094 | GET /api/v1/kpi/erab-drop-rate",
+          "name": "API-098 | GET /api/v1/kpi/erab-drop-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -2861,7 +2984,7 @@
           "response": []
         },
         {
-          "name": "API-095 | GET /api/v1/kpi/erab-success-rate",
+          "name": "API-099 | GET /api/v1/kpi/erab-success-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -2890,7 +3013,7 @@
           "response": []
         },
         {
-          "name": "API-096 | GET /api/v1/kpi/rrc-success-rate",
+          "name": "API-100 | GET /api/v1/kpi/rrc-success-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -2919,7 +3042,7 @@
           "response": []
         },
         {
-          "name": "API-097 | GET /api/v1/kpi/mean-rrc-users",
+          "name": "API-101 | GET /api/v1/kpi/mean-rrc-users",
           "request": {
             "method": "GET",
             "header": [],
@@ -2948,7 +3071,7 @@
           "response": []
         },
         {
-          "name": "API-098 | GET /api/v1/kpi/max-rrc-users",
+          "name": "API-102 | GET /api/v1/kpi/max-rrc-users",
           "request": {
             "method": "GET",
             "header": [],
@@ -2977,7 +3100,7 @@
           "response": []
         },
         {
-          "name": "API-099 | GET /api/v1/kpi/erab-setup-rate",
+          "name": "API-103 | GET /api/v1/kpi/erab-setup-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -3006,7 +3129,7 @@
           "response": []
         },
         {
-          "name": "API-100 | GET /api/v1/kpi/rrc-drop-rate",
+          "name": "API-104 | GET /api/v1/kpi/rrc-drop-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -3035,7 +3158,7 @@
           "response": []
         },
         {
-          "name": "API-101 | GET /api/v1/kpi/volte-cssr",
+          "name": "API-105 | GET /api/v1/kpi/volte-cssr",
           "request": {
             "method": "GET",
             "header": [],
@@ -3064,7 +3187,7 @@
           "response": []
         },
         {
-          "name": "API-102 | GET /api/v1/kpi/volte-dcr",
+          "name": "API-106 | GET /api/v1/kpi/volte-dcr",
           "request": {
             "method": "GET",
             "header": [],
@@ -3093,7 +3216,7 @@
           "response": []
         },
         {
-          "name": "API-103 | GET /api/v1/kpi/inter-freq-hosr",
+          "name": "API-107 | GET /api/v1/kpi/inter-freq-hosr",
           "request": {
             "method": "GET",
             "header": [],
@@ -3122,7 +3245,7 @@
           "response": []
         },
         {
-          "name": "API-104 | GET /api/v1/kpi/intra-freq-hosr",
+          "name": "API-108 | GET /api/v1/kpi/intra-freq-hosr",
           "request": {
             "method": "GET",
             "header": [],
@@ -3151,7 +3274,7 @@
           "response": []
         },
         {
-          "name": "API-105 | GET /api/v1/kpi/csfb-success-rate",
+          "name": "API-109 | GET /api/v1/kpi/csfb-success-rate",
           "request": {
             "method": "GET",
             "header": [],
@@ -3180,7 +3303,7 @@
           "response": []
         },
         {
-          "name": "API-106 | GET /api/v1/kpi/dynamic/metrics",
+          "name": "API-110 | GET /api/v1/kpi/dynamic/metrics",
           "request": {
             "method": "GET",
             "header": [],
@@ -3210,7 +3333,7 @@
           "response": []
         },
         {
-          "name": "API-107 | GET /api/v1/kpi/dynamic/summary",
+          "name": "API-111 | GET /api/v1/kpi/dynamic/summary",
           "request": {
             "method": "GET",
             "header": [],
@@ -3240,7 +3363,7 @@
           "response": []
         },
         {
-          "name": "API-108 | GET /api/v1/kpi/dynamic/columns",
+          "name": "API-112 | GET /api/v1/kpi/dynamic/columns",
           "request": {
             "method": "GET",
             "header": [],
@@ -3270,7 +3393,7 @@
           "response": []
         },
         {
-          "name": "API-109 | GET /api/v1/kpi/dynamic/data",
+          "name": "API-113 | GET /api/v1/kpi/dynamic/data",
           "request": {
             "method": "GET",
             "header": [],
@@ -3306,7 +3429,7 @@
           "response": []
         },
         {
-          "name": "API-110 | GET /api/v1/kpi/dynamic/batch-data",
+          "name": "API-114 | GET /api/v1/kpi/dynamic/batch-data",
           "request": {
             "method": "GET",
             "header": [],
@@ -3336,7 +3459,7 @@
           "response": []
         },
         {
-          "name": "API-111 | POST /api/v1/kpi/dynamic/selection",
+          "name": "API-115 | POST /api/v1/kpi/dynamic/selection",
           "request": {
             "method": "POST",
             "header": [
@@ -3380,7 +3503,7 @@
           "response": []
         },
         {
-          "name": "API-112 | POST /api/v1/kpi/dynamic/bad-days",
+          "name": "API-116 | POST /api/v1/kpi/dynamic/bad-days",
           "request": {
             "method": "POST",
             "header": [
@@ -3424,7 +3547,7 @@
           "response": []
         },
         {
-          "name": "API-113 | POST /api/v1/kpi/dynamic/export",
+          "name": "API-117 | POST /api/v1/kpi/dynamic/export",
           "request": {
             "method": "POST",
             "header": [
@@ -3473,7 +3596,7 @@
       "name": "Durable KPI ingestion",
       "item": [
         {
-          "name": "API-050 | POST /api/v1/ingestion/kpi",
+          "name": "API-054 | POST /api/v1/ingestion/kpi",
           "request": {
             "method": "POST",
             "header": [],
@@ -3534,7 +3657,7 @@
           "response": []
         },
         {
-          "name": "API-051 | GET /api/v1/ingestion/runs",
+          "name": "API-055 | GET /api/v1/ingestion/runs",
           "request": {
             "method": "GET",
             "header": [],
@@ -3563,7 +3686,7 @@
           "response": []
         },
         {
-          "name": "API-052 | GET /api/v1/ingestion/runs/{id}",
+          "name": "API-056 | GET /api/v1/ingestion/runs/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -3585,7 +3708,7 @@
           "response": []
         },
         {
-          "name": "API-053 | POST /api/v1/ingestion/runs/{id}/retry",
+          "name": "API-057 | POST /api/v1/ingestion/runs/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -3613,7 +3736,7 @@
       "name": "KPI severity thresholds",
       "item": [
         {
-          "name": "API-114 | GET /api/v1/threshold-rules",
+          "name": "API-118 | GET /api/v1/threshold-rules",
           "request": {
             "method": "GET",
             "header": [],
@@ -3633,7 +3756,7 @@
           "response": []
         },
         {
-          "name": "API-115 | POST /api/v1/threshold-rules",
+          "name": "API-119 | POST /api/v1/threshold-rules",
           "request": {
             "method": "POST",
             "header": [
@@ -3667,7 +3790,7 @@
           "response": []
         },
         {
-          "name": "API-116 | PUT /api/v1/threshold-rules/{id}",
+          "name": "API-120 | PUT /api/v1/threshold-rules/{id}",
           "request": {
             "method": "PUT",
             "header": [
@@ -3702,7 +3825,7 @@
           "response": []
         },
         {
-          "name": "API-117 | DELETE /api/v1/threshold-rules/{id}",
+          "name": "API-121 | DELETE /api/v1/threshold-rules/{id}",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3723,7 +3846,7 @@
           "response": []
         },
         {
-          "name": "API-118 | GET /api/v1/threshold-rules/evaluate",
+          "name": "API-122 | GET /api/v1/threshold-rules/evaluate",
           "request": {
             "method": "GET",
             "header": [],
@@ -3764,7 +3887,7 @@
           "response": []
         },
         {
-          "name": "API-119 | GET /api/v1/threshold-rules/evaluate-file",
+          "name": "API-123 | GET /api/v1/threshold-rules/evaluate-file",
           "request": {
             "method": "GET",
             "header": [],
@@ -3793,7 +3916,7 @@
           "response": []
         },
         {
-          "name": "API-120 | POST /api/v1/threshold-rules/ensure-file",
+          "name": "API-124 | POST /api/v1/threshold-rules/ensure-file",
           "request": {
             "method": "POST",
             "header": [],
@@ -3822,7 +3945,7 @@
           "response": []
         },
         {
-          "name": "API-121 | GET /api/v1/threshold-rules/results",
+          "name": "API-125 | GET /api/v1/threshold-rules/results",
           "request": {
             "method": "GET",
             "header": [],
@@ -3851,7 +3974,7 @@
           "response": []
         },
         {
-          "name": "API-122 | GET /api/v1/threshold-rules/results/{fileId}",
+          "name": "API-126 | GET /api/v1/threshold-rules/results/{fileId}",
           "request": {
             "method": "GET",
             "header": [],
@@ -3878,7 +4001,7 @@
       "name": "KPI validation",
       "item": [
         {
-          "name": "API-123 | GET /api/v1/kpi/validation-report/{fileId}",
+          "name": "API-127 | GET /api/v1/kpi/validation-report/{fileId}",
           "request": {
             "method": "GET",
             "header": [],
@@ -3905,7 +4028,7 @@
       "name": "License administration",
       "item": [
         {
-          "name": "API-131 | GET /api/v1/licenses",
+          "name": "API-135 | GET /api/v1/licenses",
           "request": {
             "method": "GET",
             "header": [],
@@ -3925,7 +4048,7 @@
           "response": []
         },
         {
-          "name": "API-132 | GET /api/v1/licenses/{id}",
+          "name": "API-136 | GET /api/v1/licenses/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -3946,7 +4069,7 @@
           "response": []
         },
         {
-          "name": "API-133 | POST /api/v1/licenses",
+          "name": "API-137 | POST /api/v1/licenses",
           "request": {
             "method": "POST",
             "header": [
@@ -3980,7 +4103,7 @@
           "response": []
         },
         {
-          "name": "API-134 | PATCH /api/v1/licenses/{id}/renew",
+          "name": "API-138 | PATCH /api/v1/licenses/{id}/renew",
           "request": {
             "method": "PATCH",
             "header": [
@@ -4016,7 +4139,7 @@
           "response": []
         },
         {
-          "name": "API-135 | PATCH /api/v1/licenses/{id}/block",
+          "name": "API-139 | PATCH /api/v1/licenses/{id}/block",
           "request": {
             "method": "PATCH",
             "header": [],
@@ -4038,7 +4161,7 @@
           "response": []
         },
         {
-          "name": "API-136 | GET /api/v1/licenses/{id}/download",
+          "name": "API-140 | GET /api/v1/licenses/{id}/download",
           "request": {
             "method": "GET",
             "header": [],
@@ -4065,7 +4188,7 @@
       "name": "Installed license",
       "item": [
         {
-          "name": "API-137 | POST /api/v1/local-license/upload",
+          "name": "API-141 | POST /api/v1/local-license/upload",
           "request": {
             "method": "POST",
             "header": [],
@@ -4098,7 +4221,7 @@
           "response": []
         },
         {
-          "name": "API-138 | GET /api/v1/local-license/status",
+          "name": "API-142 | GET /api/v1/local-license/status",
           "request": {
             "method": "GET",
             "header": [],
@@ -4119,7 +4242,7 @@
           "response": []
         },
         {
-          "name": "API-139 | GET /api/v1/local-license/device-id",
+          "name": "API-143 | GET /api/v1/local-license/device-id",
           "request": {
             "method": "GET",
             "header": [],
@@ -4145,7 +4268,7 @@
       "name": "Nightly KPI automation",
       "item": [
         {
-          "name": "API-140 | GET /api/v1/nightly/profile",
+          "name": "API-144 | GET /api/v1/nightly/profile",
           "request": {
             "method": "GET",
             "header": [],
@@ -4174,7 +4297,7 @@
           "response": []
         },
         {
-          "name": "API-141 | PUT /api/v1/nightly/profile",
+          "name": "API-145 | PUT /api/v1/nightly/profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -4217,7 +4340,7 @@
           "response": []
         },
         {
-          "name": "API-142 | POST /api/v1/nightly/runs",
+          "name": "API-146 | POST /api/v1/nightly/runs",
           "request": {
             "method": "POST",
             "header": [],
@@ -4258,7 +4381,7 @@
           "response": []
         },
         {
-          "name": "API-143 | GET /api/v1/nightly/runs",
+          "name": "API-147 | GET /api/v1/nightly/runs",
           "request": {
             "method": "GET",
             "header": [],
@@ -4293,7 +4416,7 @@
           "response": []
         },
         {
-          "name": "API-144 | GET /api/v1/nightly/runs/{id}",
+          "name": "API-148 | GET /api/v1/nightly/runs/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -4315,7 +4438,7 @@
           "response": []
         },
         {
-          "name": "API-145 | POST /api/v1/nightly/runs/{id}/retry",
+          "name": "API-149 | POST /api/v1/nightly/runs/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -4357,7 +4480,7 @@
       "name": "PCI analysis",
       "item": [
         {
-          "name": "API-179 | GET /api/v1/pci/analysis",
+          "name": "API-183 | GET /api/v1/pci/analysis",
           "request": {
             "method": "GET",
             "header": [],
@@ -4403,7 +4526,7 @@
       "name": "Root cause analysis",
       "item": [
         {
-          "name": "API-147 | POST /api/v1/kpi/recommendation/jobs",
+          "name": "API-151 | POST /api/v1/kpi/recommendation/jobs",
           "request": {
             "method": "POST",
             "header": [
@@ -4447,7 +4570,7 @@
           "response": []
         },
         {
-          "name": "API-148 | GET /api/v1/kpi/recommendation/jobs/{jobId}",
+          "name": "API-152 | GET /api/v1/kpi/recommendation/jobs/{jobId}",
           "request": {
             "method": "GET",
             "header": [],
@@ -4470,7 +4593,7 @@
           "response": []
         },
         {
-          "name": "API-149 | POST /api/v1/kpi/recommendation/run",
+          "name": "API-153 | POST /api/v1/kpi/recommendation/run",
           "request": {
             "method": "POST",
             "header": [
@@ -4514,7 +4637,7 @@
           "response": []
         },
         {
-          "name": "API-150 | POST /api/v1/kpi/recommendation/export",
+          "name": "API-154 | POST /api/v1/kpi/recommendation/export",
           "request": {
             "method": "POST",
             "header": [
@@ -4558,7 +4681,7 @@
           "response": []
         },
         {
-          "name": "API-151 | GET /api/v1/kpi/recommendation/presets",
+          "name": "API-155 | GET /api/v1/kpi/recommendation/presets",
           "request": {
             "method": "GET",
             "header": [],
@@ -4580,7 +4703,7 @@
           "response": []
         },
         {
-          "name": "API-152 | POST /api/v1/kpi/recommendation/presets",
+          "name": "API-156 | POST /api/v1/kpi/recommendation/presets",
           "request": {
             "method": "POST",
             "header": [
@@ -4616,7 +4739,7 @@
           "response": []
         },
         {
-          "name": "API-153 | GET /api/v1/kpi/recommendation/presets/{name}",
+          "name": "API-157 | GET /api/v1/kpi/recommendation/presets/{name}",
           "request": {
             "method": "GET",
             "header": [],
@@ -4644,7 +4767,7 @@
       "name": "Durable RCA export",
       "item": [
         {
-          "name": "API-154 | POST /api/v1/rca-exports",
+          "name": "API-158 | POST /api/v1/rca-exports",
           "request": {
             "method": "POST",
             "header": [
@@ -4686,7 +4809,7 @@
           "response": []
         },
         {
-          "name": "API-155 | GET /api/v1/rca-exports/{id}",
+          "name": "API-159 | GET /api/v1/rca-exports/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -4707,7 +4830,7 @@
           "response": []
         },
         {
-          "name": "API-156 | GET /api/v1/rca-exports/{id}/download",
+          "name": "API-160 | GET /api/v1/rca-exports/{id}/download",
           "request": {
             "method": "GET",
             "header": [],
@@ -4734,7 +4857,7 @@
       "name": "Report dataset discovery",
       "item": [
         {
-          "name": "API-169 | GET /api/v1/report-datasets",
+          "name": "API-173 | GET /api/v1/report-datasets",
           "request": {
             "method": "GET",
             "header": [],
@@ -4773,7 +4896,7 @@
       "name": "Common-report email outbox",
       "item": [
         {
-          "name": "API-170 | PUT /api/v1/report-mail/profile",
+          "name": "API-174 | PUT /api/v1/report-mail/profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -4816,7 +4939,7 @@
           "response": []
         },
         {
-          "name": "API-171 | GET /api/v1/report-mail/profile",
+          "name": "API-175 | GET /api/v1/report-mail/profile",
           "request": {
             "method": "GET",
             "header": [],
@@ -4845,7 +4968,7 @@
           "response": []
         },
         {
-          "name": "API-172 | POST /api/v1/report-mail/deliveries",
+          "name": "API-176 | POST /api/v1/report-mail/deliveries",
           "request": {
             "method": "POST",
             "header": [],
@@ -4880,7 +5003,7 @@
           "response": []
         },
         {
-          "name": "API-173 | GET /api/v1/report-mail/deliveries",
+          "name": "API-177 | GET /api/v1/report-mail/deliveries",
           "request": {
             "method": "GET",
             "header": [],
@@ -4915,7 +5038,7 @@
           "response": []
         },
         {
-          "name": "API-174 | GET /api/v1/report-mail/deliveries/{id}",
+          "name": "API-178 | GET /api/v1/report-mail/deliveries/{id}",
           "request": {
             "method": "GET",
             "header": [],
@@ -4937,7 +5060,7 @@
           "response": []
         },
         {
-          "name": "API-175 | POST /api/v1/report-mail/deliveries/{id}/retry",
+          "name": "API-179 | POST /api/v1/report-mail/deliveries/{id}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -4960,7 +5083,7 @@
           "response": []
         },
         {
-          "name": "API-176 | POST /api/v1/report-mail/deliveries/{id}/cancel",
+          "name": "API-180 | POST /api/v1/report-mail/deliveries/{id}/cancel",
           "request": {
             "method": "POST",
             "header": [],
@@ -4983,7 +5106,7 @@
           "response": []
         },
         {
-          "name": "API-177 | POST /api/v1/report-mail/deliveries/{id}/reconcile",
+          "name": "API-181 | POST /api/v1/report-mail/deliveries/{id}/reconcile",
           "request": {
             "method": "POST",
             "header": [
@@ -5020,7 +5143,7 @@
           "response": []
         },
         {
-          "name": "API-178 | GET /api/v1/report-mail/deliveries/{id}/message.eml",
+          "name": "API-182 | GET /api/v1/report-mail/deliveries/{id}/message.eml",
           "request": {
             "method": "GET",
             "header": [],
@@ -5048,7 +5171,7 @@
       "name": "Dashboard threshold settings",
       "item": [
         {
-          "name": "API-124 | GET /api/v1/setting/getsettings",
+          "name": "API-128 | GET /api/v1/setting/getsettings",
           "request": {
             "method": "GET",
             "header": [],
@@ -5077,7 +5200,7 @@
           "response": []
         },
         {
-          "name": "API-125 | POST /api/v1/setting/updateSetting",
+          "name": "API-129 | POST /api/v1/setting/updateSetting",
           "request": {
             "method": "POST",
             "header": [
@@ -5120,7 +5243,7 @@
           "response": []
         },
         {
-          "name": "API-126 | POST /api/v1/setting/thresholds/export",
+          "name": "API-130 | POST /api/v1/setting/thresholds/export",
           "request": {
             "method": "POST",
             "header": [
@@ -5156,7 +5279,7 @@
           "response": []
         },
         {
-          "name": "API-127 | POST /api/v1/setting/thresholds/import",
+          "name": "API-131 | POST /api/v1/setting/thresholds/import",
           "request": {
             "method": "POST",
             "header": [],
@@ -5195,7 +5318,7 @@
       "name": "Site analytics and map intelligence",
       "item": [
         {
-          "name": "API-180 | GET /api/v1/sites/summary",
+          "name": "API-184 | GET /api/v1/sites/summary",
           "request": {
             "method": "GET",
             "header": [],
@@ -5224,7 +5347,7 @@
           "response": []
         },
         {
-          "name": "API-181 | GET /api/v1/sites/worst",
+          "name": "API-185 | GET /api/v1/sites/worst",
           "request": {
             "method": "GET",
             "header": [],
@@ -5259,7 +5382,7 @@
           "response": []
         },
         {
-          "name": "API-182 | GET /api/v1/sites/details",
+          "name": "API-186 | GET /api/v1/sites/details",
           "request": {
             "method": "GET",
             "header": [],
@@ -5294,7 +5417,7 @@
           "response": []
         },
         {
-          "name": "API-183 | GET /api/v1/sites/intelligence",
+          "name": "API-187 | GET /api/v1/sites/intelligence",
           "request": {
             "method": "GET",
             "header": [],
@@ -5340,7 +5463,7 @@
       "name": "Predictions",
       "item": [
         {
-          "name": "API-184 | GET /api/v1/site-prediction/recommendations",
+          "name": "API-188 | GET /api/v1/site-prediction/recommendations",
           "request": {
             "method": "GET",
             "header": [],
@@ -5381,7 +5504,7 @@
           "response": []
         },
         {
-          "name": "API-185 | GET /api/v1/site-prediction/summary",
+          "name": "API-189 | GET /api/v1/site-prediction/summary",
           "request": {
             "method": "GET",
             "header": [],
@@ -5410,7 +5533,7 @@
           "response": []
         },
         {
-          "name": "API-186 | POST /api/v1/site-prediction/lb-wcf",
+          "name": "API-190 | POST /api/v1/site-prediction/lb-wcf",
           "request": {
             "method": "POST",
             "header": [],
@@ -5476,7 +5599,7 @@
       "name": "Uploads and parsing",
       "item": [
         {
-          "name": "API-054 | POST /api/v1/upload/upload",
+          "name": "API-058 | POST /api/v1/upload/upload",
           "request": {
             "method": "POST",
             "header": [],
@@ -5558,7 +5681,7 @@
           "response": []
         },
         {
-          "name": "API-055 | POST /api/v1/upload/kpi",
+          "name": "API-059 | POST /api/v1/upload/kpi",
           "request": {
             "method": "POST",
             "header": [],
@@ -5640,7 +5763,7 @@
           "response": []
         },
         {
-          "name": "API-056 | GET /api/v1/upload/jobs/{jobId}",
+          "name": "API-060 | GET /api/v1/upload/jobs/{jobId}",
           "request": {
             "method": "GET",
             "header": [],
@@ -5662,7 +5785,7 @@
           "response": []
         },
         {
-          "name": "API-057 | GET /api/v1/upload/jobs",
+          "name": "API-061 | GET /api/v1/upload/jobs",
           "request": {
             "method": "GET",
             "header": [],
@@ -5691,7 +5814,7 @@
           "response": []
         },
         {
-          "name": "API-058 | POST /api/v1/upload/jobs/{jobId}/retry",
+          "name": "API-062 | POST /api/v1/upload/jobs/{jobId}/retry",
           "request": {
             "method": "POST",
             "header": [],
@@ -5714,7 +5837,7 @@
           "response": []
         },
         {
-          "name": "API-059 | POST /api/v1/upload/kpi/preview",
+          "name": "API-063 | POST /api/v1/upload/kpi/preview",
           "request": {
             "method": "POST",
             "header": [],
@@ -5748,7 +5871,7 @@
           "response": []
         },
         {
-          "name": "API-060 | POST /api/v1/upload/site",
+          "name": "API-064 | POST /api/v1/upload/site",
           "request": {
             "method": "POST",
             "header": [],
@@ -5795,7 +5918,7 @@
           "response": []
         },
         {
-          "name": "API-061 | POST /api/v1/upload/alarm",
+          "name": "API-065 | POST /api/v1/upload/alarm",
           "request": {
             "method": "POST",
             "header": [],
@@ -5842,7 +5965,7 @@
           "response": []
         },
         {
-          "name": "API-062 | GET /api/v1/upload/uploads",
+          "name": "API-066 | GET /api/v1/upload/uploads",
           "request": {
             "method": "GET",
             "header": [],
@@ -5863,7 +5986,7 @@
           "response": []
         },
         {
-          "name": "API-063 | DELETE /api/v1/upload/uploads/{id}",
+          "name": "API-067 | DELETE /api/v1/upload/uploads/{id}",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -5885,7 +6008,7 @@
           "response": []
         },
         {
-          "name": "API-064 | GET /api/v1/upload/network-data",
+          "name": "API-068 | GET /api/v1/upload/network-data",
           "request": {
             "method": "GET",
             "header": [],
@@ -5920,7 +6043,7 @@
           "response": []
         },
         {
-          "name": "API-065 | GET /api/v1/upload/uploads/history",
+          "name": "API-069 | GET /api/v1/upload/uploads/history",
           "request": {
             "method": "GET",
             "header": [],
@@ -5942,7 +6065,7 @@
           "response": []
         },
         {
-          "name": "API-066 | GET /api/v1/upload/history",
+          "name": "API-070 | GET /api/v1/upload/history",
           "request": {
             "method": "GET",
             "header": [],
@@ -5963,7 +6086,7 @@
           "response": []
         },
         {
-          "name": "API-067 | GET /api/v1/upload/site-data",
+          "name": "API-071 | GET /api/v1/upload/site-data",
           "request": {
             "method": "GET",
             "header": [],
@@ -6004,7 +6127,7 @@
           "response": []
         },
         {
-          "name": "API-068 | GET /api/v1/upload/alarm-data",
+          "name": "API-072 | GET /api/v1/upload/alarm-data",
           "request": {
             "method": "GET",
             "header": [],
@@ -6080,7 +6203,7 @@
       "name": "User administration",
       "item": [
         {
-          "name": "API-048 | GET /api/v1/users",
+          "name": "API-052 | GET /api/v1/users",
           "request": {
             "method": "GET",
             "header": [],
@@ -6100,7 +6223,7 @@
           "response": []
         },
         {
-          "name": "API-049 | POST /api/v1/users",
+          "name": "API-053 | POST /api/v1/users",
           "request": {
             "method": "POST",
             "header": [
@@ -6139,7 +6262,7 @@
       "name": "Worst-performance analysis",
       "item": [
         {
-          "name": "API-128 | GET /api/v1/kpi/worst-cells",
+          "name": "API-132 | GET /api/v1/kpi/worst-cells",
           "request": {
             "method": "GET",
             "header": [],
@@ -6180,7 +6303,7 @@
           "response": []
         },
         {
-          "name": "API-129 | GET /api/v1/kpi/worst-sites",
+          "name": "API-133 | GET /api/v1/kpi/worst-sites",
           "request": {
             "method": "GET",
             "header": [],
@@ -6221,7 +6344,7 @@
           "response": []
         },
         {
-          "name": "API-130 | GET /api/v1/kpi/worst-cells/detail",
+          "name": "API-134 | GET /api/v1/kpi/worst-cells/detail",
           "request": {
             "method": "GET",
             "header": [],

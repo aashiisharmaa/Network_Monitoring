@@ -110,7 +110,7 @@ public class AlarmAutomationService {
                     if(settings.enabled()) {
                         List<Long> sourceIds=reports.sourceIds(company,jdbcInstant(run.get("snapshot_at")).toString());
                         boolean incomplete=jdbc.queryForObject("SELECT COUNT(*) FROM alarm_source_feed_profiles f WHERE f.company_id=? AND f.active=TRUE AND NOT EXISTS (SELECT 1 FROM alarm_ingestion_runs r WHERE r.company_id=f.company_id AND r.feed_id=f.id AND r.status='SUCCEEDED' AND r.snapshot_at<=?)",Integer.class,company,run.get("snapshot_at"))>0;
-                        for(var route:settings.reports()) enqueue(company,id,"report:"+route.key(),new Envelope("Alarm snapshot | "+route.key(),route.recipients(),route.mode(),route.circleId(),null,sourceIds),stale||incomplete);
+                        for(var route:settings.reports()) enqueue(company,id,"report:"+route.key(),new Envelope("Alarm snapshot | "+route.key(),route.recipients(),route.mode(),route.circleId(),null,sourceIds,reports.operationalSnapshotId(company,jdbcInstant(run.get("snapshot_at")).toString())),stale||incomplete);
                         for(var policy:settings.escalations()) {
                             String policyKey=digest(workflow.encode(policy).getBytes(StandardCharsets.UTF_8));
                             Set<String> previous=new HashSet<>(jdbc.queryForList("SELECT identity_key FROM alarm_escalation_decisions WHERE company_id=? AND feed_id=? AND policy_key=?",String.class,company,feed,policyKey));
@@ -124,7 +124,7 @@ public class AlarmAutomationService {
                                     List<Object[]> batch=eligible.stream().map(identity->new Object[]{company,feed,id,identity,policyKey}).toList();
                                     for(int offset=0;offset<batch.size();offset+=250) jdbc.batchUpdate("INSERT INTO alarm_escalation_decisions(company_id,feed_id,run_id,identity_key,policy_key) VALUES(?,?,?,?,?)",batch.subList(offset,Math.min(offset+250,batch.size())));
                                 }
-                                enqueue(company,id,"escalation:"+policy.key(),new Envelope("Alarm escalation | "+policy.key(),policy.recipients(),policy.mode(),policy.circleId(),Set.copyOf(eligible),List.of(id)),stale);
+                                enqueue(company,id,"escalation:"+policy.key(),new Envelope("Alarm escalation | "+policy.key(),policy.recipients(),policy.mode(),policy.circleId(),Set.copyOf(eligible),List.of(id),reports.operationalSnapshotId(company,jdbcInstant(run.get("snapshot_at")).toString())),stale);
                             }
                         }
                     }

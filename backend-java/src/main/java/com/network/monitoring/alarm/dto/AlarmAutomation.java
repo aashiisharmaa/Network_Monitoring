@@ -11,5 +11,9 @@ public final class AlarmAutomation {
         public Watch(long feedId,String folder,String timestampSource) {this(feedId,folder,timestampSource,null,null,null);}
     }
     public record Settings(int version, boolean enabled, int freshnessMinutes, List<Route> reports, List<Policy> escalations, List<Watch> watches) {}
-    public record Envelope(String subject, List<String> recipients, String mode, Long circleId, Set<String> identities, List<Long> sourceRunIds) {}
+    public record Envelope(String subject, List<String> recipients, String mode, Long circleId, Set<String> identities, List<Long> sourceRunIds, Long operationalSnapshotId) {
+        public Envelope(String subject,List<String> recipients,String mode,Long circleId,Set<String> identities,List<Long> sourceRunIds) {
+            this(subject,recipients,mode,circleId,identities,sourceRunIds,null);
+        }
+    }
 }

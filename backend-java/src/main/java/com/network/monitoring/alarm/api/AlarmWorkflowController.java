@@ -6,6 +6,9 @@ import com.network.monitoring.alarm.exception.AlarmConfigurationException;
 import com.network.monitoring.alarm.service.AlarmAutomationService;
 import com.network.monitoring.alarm.service.AlarmReportService;
 import com.network.monitoring.alarm.service.AlarmWorkflowService;
+import com.network.monitoring.alarm.service.AlarmOperationalService;
+import com.network.monitoring.alarm.service.AlarmReadinessService;
+import com.network.monitoring.alarm.dto.AlarmOperational;
 import java.time.Instant;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +23,13 @@ public class AlarmWorkflowController {
     private final AlarmWorkflowService service;
     private final AlarmReportService reports;
     private final AlarmAutomationService automation;
-    public AlarmWorkflowController(AlarmWorkflowService service,AlarmReportService reports,AlarmAutomationService automation) { this.service = service; this.reports=reports;this.automation=automation; }
+    private final AlarmOperationalService operational;
+    private final AlarmReadinessService readiness;
+    public AlarmWorkflowController(AlarmWorkflowService service,AlarmReportService reports,AlarmAutomationService automation,AlarmOperationalService operational,AlarmReadinessService readiness) { this.service = service; this.reports=reports;this.automation=automation;this.operational=operational;this.readiness=readiness; }
+    @GetMapping("/readiness") public Map<String,Object> readiness(@PathVariable("companyId") long company) {return ok(readiness.inspect(company));}
+    @GetMapping("/operational-inputs") public Map<String,Object> operationalInputs(@PathVariable("companyId") long company,@RequestParam("asOf") String at) {return ok(operational.current(company,at));}
+    @PostMapping("/operational-inputs") public ResponseEntity<?> captureOperationalInputs(@PathVariable("companyId") long company,@RequestBody AlarmOperational.Capture body) {return ResponseEntity.status(201).body(ok(operational.capture(company,body)));}
+    @GetMapping("/operational-inputs/history") public Map<String,Object> operationalHistory(@PathVariable("companyId") long company,@RequestParam(value="limit",defaultValue="50") int limit) {return ok(operational.history(company,limit));}
     private Map<String, Object> ok(Object value) { return Map.of("success", true, "data", value); }
     @PostMapping(value = "/feeds/{feedId}/imports", consumes = "multipart/form-data")
     public ResponseEntity<?> submit(@PathVariable("companyId") long company, @PathVariable("feedId") long feed,
